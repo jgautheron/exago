@@ -19,10 +19,10 @@ func handleError(w http.ResponseWriter, r *http.Request, err error) {
 
 	switch err.(type) {
 	case badRequest:
-		handleOutput(w, http.StatusBadRequest, err.Error())
+		outputJSON(w, r, http.StatusBadRequest, err.Error())
 	case notFound:
-		handleOutput(w, http.StatusNotFound, err.Error())
+		outputJSON(w, r, http.StatusNotFound, err.Error())
 	default:
-		handleOutput(w, http.StatusInternalServerError, err.Error())
+		outputJSON(w, r, http.StatusInternalServerError, err.Error())
 	}
 }

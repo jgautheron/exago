@@ -38,10 +38,10 @@ type cstNotFound struct{}
 
 // ServeHTTP is a custom handler for the "method not allowed" error
 func (wrt cstMethodNotAllowed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handleOutput(w, http.StatusMethodNotAllowed, "Method not allowed")
+	outputJSON(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 }
 
 // ServeHTTP is a custom handler for the 404 error
 func (wrt cstNotFound) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	handleOutput(w, http.StatusNotFound, "Not found")
+	outputJSON(w, r, http.StatusNotFound, "Not found")
 }

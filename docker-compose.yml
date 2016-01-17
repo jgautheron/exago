@@ -1,0 +1,11 @@
+cache:
+    image: redis:3-alpine
+    expose:
+        - "6379"
+    ports:
+        - "6379:6379"
+queue:
+    image: nats:0.7.2
+    expose:
+        - "4222"
+        - "8222"

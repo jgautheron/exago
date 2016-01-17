@@ -1,6 +1,8 @@
 package main
 
 import (
+	"bytes"
+	"compress/gzip"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
@@ -22,9 +24,9 @@ const (
 )
 
 var (
-	invalidParameter = errors.New("Invalid parameter passed")
-	lintFail         = errors.New("The linting process didn't finish")
-	cfg              *config
+	errInvalidParameter = errors.New("Invalid parameter passed")
+	errTestIssue        = errors.New("The test runner couldn't run properly")
+	cfg                 *config
 )
 
 type config struct {
@@ -41,7 +43,7 @@ func init() {
 }
 
 func main() {
-	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository)
+	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository, checkCache)
 	router := NewRouter()
 
 	router.Get("/:registry/:username/:repository/exists", repoHandlers.ThenFunc(repoExistsHandler))
@@ -61,6 +63,7 @@ func main() {
 func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	lambdaFn := strings.Split(r.URL.String()[1:], "/")[3]
+	linter := ps.ByName("linter")
 
 	ctxt := lambdaContext{
 		Registry:   ps.ByName("registry"),
@@ -71,7 +74,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	// Specific handling depending of the lambda function
 	switch lambdaFn {
 	case "lint":
-		ctxt.Linters = ps.ByName("linter")
+		ctxt.Linters = linter
 	}
 
 	resp, err := callLambdaFn(lambdaFn, ctxt)
@@ -83,7 +86,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	logger := context.Get(r, "logger").(*log.Entry)
 	logger.Infoln(lambdaFn, resp.Metadata)
 
-	handleOutput(w, http.StatusOK, resp.Data)
+	outputJSON(w, r, http.StatusOK, resp.Data)
 }
 
 func repoExistsHandler(w http.ResponseWriter, r *http.Request) {
@@ -97,7 +100,7 @@ func repoExistsHandler(w http.ResponseWriter, r *http.Request) {
 		code = http.StatusNotFound
 	}
 
-	handleOutput(w, code, nil)
+	outputJSON(w, r, code, nil)
 }
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
@@ -133,7 +136,7 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	handleOutput(w, http.StatusOK, string(contents))
+	outputJSON(w, r, http.StatusOK, string(contents))
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
@@ -141,7 +144,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	registry, username, repository := ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository")
 
 	fp := fmt.Sprintf("%s/%s/%s", registry, username, repository)
-	out, err := exec.Command("docker", "run", "--rm", "-a", "stdout", "-a", "stderr", "exago-runner", fp).CombinedOutput()
+	out, err := exec.Command("docker", "run", "--rm", "-a", "stdout", "-a", "stderr", "jgautheron/exago-runner", fp).CombinedOutput()
 	if err != nil {
 		handleError(w, r, err)
 		return
@@ -149,8 +152,12 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp := map[string]interface{}{}
 	err = json.Unmarshal(out, &resp)
+	if len(resp) == 0 {
+		handleError(w, r, errTestIssue)
+		return
+	}
 
-	handleOutput(w, http.StatusOK, resp)
+	outputJSON(w, r, http.StatusOK, resp)
 }
 
 // checkRepo ensures that the matching username/repository exist on Github.
@@ -169,16 +176,48 @@ func checkRepo(r *http.Request, username, repository string) error {
 	return nil
 }
 
-// handleOutput handles the response for each endpoint.
+func getCacheIdentifier(r *http.Request) string {
+	ps := context.Get(r, "params").(httprouter.Params)
+	sp := strings.Split(r.URL.String(), "/")
+	switch action := sp[4]; {
+	case ps.ByName("linter") != "":
+		return action + ":" + ps.ByName("linter")
+	case ps.ByName("path") != "":
+		return action + ":" + ps.ByName("path")
+	default:
+		return action
+	}
+	return ""
+}
+
+func cacheOutput(r *http.Request, output []byte) {
+	const timeoutSeconds = 3600
+
+	ps := context.Get(r, "params").(httprouter.Params)
+
+	idfr := getCacheIdentifier(r)
+	k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+	if _, err := pool.Get().Do("HMSET", k, idfr, output); err != nil {
+		log.Error(err)
+		return
+	}
+	if _, err := pool.Get().Do("EXPIRE", k, timeoutSeconds); err != nil {
+		log.Error(err)
+		return
+	}
+}
+
+// outputJSON handles the response for each endpoint.
 // It follows the JSEND standard for JSON response.
 // See https://labs.omniti.com/labs/jsend
-func handleOutput(w http.ResponseWriter, code int, data interface{}) {
+func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)
 
 	success := false
-	if code == 200 {
+	if code == http.StatusOK {
 		success = true
 	}
 
@@ -196,5 +235,22 @@ func handleOutput(w http.ResponseWriter, code int, data interface{}) {
 		res[dataType] = data
 	}
 
-	json.NewEncoder(w).Encode(res)
+	// Assuming here that all browsers support gzip encoding
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+	json.NewEncoder(gz).Encode(res)
+	gz.Close()
+
+	if success {
+		cacheOutput(r, b.Bytes())
+	}
+	w.Write(b.Bytes())
+}
+
+func outputFromCache(w http.ResponseWriter, r *http.Request, code int, output []byte) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Encoding", "gzip")
+	w.WriteHeader(code)
+	w.Write(output)
 }

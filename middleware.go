@@ -31,7 +31,7 @@ func checkRegistry(next http.Handler) http.Handler {
 		params := context.Get(r, "params").(httprouter.Params)
 		registry := params.ByName("registry")
 		if registry != "github.com" {
-			handleOutput(w, http.StatusNotImplemented, fmt.Sprintf("the registry %s is not yet supported", registry))
+			outputJSON(w, r, http.StatusNotImplemented, fmt.Sprintf("the registry %s is not yet supported", registry))
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -45,10 +45,36 @@ func checkValidRepository(next http.Handler) http.Handler {
 		username, repository := params.ByName("username"), params.ByName("repository")
 		re := regexp.MustCompile(reAlphaNumeric)
 		if !re.MatchString(username) || !re.MatchString(repository) {
-			handleError(w, r, invalidParameter)
+			handleError(w, r, errInvalidParameter)
 			return
 		}
 		next.ServeHTTP(w, r)
+	}
+	return http.HandlerFunc(fn)
+}
+
+func checkCache(next http.Handler) http.Handler {
+	fn := func(w http.ResponseWriter, r *http.Request) {
+		ps := context.Get(r, "params").(httprouter.Params)
+		lgr := context.Get(r, "logger").(*log.Entry)
+
+		idfr := getCacheIdentifier(r)
+		k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+
+		c := pool.Get()
+		o, err := c.Do("HGET", k, idfr)
+		if err != nil {
+			// Log the error and fallback
+			lgr.Error(err)
+			next.ServeHTTP(w, r)
+			return
+		}
+		if o == nil {
+			next.ServeHTTP(w, r)
+			return
+		}
+		lgr.Infoln(k, idfr, "cache hit")
+		outputFromCache(w, r, http.StatusOK, o.([]byte))
 	}
 	return http.HandlerFunc(fn)
 }
