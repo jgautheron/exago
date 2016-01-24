@@ -12,6 +12,7 @@ checkout:
   post:
     - mkdir -p $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
     - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
+    - ls $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
 
 dependencies:
   pre:
