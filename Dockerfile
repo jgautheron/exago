@@ -1,5 +1,5 @@
-FROM busybox
+FROM scratch
 ADD exago /
-CMD ["-h"]
+CMD [""]
 ENTRYPOINT ["/exago"]
 EXPOSE 3000
