@@ -26,6 +26,6 @@ check:
 # but does not run the tests.
 .PHONY: test
 test:
-	$(GO) test ./...
+	$(GO) test
 
 default: build
