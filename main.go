@@ -79,7 +79,9 @@ func main() {
 	router.Get("/:registry/:username/:repository/contents/*path", repoHandlers.ThenFunc(fileHandler))
 
 	log.Info("Listening on port " + cfg.httpPort)
-	http.ListenAndServe(":"+cfg.httpPort, router)
+	if err := http.ListenAndServe(":"+cfg.httpPort, router); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func lambdaHandler(w http.ResponseWriter, r *http.Request) {
@@ -130,7 +132,12 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 		handleError(w, r, err)
 		return
 	}
-	defer resp.Body.Close()
+	defer func() {
+		err := resp.Body.Close()
+		if err != nil {
+			log.Error(err)
+		}
+	}()
 
 	raw, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -139,8 +146,7 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var data map[string]interface{}
-	err = json.Unmarshal(raw, &data)
-	if err != nil {
+	if err = json.Unmarshal(raw, &data); err != nil {
 		handleError(w, r, err)
 		return
 	}
@@ -166,8 +172,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	resp := map[string]interface{}{}
-	err = json.Unmarshal(out, &resp)
-	if err != nil {
+	if err = json.Unmarshal(out, &resp); err != nil {
 		handleError(w, r, err)
 		return
 	}
@@ -183,7 +188,6 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 func checkRepo(r *http.Request, username, repository string) (int, error) {
 	var err error
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/languages?access_token=%s", username, repository, cfg.githubAccessToken)
-	log.Info("here")
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -204,9 +208,10 @@ func checkRepo(r *http.Request, username, repository string) (int, error) {
 	if err != nil {
 		return http.StatusNoContent, err
 	}
-	log.Infoln("go", data["Go"])
+
 	if _, found := data["Go"]; !found {
-		log.Info("Go not found")
+		logger := context.Get(r, "logger").(*log.Entry)
+		logger.Info("Not a Go repository")
 		return http.StatusNotAcceptable, errInvalidRepository
 	}
 
@@ -230,15 +235,16 @@ func cacheOutput(r *http.Request, output []byte) {
 	const timeoutSeconds = 3600
 
 	ps := context.Get(r, "params").(httprouter.Params)
+	logger := context.Get(r, "logger").(*log.Entry)
 
 	idfr := getCacheIdentifier(r)
 	k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 	if _, err := pool.Get().Do("HMSET", k, idfr, output); err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return
 	}
 	if _, err := pool.Get().Do("EXPIRE", k, timeoutSeconds); err != nil {
-		log.Error(err)
+		logger.Error(err)
 		return
 	}
 }
@@ -247,6 +253,8 @@ func cacheOutput(r *http.Request, output []byte) {
 // It follows the JSEND standard for JSON response.
 // See https://labs.omniti.com/labs/jsend
 func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
+	var err error
+
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
@@ -274,13 +282,22 @@ func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface
 	// Assuming here that all browsers support gzip encoding
 	var b bytes.Buffer
 	gz := gzip.NewWriter(&b)
-	json.NewEncoder(gz).Encode(res)
-	gz.Close()
+	if err = json.NewEncoder(gz).Encode(res); err != nil {
+		handleError(w, r, err)
+		return
+	}
+	if err = gz.Close(); err != nil {
+		handleError(w, r, err)
+		return
+	}
 
 	if success {
 		cacheOutput(r, b.Bytes())
 	}
-	w.Write(b.Bytes())
+
+	if _, err = w.Write(b.Bytes()); err != nil {
+		handleError(w, r, err)
+	}
 }
 
 func outputFromCache(w http.ResponseWriter, r *http.Request, code int, output []byte) {
@@ -288,5 +305,8 @@ func outputFromCache(w http.ResponseWriter, r *http.Request, code int, output []
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)
-	w.Write(output)
+
+	if _, err := w.Write(output); err != nil {
+		handleError(w, r, err)
+	}
 }
