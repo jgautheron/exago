@@ -56,7 +56,7 @@ func main() {
 	flag.Parse()
 	if *flagVersion {
 		fmt.Fprintf(os.Stdout, "Running version "+buildTag+" built on "+buildDate)
-		os.Exit(1)
+		return
 	}
 
 	// Basic validation
