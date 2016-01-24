@@ -1,0 +1,48 @@
+machine:
+  timezone:
+    Europe/Warsaw
+  environment:
+    GOPATH: "$HOME/.go"
+    GOVERSION: "1.5"
+    PATH: "${PATH}:${GOPATH}/bin"
+  services:
+    - docker
+
+checkout:
+  post:
+    - mkdir -p $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
+    - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
+
+dependencies:
+  pre:
+    - mkdir -p $HOME/goinstall
+    - wget -qO - https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz | tar zxf - -C $HOME/goinstall --strip-components 1
+    - sudo rm -rf /usr/local/go
+    - sudo ln -snf $HOME/goinstall /usr/local/go
+    - go version
+    - go get github.com/alecthomas/gometalinter
+    - gometalinter --install
+  override:
+    - go get ./...
+
+  # cache the go install
+  cache_directories:
+    - /home/ubuntu/goinstall
+    - /home/ubuntu/.go
+
+test:
+  override:
+    - make build
+    - ./exago -h
+    - make check
+    - make test
+
+deployment:
+  release:
+    branch: master
+    commands:
+      - go get github.com/mitchellh/gox
+      - go get github.com/tcnksm/ghr
+      - make buildall
+      - ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `git describe --tags` dist/
+      - make image
