@@ -1,4 +1,4 @@
-FROM scratch
+FROM busybox
 ADD exago /
 CMD ["-h"]
 ENTRYPOINT ["/exago"]
