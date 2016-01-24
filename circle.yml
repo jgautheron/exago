@@ -23,8 +23,7 @@ dependencies:
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install
   override:
-    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
-    - go get ./...
+    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && go get ./...
 
   # cache the go install
   cache_directories:
