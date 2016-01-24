@@ -43,7 +43,7 @@ func checkValidRepository(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		params := context.Get(r, "params").(httprouter.Params)
 		username, repository := params.ByName("username"), params.ByName("repository")
-		re := regexp.MustCompile(reAlphaNumeric)
+		re := regexp.MustCompile(`^[\w\d\-_]+$`)
 		if !re.MatchString(username) || !re.MatchString(repository) {
 			handleError(w, r, errInvalidParameter)
 			return

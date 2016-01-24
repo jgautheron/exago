@@ -19,14 +19,11 @@ import (
 	"github.com/justinas/alice"
 )
 
-const (
-	reAlphaNumeric = `^[\w\d_]+$`
-)
-
 var (
-	errInvalidParameter = errors.New("Invalid parameter passed")
-	errTestIssue        = errors.New("The test runner couldn't run properly")
-	cfg                 *config
+	errInvalidParameter  = errors.New("Invalid parameter passed")
+	errTestIssue         = errors.New("The test runner couldn't run properly")
+	errInvalidRepository = errors.New("The repository doesn't contain Go code")
+	cfg                  *config
 )
 
 type config struct {
@@ -46,7 +43,7 @@ func main() {
 	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository, checkCache)
 	router := NewRouter()
 
-	router.Get("/:registry/:username/:repository/exists", repoHandlers.ThenFunc(repoExistsHandler))
+	router.Get("/:registry/:username/:repository/valid", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/:registry/:username/:repository/loc", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/imports", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/lint/:linter", repoHandlers.ThenFunc(lambdaHandler))
@@ -54,10 +51,6 @@ func main() {
 	router.Get("/:registry/:username/:repository/contents/*path", repoHandlers.ThenFunc(fileHandler))
 
 	http.ListenAndServe(":8080", router)
-
-	// TODO:
-	// - check repository exists caching
-	// - caching support
 }
 
 func lambdaHandler(w http.ResponseWriter, r *http.Request) {
@@ -89,18 +82,11 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	outputJSON(w, r, http.StatusOK, resp.Data)
 }
 
-func repoExistsHandler(w http.ResponseWriter, r *http.Request) {
-	code := http.StatusOK
-
+func repoValidHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	username, repository := ps.ByName("username"), ps.ByName("repository")
-
-	// Check if the specified repository is valid
-	if err := checkRepo(r, username, repository); err != nil {
-		code = http.StatusNotFound
-	}
-
-	outputJSON(w, r, code, nil)
+	code, err := checkRepo(r, username, repository)
+	outputJSON(w, r, code, err.Error())
 }
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
@@ -152,6 +138,10 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 
 	resp := map[string]interface{}{}
 	err = json.Unmarshal(out, &resp)
+	if err != nil {
+		handleError(w, r, err)
+		return
+	}
 	if len(resp) == 0 {
 		handleError(w, r, errTestIssue)
 		return
@@ -161,19 +151,37 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // checkRepo ensures that the matching username/repository exist on Github.
-func checkRepo(r *http.Request, username, repository string) error {
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s?access_token=%s", username, repository, cfg.githubAccessToken)
+func checkRepo(r *http.Request, username, repository string) (int, error) {
+	var err error
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/languages?access_token=%s", username, repository, cfg.githubAccessToken)
+	log.Info("here")
 
 	resp, err := http.Get(url)
 	if err != nil {
-		return err
+		return http.StatusServiceUnavailable, err
 	}
 
 	if resp.StatusCode != 200 {
-		return fmt.Errorf("Repository %s not found in Github.", repository)
+		return http.StatusNotFound, fmt.Errorf("Repository %s not found in Github.", repository)
 	}
 
-	return nil
+	contents, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return http.StatusNoContent, err
+	}
+
+	data := map[string]int{}
+	err = json.Unmarshal(contents, &data)
+	if err != nil {
+		return http.StatusNoContent, err
+	}
+	log.Infoln("go", data["Go"])
+	if _, found := data["Go"]; !found {
+		log.Info("Go not found")
+		return http.StatusNotAcceptable, errInvalidRepository
+	}
+
+	return http.StatusOK, nil
 }
 
 func getCacheIdentifier(r *http.Request) string {
