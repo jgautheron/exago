@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	pool = newPool("192.168.99.100:6379", "")
+	pool = newPool("redis:6379", "")
 }
 
 func newPool(server, password string) *redis.Pool {
