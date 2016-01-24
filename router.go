@@ -11,16 +11,19 @@ import (
 // - jsend
 // - context
 
-type router struct {
+// Router wraps httprouter.Router.
+type Router struct {
 	*httprouter.Router
 }
 
-func (r *router) Get(path string, handler http.Handler) {
+// Get wraps httprouter's GET.
+func (r *Router) Get(path string, handler http.Handler) {
 	r.GET(path, wrapHandler(handler))
 }
 
-func NewRouter() *router {
-	r := &router{httprouter.New()}
+// NewRouter returns a wrapped httprouter.
+func NewRouter() *Router {
+	r := &Router{httprouter.New()}
 	r.NotFound = cstNotFound{}
 	r.MethodNotAllowed = cstMethodNotAllowed{}
 	return r

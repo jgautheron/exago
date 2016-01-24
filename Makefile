@@ -20,7 +20,7 @@ buildall:
 .PHONY: check
 check:
 	@echo "gometalinter"
-	@ gometalinter ./...
+	@ gometalinter --deadline 10s ./...
 
 # "go test -i" builds dependencies and installs them into GOPATH/pkg,
 # but does not run the tests.

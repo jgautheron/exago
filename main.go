@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -24,10 +25,20 @@ var (
 	errTestIssue         = errors.New("The test runner couldn't run properly")
 	errInvalidRepository = errors.New("The repository doesn't contain Go code")
 	cfg                  *config
+
+	// Command line flags
+	flagVersion = flag.Bool("version", false, "show the version")
+
+	// Build vars
+	// Do not set these manually! these variables
+	// are meant to be set through ldflags
+	buildTag  string
+	buildDate string
 )
 
 type config struct {
 	githubAccessToken, awsAccessKeyID, awsSecretAccessKey string
+	httpPort, redisHost                                   string
 }
 
 func init() {
@@ -36,10 +47,27 @@ func init() {
 		githubAccessToken:  os.Getenv("GITHUB_ACCESS_TOKEN"),
 		awsAccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		awsSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		httpPort:           os.Getenv("HTTP_PORT"),
+		redisHost:          os.Getenv("REDIS_HOST"),
 	}
 }
 
 func main() {
+	flag.Parse()
+	if *flagVersion {
+		fmt.Fprintf(os.Stdout, "Running version "+buildTag+" built on "+buildDate)
+		os.Exit(1)
+	}
+
+	// Basic validation
+	if cfg.githubAccessToken == "" ||
+		cfg.awsAccessKeyID == "" ||
+		cfg.awsSecretAccessKey == "" ||
+		cfg.httpPort == "" ||
+		cfg.redisHost == "" {
+		log.Fatal("Missing environment variable(s)")
+	}
+
 	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository, checkCache)
 	router := NewRouter()
 
@@ -50,7 +78,8 @@ func main() {
 	router.Get("/:registry/:username/:repository/test", repoHandlers.ThenFunc(testHandler))
 	router.Get("/:registry/:username/:repository/contents/*path", repoHandlers.ThenFunc(fileHandler))
 
-	http.ListenAndServe(":8080", router)
+	log.Info("Listening on port " + cfg.httpPort)
+	http.ListenAndServe(":"+cfg.httpPort, router)
 }
 
 func lambdaHandler(w http.ResponseWriter, r *http.Request) {
@@ -195,7 +224,6 @@ func getCacheIdentifier(r *http.Request) string {
 	default:
 		return action
 	}
-	return ""
 }
 
 func cacheOutput(r *http.Request, output []byte) {

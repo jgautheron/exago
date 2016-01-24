@@ -5,6 +5,8 @@ machine:
     GOPATH: "$HOME/.go"
     GOVERSION: "1.5"
     PATH: "${PATH}:${GOPATH}/bin"
+    GO15VENDOREXPERIMENT: 1
+    TAG: "latest"
   services:
     - docker
 
@@ -33,7 +35,7 @@ dependencies:
 test:
   override:
     - make build
-    - ./exago -h
+    - ./exago -version
     - make check
     - make test
 
@@ -41,8 +43,6 @@ deployment:
   release:
     branch: master
     commands:
-      - go get github.com/mitchellh/gox
-      - go get github.com/tcnksm/ghr
-      - make buildall
-      - ghr -t $GITHUB_TOKEN -u $CIRCLE_PROJECT_USERNAME -r $CIRCLE_PROJECT_REPONAME --replace `git describe --tags` dist/
-      - make image
+      - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
+      - docker build -t jgautheron/exago-service:$TAG .
+      - docker push jgautheron/exago-service:$TAG
