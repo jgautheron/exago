@@ -12,7 +12,7 @@ checkout:
   post:
     - mkdir -p $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
     - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
-    - ls $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
+    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
 
 dependencies:
   pre:
@@ -24,7 +24,7 @@ dependencies:
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install
   override:
-    - go get $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME/...
+    - go get ./...
 
   # cache the go install
   cache_directories:
