@@ -3,7 +3,7 @@ machine:
     Europe/Warsaw
   environment:
     GOPATH: "$HOME/.go"
-    GOVERSION: "1.5"
+    GOVERSION: "1.5.3"
     PATH: "${PATH}:${GOPATH}/bin"
     GO15VENDOREXPERIMENT: 1
     TAG: "latest"
@@ -25,7 +25,8 @@ dependencies:
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install
   override:
-    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && go get ./...
+    - ls vendor
+    #- cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && go get ./...
 
   # cache the go install
   cache_directories:
