@@ -11,10 +11,10 @@ var (
 )
 
 func init() {
-	pool = newPool(cfg.redisHost+":6379", "")
+	pool = newPool(cfg.redisHost + ":6379")
 }
 
-func newPool(server, password string) *redis.Pool {
+func newPool(server string) *redis.Pool {
 	return &redis.Pool{
 		MaxIdle:     3,
 		IdleTimeout: 240 * time.Second,
@@ -23,12 +23,6 @@ func newPool(server, password string) *redis.Pool {
 			c, err := redis.Dial("tcp", server)
 			if err != nil {
 				return nil, err
-			}
-			if len(password) != 0 {
-				if _, err = c.Do("AUTH", password); err != nil {
-					c.Close()
-					return nil, err
-				}
 			}
 			return c, err
 		},
