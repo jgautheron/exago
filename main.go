@@ -11,10 +11,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
@@ -24,7 +24,9 @@ var (
 	errInvalidParameter  = errors.New("Invalid parameter passed")
 	errTestIssue         = errors.New("The test runner couldn't run properly")
 	errInvalidRepository = errors.New("The repository doesn't contain Go code")
-	cfg                  *config
+	errEmptyOutput       = errors.New("The container output is empty")
+
+	cfg *config
 
 	// Command line flags
 	flagVersion = flag.Bool("version", false, "show the version")
@@ -38,6 +40,7 @@ var (
 
 type config struct {
 	githubAccessToken, awsAccessKeyID, awsSecretAccessKey string
+	runnerImageName                                       string
 	httpPort, redisHost                                   string
 }
 
@@ -47,6 +50,7 @@ func init() {
 		githubAccessToken:  os.Getenv("GITHUB_ACCESS_TOKEN"),
 		awsAccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
 		awsSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
+		runnerImageName:    os.Getenv("RUNNER_IMAGE_NAME"),
 		httpPort:           os.Getenv("HTTP_PORT"),
 		redisHost:          os.Getenv("REDIS_HOST"),
 	}
@@ -117,7 +121,7 @@ func repoValidHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	username, repository := ps.ByName("username"), ps.ByName("repository")
 	code, err := checkRepo(r, username, repository)
-	outputJSON(w, r, code, err.Error())
+	outputJSON(w, r, code, err)
 }
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
@@ -164,20 +168,55 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	registry, username, repository := ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository")
 
-	fp := fmt.Sprintf("%s/%s/%s", registry, username, repository)
-	out, err := exec.Command("docker", "run", "--rm", "-a", "stdout", "-a", "stderr", "jgautheron/exago-runner", fp).CombinedOutput()
+	endpoint := "unix:///var/run/docker.sock"
+	client, _ := docker.NewClient(endpoint)
+	config := docker.Config{
+		Image: cfg.runnerImageName,
+		Cmd: []string{
+			fmt.Sprintf("%s/%s/%s", registry, username, repository),
+		},
+	}
+
+	rp := fmt.Sprintf("%s-%s-%s", registry, username, repository)
+	opts := docker.CreateContainerOptions{Name: "exago-runner-" + rp, Config: &config}
+	container, err := client.CreateContainer(opts)
 	if err != nil {
 		handleError(w, r, err)
 		return
 	}
 
-	resp := map[string]interface{}{}
-	if err = json.Unmarshal(out, &resp); err != nil {
+	err = client.StartContainer(container.ID, &docker.HostConfig{})
+	if err != nil {
 		handleError(w, r, err)
 		return
 	}
-	if len(resp) == 0 {
-		handleError(w, r, errTestIssue)
+
+	defer func() {
+		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
+		if err != nil {
+			handleError(w, r, err)
+			return
+		}
+	}()
+
+	var buf bytes.Buffer
+	err = client.Logs(docker.LogsOptions{
+		Container:    container.ID,
+		OutputStream: &buf,
+		Follow:       true,
+		Stdout:       true,
+		Stderr:       true,
+		Timestamps:   false,
+	})
+
+	if buf.Len() == 0 {
+		handleError(w, r, errEmptyOutput)
+		return
+	}
+
+	var resp *json.RawMessage
+	if err = json.Unmarshal(buf.Bytes(), &resp); err != nil {
+		handleError(w, r, err)
 		return
 	}
 
@@ -286,6 +325,7 @@ func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface
 		handleError(w, r, err)
 		return
 	}
+
 	if err = gz.Close(); err != nil {
 		handleError(w, r, err)
 		return
