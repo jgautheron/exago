@@ -5,7 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/go-ini/ini"
+	"github.com/vaughan0/go-ini"
 
 	"github.com/aws/aws-sdk-go/aws/awserr"
 )
@@ -76,36 +76,32 @@ func (p *SharedCredentialsProvider) IsExpired() bool {
 // The credentials retrieved from the profile will be returned or error. Error will be
 // returned if it fails to read from the file, or the data is invalid.
 func loadProfile(filename, profile string) (Value, error) {
-	config, err := ini.Load(filename)
+	config, err := ini.LoadFile(filename)
 	if err != nil {
 		return Value{}, awserr.New("SharedCredsLoad", "failed to load shared credentials file", err)
 	}
-	iniProfile, err := config.GetSection(profile)
-	if err != nil {
-		return Value{}, awserr.New("SharedCredsLoad", "failed to get profile", err)
-	}
+	iniProfile := config.Section(profile)
 
-	id, err := iniProfile.GetKey("aws_access_key_id")
-	if err != nil {
+	id, ok := iniProfile["aws_access_key_id"]
+	if !ok {
 		return Value{}, awserr.New("SharedCredsAccessKey",
 			fmt.Sprintf("shared credentials %s in %s did not contain aws_access_key_id", profile, filename),
-			err)
+			nil)
 	}
 
-	secret, err := iniProfile.GetKey("aws_secret_access_key")
-	if err != nil {
+	secret, ok := iniProfile["aws_secret_access_key"]
+	if !ok {
 		return Value{}, awserr.New("SharedCredsSecret",
 			fmt.Sprintf("shared credentials %s in %s did not contain aws_secret_access_key", profile, filename),
 			nil)
 	}
 
-	// Default to empty string if not found
-	token := iniProfile.Key("aws_session_token")
+	token := iniProfile["aws_session_token"]
 
 	return Value{
-		AccessKeyID:     id.String(),
-		SecretAccessKey: secret.String(),
-		SessionToken:    token.String(),
+		AccessKeyID:     id,
+		SecretAccessKey: secret,
+		SessionToken:    token,
 	}, nil
 }
 

@@ -57,9 +57,6 @@ var endpointsMap = endpointStruct{
 		"ap-northeast-1/s3": {
 			Endpoint: "s3-{region}.amazonaws.com",
 		},
-		"ap-northeast-2/s3": {
-			Endpoint: "s3-{region}.amazonaws.com",
-		},
 		"ap-southeast-1/s3": {
 			Endpoint: "s3-{region}.amazonaws.com",
 		},

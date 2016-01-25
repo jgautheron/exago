@@ -3,7 +3,6 @@ package request
 import (
 	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 )
 
@@ -15,7 +14,7 @@ import (
 
 // HasNextPage returns true if this request has more pages of data available.
 func (r *Request) HasNextPage() bool {
-	return len(r.nextPageTokens()) > 0
+	return r.nextPageTokens() != nil
 }
 
 // nextPageTokens returns the tokens to use when asking for the next page of
@@ -26,16 +25,11 @@ func (r *Request) nextPageTokens() []interface{} {
 	}
 
 	if r.Operation.TruncationToken != "" {
-		tr, _ := awsutil.ValuesAtPath(r.Data, r.Operation.TruncationToken)
-		if len(tr) == 0 {
+		tr := awsutil.ValuesAtAnyPath(r.Data, r.Operation.TruncationToken)
+		if tr == nil || len(tr) == 0 {
 			return nil
 		}
-
 		switch v := tr[0].(type) {
-		case *bool:
-			if !aws.BoolValue(v) {
-				return nil
-			}
 		case bool:
 			if v == false {
 				return nil
@@ -43,36 +37,35 @@ func (r *Request) nextPageTokens() []interface{} {
 		}
 	}
 
-	tokens := []interface{}{}
-	tokenAdded := false
-	for _, outToken := range r.Operation.OutputTokens {
-		v, _ := awsutil.ValuesAtPath(r.Data, outToken)
-		if len(v) > 0 {
-			tokens = append(tokens, v[0])
-			tokenAdded = true
-		} else {
-			tokens = append(tokens, nil)
+	found := false
+	tokens := make([]interface{}, len(r.Operation.OutputTokens))
+
+	for i, outToken := range r.Operation.OutputTokens {
+		v := awsutil.ValuesAtAnyPath(r.Data, outToken)
+		if v != nil && len(v) > 0 {
+			found = true
+			tokens[i] = v[0]
 		}
 	}
-	if !tokenAdded {
-		return nil
-	}
 
-	return tokens
+	if found {
+		return tokens
+	}
+	return nil
 }
 
 // NextPage returns a new Request that can be executed to return the next
 // page of result data. Call .Send() on this request to execute it.
 func (r *Request) NextPage() *Request {
 	tokens := r.nextPageTokens()
-	if len(tokens) == 0 {
+	if tokens == nil {
 		return nil
 	}
 
 	data := reflect.New(reflect.TypeOf(r.Data).Elem()).Interface()
 	nr := New(r.Config, r.ClientInfo, r.Handlers, r.Retryer, r.Operation, awsutil.CopyOf(r.Params), data)
 	for i, intok := range nr.Operation.InputTokens {
-		awsutil.SetValueAtPath(nr.Params, intok, tokens[i])
+		awsutil.SetValueAtAnyPath(nr.Params, intok, tokens[i])
 	}
 	return nr
 }
@@ -92,10 +85,9 @@ func (r *Request) NextPage() *Request {
 // return true to keep iterating or false to stop.
 func (r *Request) EachPage(fn func(data interface{}, isLastPage bool) (shouldContinue bool)) error {
 	for page := r; page != nil; page = page.NextPage() {
-		if err := page.Send(); err != nil {
-			return err
-		}
-		if getNextPage := fn(page.Data, !page.HasNextPage()); !getNextPage {
+		page.Send()
+		shouldContinue := fn(page.Data, !page.HasNextPage())
+		if page.Error != nil || !shouldContinue {
 			return page.Error
 		}
 	}
