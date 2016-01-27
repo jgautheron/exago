@@ -2,7 +2,7 @@ machine:
   timezone:
     Europe/Warsaw
   environment:
-    GOPATH: "$HOME/.go"
+    GOPATH: "/home/ubuntu/.go"
     GOVERSION: "1.5.3"
     GO15VENDOREXPERIMENT: 1
     PATH: "${PATH}:${GOPATH}/bin"
@@ -18,16 +18,15 @@ checkout:
 
 dependencies:
   pre:
-    - mkdir -p $HOME/goinstall
+    - mkdir -p /home/ubuntu/goinstall
     - wget -qO - https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz | tar zxf - -C $HOME/goinstall --strip-components 1
     - sudo rm -rf /usr/local/go
-    - sudo ln -snf $HOME/goinstall /usr/local/go
+    - sudo ln -snf /home/ubuntu/goinstall /usr/local/go
     - go version
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install
   override:
     - ls vendor
-    #- cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && go get ./...
 
   # cache the go install
   cache_directories:
@@ -36,7 +35,7 @@ dependencies:
 
 test:
   override:
-    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && make build
+    - make build
     - ./exago -version
     - make check
     - make test
