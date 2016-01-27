@@ -35,7 +35,7 @@ dependencies:
 
 test:
   override:
-    - make build
+    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && make build
     - ./exago -version
     - make check
     - make test
