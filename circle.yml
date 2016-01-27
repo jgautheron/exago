@@ -19,7 +19,7 @@ checkout:
 dependencies:
   pre:
     - mkdir -p /home/ubuntu/goinstall
-    - wget -qO - https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz | tar zxf - -C $HOME/goinstall --strip-components 1
+    - wget -qO - https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz | tar zxf - -C /home/ubuntu/goinstall --strip-components 1
     - sudo rm -rf /usr/local/go
     - sudo ln -snf /home/ubuntu/goinstall /usr/local/go
     - go version
