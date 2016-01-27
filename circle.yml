@@ -36,6 +36,8 @@ dependencies:
 test:
   override:
     - pwd
+    - cd $GOPATH
+    - pwd
     - make build
     - ./exago -version
     - make check
