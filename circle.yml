@@ -1,13 +1,14 @@
+general:
+  build_dir: $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
 machine:
   timezone:
     Europe/Warsaw
   environment:
-    GOPATH: "/home/ubuntu/.go"
+    GOPATH: "$HOME/.go"
     GOVERSION: "1.5.3"
-    GO15VENDOREXPERIMENT: 1
     PATH: "${PATH}:${GOPATH}/bin"
+    GO15VENDOREXPERIMENT: 1
     TAG: $CIRCLE_BUILD_NUM
-    HOME: "${GOPATH}/src/github.com/${CIRCLE_PROJECT_USERNAME}/${CIRCLE_PROJECT_REPONAME}"
   services:
     - docker
 
@@ -18,15 +19,16 @@ checkout:
 
 dependencies:
   pre:
-    - mkdir -p /home/ubuntu/goinstall
-    - wget -qO - https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz | tar zxf - -C /home/ubuntu/goinstall --strip-components 1
+    - mkdir -p $HOME/goinstall
+    - wget -qO - https://storage.googleapis.com/golang/go$GOVERSION.linux-amd64.tar.gz | tar zxf - -C $HOME/goinstall --strip-components 1
     - sudo rm -rf /usr/local/go
-    - sudo ln -snf /home/ubuntu/goinstall /usr/local/go
+    - sudo ln -snf $HOME/goinstall /usr/local/go
     - go version
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install
   override:
     - ls vendor
+    #- cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && go get ./...
 
   # cache the go install
   cache_directories:
@@ -35,10 +37,7 @@ dependencies:
 
 test:
   override:
-    - pwd
-    - cd $GOPATH
-    - pwd
-    - make build
+    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && make build
     - ./exago -version
     - make check
     - make test
