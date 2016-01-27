@@ -22,7 +22,6 @@ import (
 
 var (
 	errInvalidParameter  = errors.New("Invalid parameter passed")
-	errTestIssue         = errors.New("The test runner couldn't run properly")
 	errInvalidRepository = errors.New("The repository doesn't contain Go code")
 	errEmptyOutput       = errors.New("The container output is empty")
 
