@@ -4,7 +4,7 @@ machine:
   timezone:
     Europe/Warsaw
   environment:
-    GOPATH: "$HOME/.go"
+    GOPATH: "$HOME/exago-service/.go"
     GOVERSION: "1.5.3"
     GO15VENDOREXPERIMENT: 1
     PATH: "${PATH}:${GOPATH}/bin"
