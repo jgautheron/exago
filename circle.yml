@@ -1,13 +1,13 @@
 general:
-  build_dir: $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
+  build_dir: /home/ubuntu/.go/src/github.com/jgautheron/exago-service
 machine:
   timezone:
     Europe/Warsaw
   environment:
     GOPATH: "$HOME/.go"
     GOVERSION: "1.5.3"
-    PATH: "${PATH}:${GOPATH}/bin"
     GO15VENDOREXPERIMENT: 1
+    PATH: "${PATH}:${GOPATH}/bin"
     TAG: $CIRCLE_BUILD_NUM
   services:
     - docker
