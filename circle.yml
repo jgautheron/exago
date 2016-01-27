@@ -1,5 +1,5 @@
 general:
-  build_dir: /home/ubuntu/.go/src/github.com/jgautheron/exago-service
+  build_dir: .go/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
 machine:
   timezone:
     Europe/Warsaw
