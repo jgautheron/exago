@@ -168,8 +168,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	registry, username, repository := ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository")
 
-	endpoint := "unix:///var/run/docker.sock"
-	client, _ := docker.NewClient(endpoint)
+	client, _ := docker.NewClientFromEnv()
 	config := docker.Config{
 		Image: cfg.runnerImageName,
 		Cmd: []string{
