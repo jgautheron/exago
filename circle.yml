@@ -37,7 +37,7 @@ test:
     - pwd
     - make build
     - ./exago -version
-    - make check
+    #- make check
     - make test
 
 deployment:
