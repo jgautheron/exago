@@ -6,6 +6,7 @@ machine:
     GOVERSION: "1.5.3"
     GO15VENDOREXPERIMENT: 1
     PATH: "${PATH}:${GOPATH}/bin"
+#    TAG: $CIRCLE_BUILD_NUM
     TAG: $CIRCLE_BUILD_NUM
   services:
     - docker
