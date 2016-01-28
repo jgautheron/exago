@@ -20,7 +20,7 @@ buildall:
 .PHONY: check
 check:
 	@echo "gometalinter"
-	@! gometalinter --deadline 10s ./... | \
+	@! gometalinter --disable gotype,aligncheck,interfacer,structcheck --deadline 10s ./... | \
 	  grep -vE 'vendor'
 
 # "go test -i" builds dependencies and installs them into GOPATH/pkg,
