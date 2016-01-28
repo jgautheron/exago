@@ -9,11 +9,11 @@ machine:
     TAG: $CIRCLE_BUILD_NUM
   services:
     - docker
-
-checkout:
   post:
     - mkdir -p $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
     - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
+general:
+  build_dir: .go/src/github.com/$CIRCLE_PROJECT_USERNAME
 
 dependencies:
   pre:
@@ -25,7 +25,7 @@ dependencies:
     - go get github.com/alecthomas/gometalinter
     - gometalinter --install
   override:
-    - ls vendor
+    - echo "nothing to do here"
 
   # cache the go install
   cache_directories:
@@ -34,10 +34,11 @@ dependencies:
 
 test:
   override:
-    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && make build
+    - pwd
+    - make build
     - ./exago -version
-    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && make check
-    - cd $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME && make test
+    - make check
+    - make test
 
 deployment:
   release:
