@@ -13,7 +13,7 @@ machine:
     - mkdir -p $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
     - ln -snf $HOME/$CIRCLE_PROJECT_REPONAME $GOPATH/src/github.com/$CIRCLE_PROJECT_USERNAME
 general:
-  build_dir: .go/src/github.com/$CIRCLE_PROJECT_USERNAME
+  build_dir: ../.go/src/github.com/$CIRCLE_PROJECT_USERNAME/$CIRCLE_PROJECT_REPONAME
 
 dependencies:
   pre:
