@@ -36,9 +36,7 @@ var (
 //     creds := NewChainCredentials(
 //         []Provider{
 //             &EnvProvider{},
-//             &EC2RoleProvider{
-//                 Client: ec2metadata.New(sess),
-//             },
+//             &EC2RoleProvider{},
 //         })
 //
 //     // Usage of ChainCredentials with aws.Config

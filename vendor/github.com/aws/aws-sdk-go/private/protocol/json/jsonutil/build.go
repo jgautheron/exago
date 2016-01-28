@@ -50,7 +50,7 @@ func buildAny(value reflect.Value, buf *bytes.Buffer, tag reflect.StructTag) err
 
 	switch t {
 	case "structure":
-		if field, ok := vtype.FieldByName("_"); ok {
+		if field, ok := vtype.FieldByName("SDKShapeTraits"); ok {
 			tag = field.Tag
 		}
 		return buildStruct(value, buf, tag)
@@ -84,12 +84,11 @@ func buildStruct(value reflect.Value, buf *bytes.Buffer, tag reflect.StructTag) 
 	t := value.Type()
 	first := true
 	for i := 0; i < t.NumField(); i++ {
-		member := value.Field(i)
+		field := t.Field(i)
+		member := value.FieldByIndex(field.Index)
 		if (member.Kind() == reflect.Ptr || member.Kind() == reflect.Slice || member.Kind() == reflect.Map) && member.IsNil() {
 			continue // ignore unset fields
 		}
-
-		field := t.Field(i)
 		if field.PkgPath != "" {
 			continue // ignore unexported fields
 		}
