@@ -12,6 +12,8 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/fsouza/go-dockerclient"
@@ -165,60 +167,81 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
+	logger := context.Get(r, "logger").(*log.Entry)
 	registry, username, repository := ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository")
 
-	client, _ := docker.NewClientFromEnv()
-	config := docker.Config{
-		Image: cfg.runnerImageName,
-		Cmd: []string{
-			fmt.Sprintf("%s/%s/%s", registry, username, repository),
-		},
-	}
+	resp := make(chan interface{})
+	var wg sync.WaitGroup
 
-	rp := fmt.Sprintf("%s-%s-%s", registry, username, repository)
-	opts := docker.CreateContainerOptions{Name: "exago-runner-" + rp, Config: &config}
-	container, err := client.CreateContainer(opts)
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
 
-	err = client.StartContainer(container.ID, &docker.HostConfig{})
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
+		client, _ := docker.NewClientFromEnv()
+		config := docker.Config{
+			Image: cfg.runnerImageName,
+			Cmd: []string{
+				fmt.Sprintf("%s/%s/%s", registry, username, repository),
+			},
+		}
 
-	defer func() {
-		err = client.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
+		rp := fmt.Sprintf("%s-%s-%s", registry, username, repository)
+		opts := docker.CreateContainerOptions{Name: "exago-runner-" + rp, Config: &config}
+		container, err := client.CreateContainer(opts)
 		if err != nil {
-			handleError(w, r, err)
+			log.Errorln(err, "exago-runner-"+rp)
+			resp <- err
 			return
 		}
+
+		defer func() {
+			err = client.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
+			if err != nil {
+				logger.Error(err)
+				return
+			}
+		}()
+
+		err = client.StartContainer(container.ID, &docker.HostConfig{})
+		if err != nil {
+			resp <- err
+			return
+		}
+
+		var buf bytes.Buffer
+		err = client.Logs(docker.LogsOptions{
+			Container:    container.ID,
+			OutputStream: &buf,
+			Follow:       true,
+			Stdout:       true,
+			Stderr:       true,
+			Timestamps:   false,
+		})
+
+		if buf.Len() == 0 {
+			resp <- errEmptyOutput
+			return
+		}
+
+		var msg *json.RawMessage
+		if err = json.Unmarshal(buf.Bytes(), &msg); err != nil {
+			resp <- err
+			return
+		}
+
+		log.Info("output sent")
+
+		resp <- msg
 	}()
 
-	var buf bytes.Buffer
-	err = client.Logs(docker.LogsOptions{
-		Container:    container.ID,
-		OutputStream: &buf,
-		Follow:       true,
-		Stdout:       true,
-		Stderr:       true,
-		Timestamps:   false,
-	})
-
-	if buf.Len() == 0 {
-		handleError(w, r, errEmptyOutput)
-		return
+	out := <-resp
+	switch out.(type) {
+	case error:
+		handleError(w, r, out.(error))
+	case *json.RawMessage:
+		outputJSON(w, r, http.StatusOK, out)
 	}
-
-	var resp *json.RawMessage
-	if err = json.Unmarshal(buf.Bytes(), &resp); err != nil {
-		handleError(w, r, err)
-		return
-	}
-
-	outputJSON(w, r, http.StatusOK, resp)
+	wg.Wait()
 }
 
 // checkRepo ensures that the matching username/repository exist on Github.
@@ -269,7 +292,7 @@ func getCacheIdentifier(r *http.Request) string {
 }
 
 func cacheOutput(r *http.Request, output []byte) {
-	const timeoutSeconds = 3600
+	const timeout = 60 * time.Minute
 
 	ps := context.Get(r, "params").(httprouter.Params)
 	logger := context.Get(r, "logger").(*log.Entry)
@@ -280,7 +303,7 @@ func cacheOutput(r *http.Request, output []byte) {
 		logger.Error(err)
 		return
 	}
-	if _, err := pool.Get().Do("EXPIRE", k, timeoutSeconds); err != nil {
+	if _, err := pool.Get().Do("EXPIRE", k, timeout); err != nil {
 		logger.Error(err)
 		return
 	}
