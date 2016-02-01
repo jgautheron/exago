@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/garyburd/redigo/redis"
+	"github.com/jgautheron/exago-service/config"
 )
 
 var (
@@ -11,7 +12,7 @@ var (
 )
 
 func init() {
-	pool = newPool(cfg.redisHost + ":6379")
+	pool = newPool(config.Get("RedisHost") + ":6379")
 }
 
 func newPool(server string) *redis.Pool {

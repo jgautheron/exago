@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -11,13 +10,16 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/fsouza/go-dockerclient"
 	"github.com/gorilla/context"
+	"github.com/jgautheron/exago-service/badge"
+	"github.com/jgautheron/exago-service/config"
+	"github.com/jgautheron/exago-service/datafetcher"
+	"github.com/jgautheron/exago-service/logger"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 )
@@ -25,9 +27,7 @@ import (
 var (
 	errInvalidParameter  = errors.New("Invalid parameter passed")
 	errInvalidRepository = errors.New("The repository doesn't contain Go code")
-	errEmptyOutput       = errors.New("The container output is empty")
-
-	cfg *config
+	errBadgeError        = errors.New("The badge cannot be fetched")
 
 	// Command line flags
 	flagVersion = flag.Bool("version", false, "show the version")
@@ -39,83 +39,95 @@ var (
 	buildDate string
 )
 
-type config struct {
-	githubAccessToken, awsAccessKeyID, awsSecretAccessKey string
-	runnerImageName                                       string
-	httpPort, redisHost                                   string
-}
-
-func init() {
-	cfg = &config{
-		// Should be overridable later by a logged in user
-		githubAccessToken:  os.Getenv("GITHUB_ACCESS_TOKEN"),
-		awsAccessKeyID:     os.Getenv("AWS_ACCESS_KEY_ID"),
-		awsSecretAccessKey: os.Getenv("AWS_SECRET_ACCESS_KEY"),
-		runnerImageName:    os.Getenv("RUNNER_IMAGE_NAME"),
-		httpPort:           os.Getenv("HTTP_PORT"),
-		redisHost:          os.Getenv("REDIS_HOST"),
-	}
-}
-
 func main() {
+	var err error
+
 	flag.Parse()
 	if *flagVersion {
 		fmt.Fprintf(os.Stdout, "Running version "+buildTag+" built on "+buildDate)
 		return
 	}
 
-	// Basic validation
-	if cfg.githubAccessToken == "" ||
-		cfg.awsAccessKeyID == "" ||
-		cfg.awsSecretAccessKey == "" ||
-		cfg.httpPort == "" ||
-		cfg.redisHost == "" {
-		log.Fatal("Missing environment variable(s)")
+	err = config.SetUp()
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = logger.SetUp()
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository, checkCache)
 	router := NewRouter()
+
+	router.Get("/:registry/:username/:repository/badge/:type", repoHandlers.ThenFunc(badgeHandler))
 
 	router.Get("/:registry/:username/:repository/valid", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/:registry/:username/:repository/loc", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/imports", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/lint/:linter", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/test", repoHandlers.ThenFunc(testHandler))
+	// router.Get("/:registry/:username/:repository/rank", repoHandlers.ThenFunc(rankHandler))
 	router.Get("/:registry/:username/:repository/contents/*path", repoHandlers.ThenFunc(fileHandler))
 
-	log.Info("Listening on port " + cfg.httpPort)
-	if err := http.ListenAndServe(":"+cfg.httpPort, router); err != nil {
+	hp := config.Get("HttpPort")
+	log.Info("Listening on port " + hp)
+	if err := http.ListenAndServe(":"+hp, router); err != nil {
 		log.Fatal(err)
 	}
 }
 
+func badgeHandler(w http.ResponseWriter, r *http.Request) {
+	ps := context.Get(r, "params").(httprouter.Params)
+	tp := ps.ByName("type")
+
+	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+	switch tp {
+	case "imports":
+		out, err := datafetcher.GetImports(rp)
+		if err != nil {
+			badge.WriteError(w, tp)
+			return
+		}
+		var data []string
+		err = json.Unmarshal(*out.Data, &data)
+		if err != nil {
+			badge.WriteError(w, tp)
+			return
+		}
+
+		ln := strconv.Itoa(len(data))
+		badge.Write(w, "imports", ln, "blue")
+	}
+}
+
+func rankHandler(w http.ResponseWriter, r *http.Request) {
+	ps := context.Get(r, "params").(httprouter.Params)
+	log.Info(ps)
+}
+
 func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
+
 	lambdaFn := strings.Split(r.URL.String()[1:], "/")[3]
-	linter := ps.ByName("linter")
+	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 
-	ctxt := lambdaContext{
-		Registry:   ps.ByName("registry"),
-		Username:   ps.ByName("username"),
-		Repository: ps.ByName("repository"),
-	}
+	var out datafetcher.LambdaResponse
+	var err error
 
-	// Specific handling depending of the lambda function
 	switch lambdaFn {
+	case "imports":
+		out, err = datafetcher.GetImports(rp)
+	case "loc":
+		out, err = datafetcher.GetCodeStats(rp)
 	case "lint":
-		ctxt.Linters = linter
+		out, err = datafetcher.GetLintResults(rp, ps.ByName("lint"))
 	}
 
-	resp, err := callLambdaFn(lambdaFn, ctxt)
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
-
-	logger := context.Get(r, "logger").(*log.Entry)
-	logger.Infoln(lambdaFn, resp.Metadata)
-
-	outputJSON(w, r, http.StatusOK, resp.Data)
+	// lgr := context.Get(r, "logger").(*log.Entry)
+	// lgr.WithField("fn", lambdaFn).Info(out.Metadata)
+	send(w, r, out, err)
 }
 
 func repoValidHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,127 +139,26 @@ func repoValidHandler(w http.ResponseWriter, r *http.Request) {
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
-	username, repository, path := ps.ByName("username"), ps.ByName("repository"), ps.ByName("path")
+	lgr := context.Get(r, "logger").(*log.Entry)
 
-	// Only github implemented for now
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s?access_token=%s", username, repository, path, cfg.githubAccessToken)
-
-	resp, err := http.Get(url)
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
-	defer func() {
-		err := resp.Body.Close()
-		if err != nil {
-			log.Error(err)
-		}
-	}()
-
-	raw, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
-
-	var data map[string]interface{}
-	if err = json.Unmarshal(raw, &data); err != nil {
-		handleError(w, r, err)
-		return
-	}
-
-	contents, err := base64.StdEncoding.DecodeString(data["content"].(string))
-	if err != nil {
-		handleError(w, r, err)
-		return
-	}
-
-	outputJSON(w, r, http.StatusOK, string(contents))
+	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+	out, err := datafetcher.GetFileContents(lgr, rp, ps.ByName("path")[1:])
+	send(w, r, out, err)
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
-	logger := context.Get(r, "logger").(*log.Entry)
-	registry, username, repository := ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository")
+	lgr := context.Get(r, "logger").(*log.Entry)
 
-	resp := make(chan interface{})
-	var wg sync.WaitGroup
-
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-
-		client, _ := docker.NewClientFromEnv()
-		config := docker.Config{
-			Image: cfg.runnerImageName,
-			Cmd: []string{
-				fmt.Sprintf("%s/%s/%s", registry, username, repository),
-			},
-		}
-
-		rp := fmt.Sprintf("%s-%s-%s", registry, username, repository)
-		opts := docker.CreateContainerOptions{Name: "exago-runner-" + rp, Config: &config}
-		container, err := client.CreateContainer(opts)
-		if err != nil {
-			log.Errorln(err, "exago-runner-"+rp)
-			resp <- err
-			return
-		}
-
-		defer func() {
-			err = client.RemoveContainer(docker.RemoveContainerOptions{ID: container.ID})
-			if err != nil {
-				logger.Error(err)
-				return
-			}
-		}()
-
-		err = client.StartContainer(container.ID, &docker.HostConfig{})
-		if err != nil {
-			resp <- err
-			return
-		}
-
-		var buf bytes.Buffer
-		err = client.Logs(docker.LogsOptions{
-			Container:    container.ID,
-			OutputStream: &buf,
-			Follow:       true,
-			Stdout:       true,
-			Stderr:       true,
-			Timestamps:   false,
-		})
-
-		if buf.Len() == 0 {
-			resp <- errEmptyOutput
-			return
-		}
-
-		var msg *json.RawMessage
-		if err = json.Unmarshal(buf.Bytes(), &msg); err != nil {
-			resp <- err
-			return
-		}
-
-		log.Info("output sent")
-
-		resp <- msg
-	}()
-
-	out := <-resp
-	switch out.(type) {
-	case error:
-		handleError(w, r, out.(error))
-	case *json.RawMessage:
-		outputJSON(w, r, http.StatusOK, out)
-	}
-	wg.Wait()
+	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+	out, err := datafetcher.GetCoverage(lgr, rp)
+	send(w, r, out, err)
 }
 
 // checkRepo ensures that the matching username/repository exist on Github.
 func checkRepo(r *http.Request, username, repository string) (int, error) {
 	var err error
-	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/languages?access_token=%s", username, repository, cfg.githubAccessToken)
+	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/languages?access_token=%s", username, repository, config.Get("GithubAccessToken"))
 
 	resp, err := http.Get(url)
 	if err != nil {
@@ -270,8 +181,8 @@ func checkRepo(r *http.Request, username, repository string) (int, error) {
 	}
 
 	if _, found := data["Go"]; !found {
-		logger := context.Get(r, "logger").(*log.Entry)
-		logger.Info("Not a Go repository")
+		lgr := context.Get(r, "logger").(*log.Entry)
+		lgr.Info("Not a Go repository")
 		return http.StatusNotAcceptable, errInvalidRepository
 	}
 
@@ -292,20 +203,28 @@ func getCacheIdentifier(r *http.Request) string {
 }
 
 func cacheOutput(r *http.Request, output []byte) {
-	const timeout = 60 * time.Minute
+	const timeout = 2 * time.Hour
 
 	ps := context.Get(r, "params").(httprouter.Params)
-	logger := context.Get(r, "logger").(*log.Entry)
+	lgr := context.Get(r, "logger").(*log.Entry)
 
 	idfr := getCacheIdentifier(r)
 	k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 	if _, err := pool.Get().Do("HMSET", k, idfr, output); err != nil {
-		logger.Error(err)
+		lgr.Error(err)
 		return
 	}
 	if _, err := pool.Get().Do("EXPIRE", k, timeout); err != nil {
-		logger.Error(err)
+		lgr.Error(err)
 		return
+	}
+}
+
+func send(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
+	if err == nil {
+		outputJSON(w, r, http.StatusOK, data)
+	} else {
+		handleError(w, r, err)
 	}
 }
 
@@ -315,7 +234,7 @@ func cacheOutput(r *http.Request, output []byte) {
 func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	var err error
 
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)
@@ -357,17 +276,6 @@ func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface
 	}
 
 	if _, err = w.Write(b.Bytes()); err != nil {
-		handleError(w, r, err)
-	}
-}
-
-func outputFromCache(w http.ResponseWriter, r *http.Request, code int, output []byte) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	w.Header().Set("Content-Type", "application/json")
-	w.Header().Set("Content-Encoding", "gzip")
-	w.WriteHeader(code)
-
-	if _, err := w.Write(output); err != nil {
 		handleError(w, r, err)
 	}
 }

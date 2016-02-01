@@ -3,13 +3,14 @@ package main
 import (
 	"net/http"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
 
-// - handler return data, err (output automatically jsend)
-// - jsend
-// - context
+// TODO:
+// - handlers: return data, err (output automatically jsend)
+// - pass context.Context to the handlers
 
 // Router wraps httprouter.Router.
 type Router struct {
@@ -47,4 +48,24 @@ func (wrt cstMethodNotAllowed) ServeHTTP(w http.ResponseWriter, r *http.Request)
 // ServeHTTP is a custom handler for the 404 error
 func (wrt cstNotFound) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	outputJSON(w, r, http.StatusNotFound, "Not found")
+}
+
+// badRequest is handled by setting the status code in the reply to StatusBadRequest.
+type badRequest struct{ error }
+
+// notFound is handled by setting the status code in the reply to StatusNotFound.
+type notFound struct{ error }
+
+func handleError(w http.ResponseWriter, r *http.Request, err error) {
+	logger := context.Get(r, "logger").(*log.Entry)
+	logger.Error(err)
+
+	switch err.(type) {
+	case badRequest:
+		outputJSON(w, r, http.StatusBadRequest, err.Error())
+	case notFound:
+		outputJSON(w, r, http.StatusNotFound, err.Error())
+	default:
+		outputJSON(w, r, http.StatusInternalServerError, err.Error())
+	}
 }

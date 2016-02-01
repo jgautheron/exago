@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
-	"net"
 	"net/http"
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
+	"github.com/jgautheron/exago-service/config"
+	"github.com/jgautheron/exago-service/logger"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -22,7 +23,6 @@ func recoverHandler(next http.Handler) http.Handler {
 
 		next.ServeHTTP(w, r)
 	}
-
 	return http.HandlerFunc(fn)
 }
 
@@ -74,32 +74,25 @@ func checkCache(next http.Handler) http.Handler {
 			return
 		}
 		lgr.Infoln(k, idfr, "cache hit")
-		outputFromCache(w, r, http.StatusOK, o.([]byte))
+
+		// Output straight from the cache
+		w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Encoding", "gzip")
+		w.WriteHeader(http.StatusOK)
+
+		if _, err := w.Write(o.([]byte)); err != nil {
+			handleError(w, r, err)
+		}
 	}
 	return http.HandlerFunc(fn)
 }
 
 func setLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		params := context.Get(r, "params").(httprouter.Params)
-		registry, username, repository := params.ByName("registry"), params.ByName("username"), params.ByName("repository")
-
-		// Retrieve the user IP
-		ip, _, err := net.SplitHostPort(r.RemoteAddr)
-		if err != nil {
-			handleError(w, r, fmt.Errorf("userip: %q is not IP:port", r.RemoteAddr))
-			return
-		}
-
-		// Set the logging context
-		logger := log.WithFields(log.Fields{
-			"registry":   registry,
-			"username":   username,
-			"repository": repository,
-			"ip":         ip,
-		})
-
-		context.Set(r, "logger", logger)
+		ps := context.Get(r, "params").(httprouter.Params)
+		rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+		context.Set(r, "logger", logger.With(rp, r.RemoteAddr))
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)

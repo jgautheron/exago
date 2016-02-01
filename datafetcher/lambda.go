@@ -1,4 +1,4 @@
-package main
+package datafetcher
 
 import (
 	"encoding/json"
@@ -7,6 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
+	"github.com/jgautheron/exago-service/config"
 )
 
 const (
@@ -22,14 +23,23 @@ type lambdaContext struct {
 	Indexes    string `json:"indexes,omitempty"`
 }
 
-type lambdaResponse struct {
+type LambdaResponse struct {
 	Data     *json.RawMessage       `json:"data"`
 	Metadata map[string]interface{} `json:"_metadata"`
 }
 
-func callLambdaFn(fn string, ctxt lambdaContext) (resp lambdaResponse, err error) {
-	creds := credentials.NewStaticCredentials(cfg.awsAccessKeyID, cfg.awsSecretAccessKey, "")
-	svc := lambda.New(session.New(), aws.NewConfig().WithRegion(lambdaRegion).WithCredentials(creds))
+func callLambdaFn(fn string, ctxt lambdaContext) (resp LambdaResponse, err error) {
+	creds := credentials.NewStaticCredentials(
+		config.Get("AwsAccessKeyID"),
+		config.Get("AwsSecretAccessKey"),
+		"",
+	)
+	svc := lambda.New(
+		session.New(),
+		aws.NewConfig().
+			WithRegion(lambdaRegion).
+			WithCredentials(creds),
+	)
 
 	payload, _ := json.Marshal(ctxt)
 
