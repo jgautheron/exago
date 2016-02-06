@@ -23,8 +23,8 @@ dependencies:
     - sudo rm -rf /usr/local/go
     - sudo ln -snf $HOME/goinstall /usr/local/go
     - go version
-    - go get github.com/alecthomas/gometalinter
-    - gometalinter --install
+    #- go get github.com/alecthomas/gometalinter
+    #- gometalinter --install
   override:
     - echo "nothing to do here"
 
@@ -37,7 +37,7 @@ test:
   override:
     - pwd
     - make build
-    - ./exago -version
+    #- ./exago -version
     #- make check
     - make test
 
