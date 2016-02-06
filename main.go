@@ -12,7 +12,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
@@ -202,7 +201,7 @@ func getCacheIdentifier(r *http.Request) string {
 }
 
 func cacheOutput(r *http.Request, output []byte) {
-	const timeout = 2 * time.Hour
+	const timeout = 2 * 3600
 
 	ps := context.Get(r, "params").(httprouter.Params)
 	lgr := context.Get(r, "logger").(*log.Entry)
@@ -234,7 +233,7 @@ func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface
 	var err error
 
 	// w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
-	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)
@@ -273,7 +272,6 @@ func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface
 
 	if success {
 		cacheOutput(r, b.Bytes())
-		// cacheDynamo(r, b.Bytes())
 	}
 
 	if _, err = w.Write(b.Bytes()); err != nil {
