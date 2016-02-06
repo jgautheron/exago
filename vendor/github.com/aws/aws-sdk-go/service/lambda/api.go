@@ -9,6 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws/awsutil"
 	"github.com/aws/aws-sdk-go/aws/request"
+	"github.com/aws/aws-sdk-go/private/protocol"
+	"github.com/aws/aws-sdk-go/private/protocol/restjson"
 )
 
 const opAddPermission = "AddPermission"
@@ -175,6 +177,8 @@ func (c *Lambda) DeleteAliasRequest(input *DeleteAliasInput) (req *request.Reque
 	}
 
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	output = &DeleteAliasOutput{}
 	req.Data = output
 	return
@@ -236,6 +240,8 @@ func (c *Lambda) DeleteFunctionRequest(input *DeleteFunctionInput) (req *request
 	}
 
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	output = &DeleteFunctionOutput{}
 	req.Data = output
 	return
@@ -578,6 +584,7 @@ func (c *Lambda) ListEventSourceMappings(input *ListEventSourceMappingsInput) (*
 
 func (c *Lambda) ListEventSourceMappingsPages(input *ListEventSourceMappingsInput, fn func(p *ListEventSourceMappingsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListEventSourceMappingsRequest(input)
+	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
 	return page.EachPage(func(p interface{}, lastPage bool) bool {
 		return fn(p.(*ListEventSourceMappingsOutput), lastPage)
 	})
@@ -622,6 +629,7 @@ func (c *Lambda) ListFunctions(input *ListFunctionsInput) (*ListFunctionsOutput,
 
 func (c *Lambda) ListFunctionsPages(input *ListFunctionsInput, fn func(p *ListFunctionsOutput, lastPage bool) (shouldContinue bool)) error {
 	page, _ := c.ListFunctionsRequest(input)
+	page.Handlers.Build.PushBack(request.MakeAddToUserAgentFreeFormHandler("Paginator"))
 	return page.EachPage(func(p interface{}, lastPage bool) bool {
 		return fn(p.(*ListFunctionsOutput), lastPage)
 	})
@@ -700,6 +708,8 @@ func (c *Lambda) RemovePermissionRequest(input *RemovePermissionInput) (req *req
 	}
 
 	req = c.newRequest(op, input, output)
+	req.Handlers.Unmarshal.Remove(restjson.UnmarshalHandler)
+	req.Handlers.Unmarshal.PushBackNamed(protocol.UnmarshalDiscardBodyHandler)
 	output = &RemovePermissionOutput{}
 	req.Data = output
 	return
@@ -849,6 +859,8 @@ func (c *Lambda) UpdateFunctionConfiguration(input *UpdateFunctionConfigurationI
 }
 
 type AddPermissionInput struct {
+	_ struct{} `type:"structure"`
+
 	// The AWS Lambda action you want to allow in this statement. Each Lambda action
 	// is a string starting with "lambda:" followed by the API name (see Operations).
 	// For example, "lambda:CreateFunction". You can use wildcard ("lambda:*") to
@@ -913,12 +925,6 @@ type AddPermissionInput struct {
 
 	// A unique statement identifier.
 	StatementId *string `min:"1" type:"string" required:"true"`
-
-	metadataAddPermissionInput `json:"-" xml:"-"`
-}
-
-type metadataAddPermissionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -932,15 +938,11 @@ func (s AddPermissionInput) GoString() string {
 }
 
 type AddPermissionOutput struct {
+	_ struct{} `type:"structure"`
+
 	// The permission statement you specified in the request. The response returns
 	// the same as a string using "\" as an escape character in the JSON.
 	Statement *string `type:"string"`
-
-	metadataAddPermissionOutput `json:"-" xml:"-"`
-}
-
-type metadataAddPermissionOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -955,6 +957,8 @@ func (s AddPermissionOutput) GoString() string {
 
 // Provides configuration information about a Lambda function version alias.
 type AliasConfiguration struct {
+	_ struct{} `type:"structure"`
+
 	// Lambda function ARN that is qualified using alias name as the suffix. For
 	// example, if you create an alias "BETA" pointing to a helloworld function
 	// version, the ARN is arn:aws:lambda:aws-regions:acct-id:function:helloworld:BETA.
@@ -968,12 +972,6 @@ type AliasConfiguration struct {
 
 	// Alias name.
 	Name *string `min:"1" type:"string"`
-
-	metadataAliasConfiguration `json:"-" xml:"-"`
-}
-
-type metadataAliasConfiguration struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -987,6 +985,8 @@ func (s AliasConfiguration) GoString() string {
 }
 
 type CreateAliasInput struct {
+	_ struct{} `type:"structure"`
+
 	// Description of the alias.
 	Description *string `type:"string"`
 
@@ -998,12 +998,6 @@ type CreateAliasInput struct {
 
 	// Name for the alias your creating.
 	Name *string `min:"1" type:"string" required:"true"`
-
-	metadataCreateAliasInput `json:"-" xml:"-"`
-}
-
-type metadataCreateAliasInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1017,6 +1011,8 @@ func (s CreateAliasInput) GoString() string {
 }
 
 type CreateEventSourceMappingInput struct {
+	_ struct{} `type:"structure"`
+
 	// The largest number of records that AWS Lambda will retrieve from your event
 	// source at the time of invoking your function. Your function receives an event
 	// with all the retrieved records. The default is 100 records.
@@ -1047,12 +1043,6 @@ type CreateEventSourceMappingInput struct {
 	// information, go to ShardIteratorType (http://docs.aws.amazon.com/kinesis/latest/APIReference/API_GetShardIterator.html#Kinesis-GetShardIterator-request-ShardIteratorType)
 	// in the Amazon Kinesis API Reference.
 	StartingPosition *string `type:"string" required:"true" enum:"EventSourcePosition"`
-
-	metadataCreateEventSourceMappingInput `json:"-" xml:"-"`
-}
-
-type metadataCreateEventSourceMappingInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1066,6 +1056,8 @@ func (s CreateEventSourceMappingInput) GoString() string {
 }
 
 type CreateFunctionInput struct {
+	_ struct{} `type:"structure"`
+
 	// The code for the Lambda function.
 	Code *FunctionCode `type:"structure" required:"true"`
 
@@ -1115,12 +1107,6 @@ type CreateFunctionInput struct {
 	// Because the execution time has cost implications, we recommend you set this
 	// value based on your expected execution time. The default is 3 seconds.
 	Timeout *int64 `min:"1" type:"integer"`
-
-	metadataCreateFunctionInput `json:"-" xml:"-"`
-}
-
-type metadataCreateFunctionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1134,17 +1120,13 @@ func (s CreateFunctionInput) GoString() string {
 }
 
 type DeleteAliasInput struct {
+	_ struct{} `type:"structure"`
+
 	// The Lambda function name for which the alias is created.
 	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
 
 	// Name of the alias to delete.
 	Name *string `location:"uri" locationName:"Name" min:"1" type:"string" required:"true"`
-
-	metadataDeleteAliasInput `json:"-" xml:"-"`
-}
-
-type metadataDeleteAliasInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1158,11 +1140,7 @@ func (s DeleteAliasInput) GoString() string {
 }
 
 type DeleteAliasOutput struct {
-	metadataDeleteAliasOutput `json:"-" xml:"-"`
-}
-
-type metadataDeleteAliasOutput struct {
-	SDKShapeTraits bool `type:"structure"`
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
@@ -1176,14 +1154,10 @@ func (s DeleteAliasOutput) GoString() string {
 }
 
 type DeleteEventSourceMappingInput struct {
+	_ struct{} `type:"structure"`
+
 	// The event source mapping ID.
 	UUID *string `location:"uri" locationName:"UUID" type:"string" required:"true"`
-
-	metadataDeleteEventSourceMappingInput `json:"-" xml:"-"`
-}
-
-type metadataDeleteEventSourceMappingInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1197,6 +1171,8 @@ func (s DeleteEventSourceMappingInput) GoString() string {
 }
 
 type DeleteFunctionInput struct {
+	_ struct{} `type:"structure"`
+
 	// The Lambda function to delete.
 	//
 	//  You can specify an unqualified function name (for example, "Thumbnail")
@@ -1221,12 +1197,6 @@ type DeleteFunctionInput struct {
 	// If you don't specify this parameter, AWS Lambda will delete the function,
 	// including all its versions and aliases.
 	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
-
-	metadataDeleteFunctionInput `json:"-" xml:"-"`
-}
-
-type metadataDeleteFunctionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1240,11 +1210,7 @@ func (s DeleteFunctionInput) GoString() string {
 }
 
 type DeleteFunctionOutput struct {
-	metadataDeleteFunctionOutput `json:"-" xml:"-"`
-}
-
-type metadataDeleteFunctionOutput struct {
-	SDKShapeTraits bool `type:"structure"`
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
@@ -1259,6 +1225,8 @@ func (s DeleteFunctionOutput) GoString() string {
 
 // Describes mapping between an Amazon Kinesis stream and a Lambda function.
 type EventSourceMappingConfiguration struct {
+	_ struct{} `type:"structure"`
+
 	// The largest number of records that AWS Lambda will retrieve from your event
 	// source at the time of invoking your function. Your function receives an event
 	// with all the retrieved records.
@@ -1287,12 +1255,6 @@ type EventSourceMappingConfiguration struct {
 
 	// The AWS Lambda assigned opaque identifier for the mapping.
 	UUID *string `type:"string"`
-
-	metadataEventSourceMappingConfiguration `json:"-" xml:"-"`
-}
-
-type metadataEventSourceMappingConfiguration struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1307,6 +1269,8 @@ func (s EventSourceMappingConfiguration) GoString() string {
 
 // The code for the Lambda function.
 type FunctionCode struct {
+	_ struct{} `type:"structure"`
+
 	// Amazon S3 bucket name where the .zip file containing your deployment package
 	// is stored. This bucket must reside in the same AWS region where you are creating
 	// the Lambda function.
@@ -1322,12 +1286,6 @@ type FunctionCode struct {
 	// about creating a .zip file, go to Execution Permissions (http://docs.aws.amazon.com/lambda/latest/dg/intro-permission-model.html#lambda-intro-execution-role.html)
 	// in the AWS Lambda Developer Guide.
 	ZipFile []byte `type:"blob"`
-
-	metadataFunctionCode `json:"-" xml:"-"`
-}
-
-type metadataFunctionCode struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1342,18 +1300,14 @@ func (s FunctionCode) GoString() string {
 
 // The object for the Lambda function location.
 type FunctionCodeLocation struct {
+	_ struct{} `type:"structure"`
+
 	// The presigned URL you can use to download the function's .zip file that you
 	// previously uploaded. The URL is valid for up to 10 minutes.
 	Location *string `type:"string"`
 
 	// The repository from which you can download the function.
 	RepositoryType *string `type:"string"`
-
-	metadataFunctionCodeLocation `json:"-" xml:"-"`
-}
-
-type metadataFunctionCodeLocation struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1368,6 +1322,8 @@ func (s FunctionCodeLocation) GoString() string {
 
 // A complex type that describes function metadata.
 type FunctionConfiguration struct {
+	_ struct{} `type:"structure"`
+
 	// It is the SHA256 hash of your function deployment package.
 	CodeSha256 *string `type:"string"`
 
@@ -1407,12 +1363,6 @@ type FunctionConfiguration struct {
 
 	// The version of the Lambda function.
 	Version *string `min:"1" type:"string"`
-
-	metadataFunctionConfiguration `json:"-" xml:"-"`
-}
-
-type metadataFunctionConfiguration struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1426,6 +1376,8 @@ func (s FunctionConfiguration) GoString() string {
 }
 
 type GetAliasInput struct {
+	_ struct{} `type:"structure"`
+
 	// Function name for which the alias is created. An alias is a subresource that
 	// exists only in the context of an existing Lambda function. So you must specify
 	// the function name.
@@ -1433,12 +1385,6 @@ type GetAliasInput struct {
 
 	// Name of the alias for which you want to retrieve information.
 	Name *string `location:"uri" locationName:"Name" min:"1" type:"string" required:"true"`
-
-	metadataGetAliasInput `json:"-" xml:"-"`
-}
-
-type metadataGetAliasInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1452,14 +1398,10 @@ func (s GetAliasInput) GoString() string {
 }
 
 type GetEventSourceMappingInput struct {
+	_ struct{} `type:"structure"`
+
 	// The AWS Lambda assigned ID of the event source mapping.
 	UUID *string `location:"uri" locationName:"UUID" type:"string" required:"true"`
-
-	metadataGetEventSourceMappingInput `json:"-" xml:"-"`
-}
-
-type metadataGetEventSourceMappingInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1473,6 +1415,8 @@ func (s GetEventSourceMappingInput) GoString() string {
 }
 
 type GetFunctionConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
 	// The name of the Lambda function for which you want to retrieve the configuration
 	// information.
 	//
@@ -1493,12 +1437,6 @@ type GetFunctionConfigurationInput struct {
 	// If you don't specify this parameter, the API uses unqualified function ARN,
 	// and returns information about the $LATEST function version.
 	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
-
-	metadataGetFunctionConfigurationInput `json:"-" xml:"-"`
-}
-
-type metadataGetFunctionConfigurationInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1512,6 +1450,8 @@ func (s GetFunctionConfigurationInput) GoString() string {
 }
 
 type GetFunctionInput struct {
+	_ struct{} `type:"structure"`
+
 	// The Lambda function name.
 	//
 	//  You can specify an unqualified function name (for example, "Thumbnail")
@@ -1530,12 +1470,6 @@ type GetFunctionInput struct {
 	// this parameter, the API uses unqualified function ARN and returns information
 	// about the $LATEST version of the Lambda function.
 	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
-
-	metadataGetFunctionInput `json:"-" xml:"-"`
-}
-
-type metadataGetFunctionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1550,17 +1484,13 @@ func (s GetFunctionInput) GoString() string {
 
 // This response contains the object for the Lambda function location (see API_FunctionCodeLocation
 type GetFunctionOutput struct {
+	_ struct{} `type:"structure"`
+
 	// The object for the Lambda function location.
 	Code *FunctionCodeLocation `type:"structure"`
 
 	// A complex type that describes function metadata.
 	Configuration *FunctionConfiguration `type:"structure"`
-
-	metadataGetFunctionOutput `json:"-" xml:"-"`
-}
-
-type metadataGetFunctionOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1574,6 +1504,8 @@ func (s GetFunctionOutput) GoString() string {
 }
 
 type GetPolicyInput struct {
+	_ struct{} `type:"structure"`
+
 	// Function name whose resource policy you want to retrieve.
 	//
 	//  You can specify an unqualified function name (for example, "Thumbnail")
@@ -1589,12 +1521,6 @@ type GetPolicyInput struct {
 	// with the specific ARN. If you don't provide this parameter, the API will
 	// return permissions that apply to the unqualified function ARN.
 	Qualifier *string `min:"1" type:"string"`
-
-	metadataGetPolicyInput `json:"-" xml:"-"`
-}
-
-type metadataGetPolicyInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1608,15 +1534,11 @@ func (s GetPolicyInput) GoString() string {
 }
 
 type GetPolicyOutput struct {
+	_ struct{} `type:"structure"`
+
 	// The resource policy associated with the specified function. The response
 	// returns the same as a string using "\" as an escape character in the JSON.
 	Policy *string `type:"string"`
-
-	metadataGetPolicyOutput `json:"-" xml:"-"`
-}
-
-type metadataGetPolicyOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1630,17 +1552,13 @@ func (s GetPolicyOutput) GoString() string {
 }
 
 type InvokeAsyncInput struct {
+	_ struct{} `type:"structure" payload:"InvokeArgs"`
+
 	// The Lambda function name.
 	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
 
 	// JSON that you want to provide to your Lambda function as input.
 	InvokeArgs io.ReadSeeker `type:"blob" required:"true"`
-
-	metadataInvokeAsyncInput `json:"-" xml:"-"`
-}
-
-type metadataInvokeAsyncInput struct {
-	SDKShapeTraits bool `type:"structure" payload:"InvokeArgs"`
 }
 
 // String returns the string representation
@@ -1655,14 +1573,10 @@ func (s InvokeAsyncInput) GoString() string {
 
 // Upon success, it returns empty response. Otherwise, throws an exception.
 type InvokeAsyncOutput struct {
+	_ struct{} `type:"structure"`
+
 	// It will be 202 upon success.
 	Status *int64 `location:"statusCode" type:"integer"`
-
-	metadataInvokeAsyncOutput `json:"-" xml:"-"`
-}
-
-type metadataInvokeAsyncOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1676,6 +1590,8 @@ func (s InvokeAsyncOutput) GoString() string {
 }
 
 type InvokeInput struct {
+	_ struct{} `type:"structure" payload:"Payload"`
+
 	// Using the ClientContext you can pass client-specific information to the Lambda
 	// function you are invoking. You can then process the client information in
 	// your Lambda function as you choose through the context variable. For an example
@@ -1722,12 +1638,6 @@ type InvokeInput struct {
 	// If you don't provide this parameter, then the API uses unqualified function
 	// ARN which results in invocation of the $LATEST version.
 	Qualifier *string `location:"querystring" locationName:"Qualifier" min:"1" type:"string"`
-
-	metadataInvokeInput `json:"-" xml:"-"`
-}
-
-type metadataInvokeInput struct {
-	SDKShapeTraits bool `type:"structure" payload:"Payload"`
 }
 
 // String returns the string representation
@@ -1742,6 +1652,8 @@ func (s InvokeInput) GoString() string {
 
 // Upon success, returns an empty response. Otherwise, throws an exception.
 type InvokeOutput struct {
+	_ struct{} `type:"structure" payload:"Payload"`
+
 	// Indicates whether an error occurred while executing the Lambda function.
 	// If an error occurred this field will have one of two values; Handled or Unhandled.
 	// Handled errors are errors that are reported by the function while the Unhandled
@@ -1768,12 +1680,6 @@ type InvokeOutput struct {
 	// "Event" invocation type this status code will be 202. For the "DryRun" invocation
 	// type the status code will be 204.
 	StatusCode *int64 `location:"statusCode" type:"integer"`
-
-	metadataInvokeOutput `json:"-" xml:"-"`
-}
-
-type metadataInvokeOutput struct {
-	SDKShapeTraits bool `type:"structure" payload:"Payload"`
 }
 
 // String returns the string representation
@@ -1787,6 +1693,8 @@ func (s InvokeOutput) GoString() string {
 }
 
 type ListAliasesInput struct {
+	_ struct{} `type:"structure"`
+
 	// Lambda function name for which the alias is created.
 	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
 
@@ -1802,12 +1710,6 @@ type ListAliasesInput struct {
 	// Optional integer. Specifies the maximum number of aliases to return in response.
 	// This parameter value must be greater than 0.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
-
-	metadataListAliasesInput `json:"-" xml:"-"`
-}
-
-type metadataListAliasesInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1821,17 +1723,13 @@ func (s ListAliasesInput) GoString() string {
 }
 
 type ListAliasesOutput struct {
+	_ struct{} `type:"structure"`
+
 	// An list of alises.
 	Aliases []*AliasConfiguration `type:"list"`
 
 	// A string, present if there are more aliases.
 	NextMarker *string `type:"string"`
-
-	metadataListAliasesOutput `json:"-" xml:"-"`
-}
-
-type metadataListAliasesOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1845,6 +1743,8 @@ func (s ListAliasesOutput) GoString() string {
 }
 
 type ListEventSourceMappingsInput struct {
+	_ struct{} `type:"structure"`
+
 	// The Amazon Resource Name (ARN) of the Amazon Kinesis stream.
 	EventSourceArn *string `location:"querystring" locationName:"EventSourceArn" type:"string"`
 
@@ -1866,12 +1766,6 @@ type ListEventSourceMappingsInput struct {
 	// Optional integer. Specifies the maximum number of event sources to return
 	// in response. This value must be greater than 0.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
-
-	metadataListEventSourceMappingsInput `json:"-" xml:"-"`
-}
-
-type metadataListEventSourceMappingsInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1886,17 +1780,13 @@ func (s ListEventSourceMappingsInput) GoString() string {
 
 // Contains a list of event sources (see API_EventSourceMappingConfiguration)
 type ListEventSourceMappingsOutput struct {
+	_ struct{} `type:"structure"`
+
 	// An array of EventSourceMappingConfiguration objects.
 	EventSourceMappings []*EventSourceMappingConfiguration `type:"list"`
 
 	// A string, present if there are more event source mappings.
 	NextMarker *string `type:"string"`
-
-	metadataListEventSourceMappingsOutput `json:"-" xml:"-"`
-}
-
-type metadataListEventSourceMappingsOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1910,6 +1800,8 @@ func (s ListEventSourceMappingsOutput) GoString() string {
 }
 
 type ListFunctionsInput struct {
+	_ struct{} `type:"structure"`
+
 	// Optional string. An opaque pagination token returned from a previous ListFunctions
 	// operation. If present, indicates where to continue the listing.
 	Marker *string `location:"querystring" locationName:"Marker" type:"string"`
@@ -1917,12 +1809,6 @@ type ListFunctionsInput struct {
 	// Optional integer. Specifies the maximum number of AWS Lambda functions to
 	// return in response. This parameter value must be greater than 0.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
-
-	metadataListFunctionsInput `json:"-" xml:"-"`
-}
-
-type metadataListFunctionsInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1937,17 +1823,13 @@ func (s ListFunctionsInput) GoString() string {
 
 // Contains a list of AWS Lambda function configurations (see FunctionConfiguration.
 type ListFunctionsOutput struct {
+	_ struct{} `type:"structure"`
+
 	// A list of Lambda functions.
 	Functions []*FunctionConfiguration `type:"list"`
 
 	// A string, present if there are more functions.
 	NextMarker *string `type:"string"`
-
-	metadataListFunctionsOutput `json:"-" xml:"-"`
-}
-
-type metadataListFunctionsOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1961,6 +1843,8 @@ func (s ListFunctionsOutput) GoString() string {
 }
 
 type ListVersionsByFunctionInput struct {
+	_ struct{} `type:"structure"`
+
 	// Function name whose versions to list. You can specify an unqualified function
 	// name (for example, "Thumbnail") or you can specify Amazon Resource Name (ARN)
 	// of the function (for example, "arn:aws:lambda:us-west-2:account-id:function:ThumbNail").
@@ -1977,12 +1861,6 @@ type ListVersionsByFunctionInput struct {
 	// Optional integer. Specifies the maximum number of AWS Lambda function versions
 	// to return in response. This parameter value must be greater than 0.
 	MaxItems *int64 `location:"querystring" locationName:"MaxItems" min:"1" type:"integer"`
-
-	metadataListVersionsByFunctionInput `json:"-" xml:"-"`
-}
-
-type metadataListVersionsByFunctionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -1996,17 +1874,13 @@ func (s ListVersionsByFunctionInput) GoString() string {
 }
 
 type ListVersionsByFunctionOutput struct {
+	_ struct{} `type:"structure"`
+
 	// A string, present if there are more function versions.
 	NextMarker *string `type:"string"`
 
 	// A list of Lambda function versions.
 	Versions []*FunctionConfiguration `type:"list"`
-
-	metadataListVersionsByFunctionOutput `json:"-" xml:"-"`
-}
-
-type metadataListVersionsByFunctionOutput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -2020,6 +1894,8 @@ func (s ListVersionsByFunctionOutput) GoString() string {
 }
 
 type PublishVersionInput struct {
+	_ struct{} `type:"structure"`
+
 	// The SHA256 hash of the deployment package you want to publish. This provides
 	// validation on the code you are publishing. If you provide this parameter
 	// value must match the SHA256 of the HEAD version for the publication to succeed.
@@ -2037,12 +1913,6 @@ type PublishVersionInput struct {
 	// only to the ARN. If you specify only the function name, it is limited to
 	// 64 character in length.
 	FunctionName *string `location:"uri" locationName:"FunctionName" min:"1" type:"string" required:"true"`
-
-	metadataPublishVersionInput `json:"-" xml:"-"`
-}
-
-type metadataPublishVersionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -2056,6 +1926,8 @@ func (s PublishVersionInput) GoString() string {
 }
 
 type RemovePermissionInput struct {
+	_ struct{} `type:"structure"`
+
 	// Lambda function whose resource policy you want to remove a permission from.
 	//
 	//  You can specify an unqualified function name (for example, "Thumbnail")
@@ -2074,12 +1946,6 @@ type RemovePermissionInput struct {
 
 	// Statement ID of the permission to remove.
 	StatementId *string `location:"uri" locationName:"StatementId" min:"1" type:"string" required:"true"`
-
-	metadataRemovePermissionInput `json:"-" xml:"-"`
-}
-
-type metadataRemovePermissionInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -2093,11 +1959,7 @@ func (s RemovePermissionInput) GoString() string {
 }
 
 type RemovePermissionOutput struct {
-	metadataRemovePermissionOutput `json:"-" xml:"-"`
-}
-
-type metadataRemovePermissionOutput struct {
-	SDKShapeTraits bool `type:"structure"`
+	_ struct{} `type:"structure"`
 }
 
 // String returns the string representation
@@ -2111,6 +1973,8 @@ func (s RemovePermissionOutput) GoString() string {
 }
 
 type UpdateAliasInput struct {
+	_ struct{} `type:"structure"`
+
 	// You can optionally change the description of the alias using this parameter.
 	Description *string `type:"string"`
 
@@ -2123,12 +1987,6 @@ type UpdateAliasInput struct {
 
 	// The alias name.
 	Name *string `location:"uri" locationName:"Name" min:"1" type:"string" required:"true"`
-
-	metadataUpdateAliasInput `json:"-" xml:"-"`
-}
-
-type metadataUpdateAliasInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -2142,6 +2000,8 @@ func (s UpdateAliasInput) GoString() string {
 }
 
 type UpdateEventSourceMappingInput struct {
+	_ struct{} `type:"structure"`
+
 	// The maximum number of stream records that can be sent to your Lambda function
 	// for a single invocation.
 	BatchSize *int64 `min:"1" type:"integer"`
@@ -2162,12 +2022,6 @@ type UpdateEventSourceMappingInput struct {
 
 	// The event source mapping identifier.
 	UUID *string `location:"uri" locationName:"UUID" type:"string" required:"true"`
-
-	metadataUpdateEventSourceMappingInput `json:"-" xml:"-"`
-}
-
-type metadataUpdateEventSourceMappingInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -2181,6 +2035,8 @@ func (s UpdateEventSourceMappingInput) GoString() string {
 }
 
 type UpdateFunctionCodeInput struct {
+	_ struct{} `type:"structure"`
+
 	// The existing Lambda function name whose code you want to replace.
 	//
 	//  You can specify an unqualified function name (for example, "Thumbnail")
@@ -2208,12 +2064,6 @@ type UpdateFunctionCodeInput struct {
 
 	// Based64-encoded .zip file containing your packaged source code.
 	ZipFile []byte `type:"blob"`
-
-	metadataUpdateFunctionCodeInput `json:"-" xml:"-"`
-}
-
-type metadataUpdateFunctionCodeInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation
@@ -2227,6 +2077,8 @@ func (s UpdateFunctionCodeInput) GoString() string {
 }
 
 type UpdateFunctionConfigurationInput struct {
+	_ struct{} `type:"structure"`
+
 	// A short user-defined function description. AWS Lambda does not use this value.
 	// Assign a meaningful description as you see fit.
 	Description *string `type:"string"`
@@ -2261,12 +2113,6 @@ type UpdateFunctionConfigurationInput struct {
 	// Because the execution time has cost implications, we recommend you set this
 	// value based on your expected execution time. The default is 3 seconds.
 	Timeout *int64 `min:"1" type:"integer"`
-
-	metadataUpdateFunctionConfigurationInput `json:"-" xml:"-"`
-}
-
-type metadataUpdateFunctionConfigurationInput struct {
-	SDKShapeTraits bool `type:"structure"`
 }
 
 // String returns the string representation

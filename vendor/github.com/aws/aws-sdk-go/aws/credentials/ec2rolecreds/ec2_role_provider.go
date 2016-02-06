@@ -14,6 +14,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws/ec2metadata"
 )
 
+// ProviderName provides a name of EC2Role provider
+const ProviderName = "EC2RoleProvider"
+
 // A EC2RoleProvider retrieves credentials from the EC2 service, and keeps track if
 // those credentials are expired.
 //
@@ -23,9 +26,10 @@ import (
 //     p := &ec2rolecreds.EC2RoleProvider{
 //         // Pass in a custom timeout to be used when requesting
 //         // IAM EC2 Role credentials.
-//         Client: &http.Client{
-//             Timeout: 10 * time.Second,
-//         },
+//         Client: ec2metadata.New(sess, aws.Config{
+//             HTTPClient: &http.Client{Timeout: 10 * time.Second},
+//         }),
+//
 //         // Do not use early expiry of credentials. If a non zero value is
 //         // specified the credentials will be expired early
 //         ExpiryWindow: 0,
@@ -84,17 +88,17 @@ func NewCredentialsWithClient(client *ec2metadata.EC2Metadata, options ...func(*
 func (m *EC2RoleProvider) Retrieve() (credentials.Value, error) {
 	credsList, err := requestCredList(m.Client)
 	if err != nil {
-		return credentials.Value{}, err
+		return credentials.Value{ProviderName: ProviderName}, err
 	}
 
 	if len(credsList) == 0 {
-		return credentials.Value{}, awserr.New("EmptyEC2RoleList", "empty EC2 Role list", nil)
+		return credentials.Value{ProviderName: ProviderName}, awserr.New("EmptyEC2RoleList", "empty EC2 Role list", nil)
 	}
 	credsName := credsList[0]
 
 	roleCreds, err := requestCred(m.Client, credsName)
 	if err != nil {
-		return credentials.Value{}, err
+		return credentials.Value{ProviderName: ProviderName}, err
 	}
 
 	m.SetExpiration(roleCreds.Expiration, m.ExpiryWindow)
@@ -103,6 +107,7 @@ func (m *EC2RoleProvider) Retrieve() (credentials.Value, error) {
 		AccessKeyID:     roleCreds.AccessKeyID,
 		SecretAccessKey: roleCreds.SecretAccessKey,
 		SessionToken:    roleCreds.Token,
+		ProviderName:    ProviderName,
 	}, nil
 }
 
