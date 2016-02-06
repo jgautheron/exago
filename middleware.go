@@ -79,6 +79,7 @@ func checkCache(next http.Handler) http.Handler {
 		w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
 		w.Header().Set("Content-Type", "application/json")
 		w.Header().Set("Content-Encoding", "gzip")
+		w.Header().Set("X-Cache", "HIT")
 		w.WriteHeader(http.StatusOK)
 
 		if _, err := w.Write(o.([]byte)); err != nil {

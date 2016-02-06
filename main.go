@@ -39,14 +39,8 @@ var (
 	buildDate string
 )
 
-func main() {
+func init() {
 	var err error
-
-	flag.Parse()
-	if *flagVersion {
-		fmt.Fprintf(os.Stdout, "Running version "+buildTag+" built on "+buildDate)
-		return
-	}
 
 	err = config.SetUp()
 	if err != nil {
@@ -57,12 +51,19 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func main() {
+	flag.Parse()
+	if *flagVersion {
+		fmt.Fprintf(os.Stdout, "Running version "+buildTag+" built on "+buildDate)
+		return
+	}
 
 	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository, checkCache)
 	router := NewRouter()
 
 	router.Get("/:registry/:username/:repository/badge/:type", repoHandlers.ThenFunc(badgeHandler))
-
 	router.Get("/:registry/:username/:repository/valid", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/:registry/:username/:repository/loc", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/imports", repoHandlers.ThenFunc(lambdaHandler))
@@ -91,7 +92,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		var data []string
-		err = json.Unmarshal(*out.Data, &data)
+		err = json.Unmarshal(*out, &data)
 		if err != nil {
 			badge.WriteError(w, tp)
 			return
@@ -113,7 +114,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	lambdaFn := strings.Split(r.URL.String()[1:], "/")[3]
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 
-	var out datafetcher.LambdaResponse
+	var out *json.RawMessage
 	var err error
 
 	switch lambdaFn {
@@ -122,11 +123,9 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	case "loc":
 		out, err = datafetcher.GetCodeStats(rp)
 	case "lint":
-		out, err = datafetcher.GetLintResults(rp, ps.ByName("lint"))
+		out, err = datafetcher.GetLintResults(rp, ps.ByName("linter"))
 	}
 
-	// lgr := context.Get(r, "logger").(*log.Entry)
-	// lgr.WithField("fn", lambdaFn).Info(out.Metadata)
 	send(w, r, out, err)
 }
 
@@ -143,7 +142,7 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 	out, err := datafetcher.GetFileContents(lgr, rp, ps.ByName("path")[1:])
-	send(w, r, out, err)
+	send(w, r, string(out), err)
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
@@ -234,7 +233,8 @@ func send(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
 func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	var err error
 
-	w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
+	// w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)
@@ -273,6 +273,7 @@ func outputJSON(w http.ResponseWriter, r *http.Request, code int, data interface
 
 	if success {
 		cacheOutput(r, b.Bytes())
+		// cacheDynamo(r, b.Bytes())
 	}
 
 	if _, err = w.Write(b.Bytes()); err != nil {

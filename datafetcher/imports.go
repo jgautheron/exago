@@ -1,8 +1,11 @@
 package datafetcher
 
-import "strings"
+import (
+	"encoding/json"
+	"strings"
+)
 
-func GetImports(repository string) (LambdaResponse, error) {
+func GetImports(repository string) (*json.RawMessage, error) {
 	sp := strings.Split(repository, "/")
 	return callLambdaFn("imports", lambdaContext{
 		Registry:   sp[0],

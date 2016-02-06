@@ -28,7 +28,7 @@ type LambdaResponse struct {
 	Metadata map[string]interface{} `json:"_metadata"`
 }
 
-func callLambdaFn(fn string, ctxt lambdaContext) (resp LambdaResponse, err error) {
+func callLambdaFn(fn string, ctxt lambdaContext) (*json.RawMessage, error) {
 	creds := credentials.NewStaticCredentials(
 		config.Get("AwsAccessKeyID"),
 		config.Get("AwsSecretAccessKey"),
@@ -50,13 +50,14 @@ func callLambdaFn(fn string, ctxt lambdaContext) (resp LambdaResponse, err error
 
 	out, err := svc.Invoke(params)
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 
+	var resp LambdaResponse
 	err = json.Unmarshal(out.Payload, &resp)
 	if err != nil {
-		return resp, err
+		return nil, err
 	}
 
-	return resp, err
+	return resp.Data, err
 }

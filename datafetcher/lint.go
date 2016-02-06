@@ -1,10 +1,13 @@
 package datafetcher
 
-import "strings"
+import (
+	"encoding/json"
+	"strings"
+)
 
-func GetLintResults(repository, linter string) (LambdaResponse, error) {
+func GetLintResults(repository, linter string) (*json.RawMessage, error) {
 	sp := strings.Split(repository, "/")
-	return callLambdaFn("loc", lambdaContext{
+	return callLambdaFn("lint", lambdaContext{
 		Registry:   sp[0],
 		Username:   sp[1],
 		Repository: sp[2],
