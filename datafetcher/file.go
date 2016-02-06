@@ -22,7 +22,6 @@ func fromGithub(log *log.Entry, repository, path string) ([]byte, error) {
 	username, repo := sp[1], sp[2]
 
 	url := fmt.Sprintf("https://api.github.com/repos/%s/%s/contents/%s?access_token=%s", username, repo, path, config.Get("GithubAccessToken"))
-	log.Info(url)
 
 	resp, err := http.Get(url)
 	if err != nil {

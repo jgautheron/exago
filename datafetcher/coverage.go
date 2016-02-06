@@ -17,7 +17,7 @@ var (
 
 func GetCoverage(log *log.Entry, repository string) (interface{}, error) {
 	resp := make(chan interface{})
-	go runContainer(repository, resp)
+	go runContainer(log, repository, resp)
 
 	out := <-resp
 	switch out.(type) {
@@ -30,7 +30,7 @@ func GetCoverage(log *log.Entry, repository string) (interface{}, error) {
 	return nil, nil
 }
 
-func runContainer(repository string, resp chan interface{}) {
+func runContainer(log *log.Entry, repository string, resp chan interface{}) {
 	client, _ := docker.NewClientFromEnv()
 	cfg := docker.Config{
 		Image: config.Get("RunnerImageName"),
