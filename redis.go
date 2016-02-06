@@ -21,7 +21,12 @@ func newPool(server string) *redis.Pool {
 		IdleTimeout: 240 * time.Second,
 		Dial: func() (redis.Conn, error) {
 			var err error
-			c, err := redis.Dial("tcp", server)
+
+			c, err := redis.Dial(
+				"tcp",
+				server,
+				redis.DialConnectTimeout(2*time.Second),
+			)
 			if err != nil {
 				return nil, err
 			}
