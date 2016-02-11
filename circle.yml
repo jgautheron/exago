@@ -44,7 +44,6 @@ deployment:
   release:
     branch: master
     commands:
-      - make build
       - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
       - docker build -t jgautheron/exago-service:$TAG .
       - docker push jgautheron/exago-service:$TAG

@@ -19,6 +19,7 @@ func Write(w http.ResponseWriter, name, val, color string) {
 		return
 	}
 	w.Header().Set("Content-Type", "image/svg+xml")
+	w.Header().Set("Cache-Control", "no-cache")
 	w.Write(img)
 }
 
