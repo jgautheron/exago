@@ -1,4 +1,4 @@
-package main
+package redis
 
 import (
 	"time"
@@ -11,8 +11,12 @@ var (
 	pool *redis.Pool
 )
 
-func init() {
+func SetUp() {
 	pool = newPool(config.Get("RedisHost") + ":6379")
+}
+
+func GetConn() redis.Conn {
+	return pool.Get()
 }
 
 func newPool(server string) *redis.Pool {

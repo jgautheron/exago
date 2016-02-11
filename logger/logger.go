@@ -2,38 +2,15 @@ package logger
 
 import (
 	"net"
-	"strconv"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/jgautheron/exago-service/config"
-	"gopkg.in/polds/logrus-papertrail-hook.v2"
 )
 
 // SetUp configures logrus to send logs to Papertrail if
 // we are in a production environment.
-func SetUp() error {
+func SetUp() {
 	setLogLevel()
-
-	// Send logs to Papertrail if we are in a production environment.
-	if config.Get("Env") == "prod" {
-		ptp, _ := strconv.Atoi(config.Get("PapertrailPort"))
-		hook, err := logrus_papertrail.NewPapertrailHook(&logrus_papertrail.Hook{
-			Host:     config.Get("PapertrailURL"),
-			Port:     ptp,
-			Hostname: config.Get("PapertrailHost"),
-			Appname:  config.Get("PapertrailApp"),
-		})
-		if err != nil {
-			return err
-		}
-		log.AddHook(hook)
-
-		log.WithFields(log.Fields{
-			"driver": "papertrail",
-		}).Debug("Logging driver successfully set")
-	}
-
-	return nil
 }
 
 func With(repository string, ip string) *log.Entry {

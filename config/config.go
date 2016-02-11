@@ -1,13 +1,13 @@
 package config
 
 import (
-	"errors"
+	"log"
 	"os"
 )
 
 var data map[string]string
 
-func SetUp() error {
+func SetUp() {
 	data = map[string]string{
 		// Should be overridable later by a logged in user
 		"GithubAccessToken":  os.Getenv("GITHUB_ACCESS_TOKEN"),
@@ -16,11 +16,6 @@ func SetUp() error {
 		"RunnerImageName":    os.Getenv("RUNNER_IMAGE_NAME"),
 		"HttpPort":           os.Getenv("HTTP_PORT"),
 		"RedisHost":          os.Getenv("REDIS_HOST"),
-		"PapertrailURL":      os.Getenv("PAPERTRAIL_URL"),
-		"PapertrailPort":     os.Getenv("PAPERTRAIL_PORT"),
-		"PapertrailHost":     os.Getenv("PAPERTRAIL_HOST"),
-		"PapertrailApp":      os.Getenv("PAPERTRAIL_APP"),
-		"Env":                os.Getenv("ENV"),
 		"AllowOrigin":        os.Getenv("ALLOW_ORIGIN"),
 		"LogLevel":           os.Getenv("LOG_LEVEL"),
 	}
@@ -31,15 +26,13 @@ func SetUp() error {
 		data["AwsSecretAccessKey"] == "" ||
 		data["HttpPort"] == "" ||
 		data["RedisHost"] == "" {
-		return errors.New("Missing environment variable(s)")
+		log.Fatal("Missing environment variable(s)")
 	}
 
 	if data["Env"] == "" {
 		// Possible values: dev, prod
 		data["Env"] = "dev"
 	}
-
-	return nil
 }
 
 func Get(key string) string {

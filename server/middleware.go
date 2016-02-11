@@ -1,4 +1,4 @@
-package main
+package server
 
 import (
 	"fmt"
@@ -9,6 +9,7 @@ import (
 	"github.com/gorilla/context"
 	"github.com/jgautheron/exago-service/config"
 	"github.com/jgautheron/exago-service/logger"
+	"github.com/jgautheron/exago-service/redis"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -61,7 +62,7 @@ func checkCache(next http.Handler) http.Handler {
 		idfr := getCacheIdentifier(r)
 		k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 
-		c := pool.Get()
+		c := redis.GetConn()
 		o, err := c.Do("HGET", k, idfr)
 		if err != nil {
 			// Log the error and fallback
