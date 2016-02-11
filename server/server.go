@@ -66,19 +66,29 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 			badge.WriteError(w, tp)
 			return
 		}
-
 		ln := strconv.Itoa(len(data))
 		badge.Write(w, "imports", ln, "blue")
+	case "rank":
+		title := "exago"
+
+		rk := rank.New()
+		rk.SetRepository(rp)
+		val, err := rk.GetRankFromCache()
+		if err != nil {
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, val, "blue")
 	}
 }
 
 func rankHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
-	k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
+	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("username"), ps.ByName("repository"))
 
 	rk := rank.New()
-	rk.SetRepository(k)
-	rank, err := rk.Get()
+	rk.SetRepository(rp)
+	rank, err := rk.GetScore()
 	send(w, r, rank, err)
 }
 

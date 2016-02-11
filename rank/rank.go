@@ -22,6 +22,7 @@ var (
 	}
 )
 
+// Rank gathers the necessary parts for computing the rank.
 type Rank struct {
 	conn       redigo.Conn
 	repository string
@@ -32,9 +33,10 @@ type Rank struct {
 	tests   testRunner
 
 	// Output
-	Score Score
+	Score Score `json:"score"`
 }
 
+// New initialises the redis connection.
 func New() *Rank {
 	return &Rank{
 		conn: redis.GetConn(),
@@ -46,7 +48,9 @@ func (rk *Rank) SetRepository(repo string) {
 	rk.repository = repo
 }
 
-func (rk *Rank) Get() (interface{}, error) {
+// GetScore returns the project's rank with a few more infos:
+// calculated score and details.
+func (rk *Rank) GetScore() (interface{}, error) {
 	data, err := rk.loadData()
 	if err != nil {
 		return nil, err
@@ -56,10 +60,30 @@ func (rk *Rank) Get() (interface{}, error) {
 		return nil, err
 	}
 
+	// Calculate the score
 	rk.calcScore()
+
+	// Save the latest score in DB
+	if err := rk.save(); err != nil {
+		return nil, err
+	}
+
 	return rk, err
 }
 
+func (rk *Rank) GetRankFromCache() (string, error) {
+	o, err := rk.conn.Do("GET", rk.repository+":rank")
+	if o == nil {
+		return "", errMissingData
+	}
+	if err != nil {
+		return "", err
+	}
+	return string(o.([]byte)), nil
+}
+
+// loadData checks if the data necessary for computing the rank
+// is available and if so returns it as a map.
 func (rk *Rank) loadData() (map[string][]byte, error) {
 	data := map[string][]byte{}
 	for idfr := range required {
@@ -89,6 +113,14 @@ func (rk *Rank) loadData() (map[string][]byte, error) {
 	return data, nil
 }
 
+// save the latest rank in database without TTL.
+// The rank is later retrieved for the badge.
+func (rk *Rank) save() error {
+	_, err := rk.conn.Do("SET", rk.repository+":rank", rk.Score.Rank)
+	return err
+}
+
+// deserialize unmarshals the data into the Rank.
 func (rk *Rank) deserialize(data map[string][]byte) error {
 	if err := json.Unmarshal(stripEnvelope(data["loc"]), &rk.loc); err != nil {
 		return err

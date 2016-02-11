@@ -14,9 +14,9 @@ const (
 type scoreType string
 
 type Score struct {
-	Value   int
-	Rank    string
-	Details []string
+	Value   int      `json:"value"`
+	Rank    string   `json:"rank"`
+	Details []string `json:"details"`
 }
 
 func (sc *Score) Increase(score int, category scoreType, comment string) {

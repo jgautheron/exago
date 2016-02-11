@@ -6,7 +6,8 @@ import (
 )
 
 func Write(w http.ResponseWriter, name, val, color string) {
-	resp, err := http.Get("https://img.shields.io/badge/" + name + "-" + val + "-" + color + ".svg?style=flat-square")
+	// TODO: Should work directly instead on the SVG file
+	resp, err := http.Get("https://img.shields.io/badge/" + name + "-" + val + "-" + color + ".svg")
 	if err != nil {
 		WriteError(w, name)
 		return
