@@ -3,7 +3,7 @@ GO ?= go
 
 .PHONY: build
 build:
-	$(GO) build -v -i -o exago
+	GOOS=linux CGO_ENABLED=0 $(GO) build -v -i -o exago
 
 # Compile the binary for all available OSes and ARCHes.
 .PHONY: buildall

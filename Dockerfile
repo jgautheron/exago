@@ -1,4 +1,3 @@
-FROM scratch
+FROM tianon/true
 ADD exago /
-CMD [""]
 ENTRYPOINT ["/exago"]
