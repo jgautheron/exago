@@ -15,7 +15,7 @@ This tool assumes you are working in a standard Go 1.5 workspace, as described i
 The configuration is managed exclusively through environment variables.
 
 Variable               | Description | Mandatory
----------------- | ------
+---------------- | ------ | ------------
 GITHUB_ACCESS_TOKEN       | Necessary to consume GitHub's API | Yes
 AWS_ACCESS_KEY_ID        | Required for AWS Lambda | Yes
 AWS_SECRET_ACCESS_KEY     | Required for AWS Lambda | Yes
