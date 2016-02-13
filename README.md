@@ -30,6 +30,14 @@ LOG_LEVEL   | Log level (debug, info, warn, error, fatal) | Yes
 Redis is used as cache backend.  
 The service will degrade gracefully if there's no Redis available for the given `REDIS_HOST`.
 
+#### Docker
+
+The tests are run in a container (see `RUNNER_IMAGE_NAME` above). Docker should be up and the container available.
+
+  $ docker pull jgautheron/exago-runner
+  
+The `DOCKER_HOST` environment variable should be defined as well. It's automatically set on OSX when using Docker Machine, on Linux, it would look like something like this: `DOCKER_HOST="unix:///var/run/docker.sock"`
+
 ## Contributing
 
 See the [dedicated page](CONTRIBUTING.md).
