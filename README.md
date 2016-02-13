@@ -1,4 +1,4 @@
-# Exago [![Circle CI](https://circleci.com/gh/exago/svc.svg?style=svg)](https://circleci.com/gh/exago/svc)
+# Exago [![Circle CI](https://circleci.com/gh/exago/svc.svg?style=svg)](https://circleci.com/gh/exago/svc) [![](https://badge.imagelayers.io/jgautheron/exago-service:latest.svg)](https://imagelayers.io/?images=jgautheron/exago-service:latest 'Get your own badge on imagelayers.io')
 
 Exago is a code quality tool that inspects your Go repository and reports on what could be improved. The dashboard displays metrics that we consider as your application pillars, you can dive deeper and browse directly the recommandations in the code.
 
@@ -21,7 +21,7 @@ AWS_ACCESS_KEY_ID        | Required for AWS Lambda | Yes
 AWS_SECRET_ACCESS_KEY     | Required for AWS Lambda | Yes
 RUNNER_IMAGE_NAME      | Required for running tests | Yes
 HTTP_PORT      | HTTP port to bind | Yes
-REDIS_HOST      | Redis host | Yes
+REDIS_HOST      | Redis host | No
 ALLOW_ORIGIN   | Origin allowed for API calls (CORS) | Yes
 LOG_LEVEL   | Log level (debug, info, warn, error, fatal) | Yes
 

@@ -24,14 +24,8 @@ func SetUp() {
 	if data["GithubAccessToken"] == "" ||
 		data["AwsAccessKeyID"] == "" ||
 		data["AwsSecretAccessKey"] == "" ||
-		data["HttpPort"] == "" ||
-		data["RedisHost"] == "" {
+		data["HttpPort"] == "" {
 		log.Fatal("Missing environment variable(s)")
-	}
-
-	if data["Env"] == "" {
-		// Possible values: dev, prod
-		data["Env"] = "dev"
 	}
 }
 

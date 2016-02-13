@@ -4,7 +4,7 @@ import (
 	"net"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/jgautheron/exago-service/config"
+	"github.com/exago/svc/config"
 )
 
 // SetUp configures logrus to send logs to Papertrail if

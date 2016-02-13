@@ -6,8 +6,8 @@ import (
 	"errors"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/config"
 	"github.com/fsouza/go-dockerclient"
-	"github.com/jgautheron/exago-service/config"
 	"github.com/twinj/uuid"
 )
 

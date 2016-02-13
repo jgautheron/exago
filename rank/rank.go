@@ -8,8 +8,8 @@ import (
 	"io/ioutil"
 	"strings"
 
+	"github.com/exago/svc/redis"
 	redigo "github.com/garyburd/redigo/redis"
-	"github.com/jgautheron/exago-service/redis"
 )
 
 var (

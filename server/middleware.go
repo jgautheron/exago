@@ -6,10 +6,10 @@ import (
 	"regexp"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/config"
+	"github.com/exago/svc/logger"
+	"github.com/exago/svc/redis"
 	"github.com/gorilla/context"
-	"github.com/jgautheron/exago-service/config"
-	"github.com/jgautheron/exago-service/logger"
-	"github.com/jgautheron/exago-service/redis"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -74,7 +74,7 @@ func checkCache(next http.Handler) http.Handler {
 			next.ServeHTTP(w, r)
 			return
 		}
-		lgr.Infoln(k, idfr, "cache hit")
+		lgr.Debugln(k, idfr, "cache hit")
 
 		// Output straight from the cache
 		w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))

@@ -3,8 +3,8 @@ package redis
 import (
 	"time"
 
+	"github.com/exago/svc/config"
 	"github.com/garyburd/redigo/redis"
-	"github.com/jgautheron/exago-service/config"
 )
 
 var (

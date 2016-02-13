@@ -9,7 +9,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/jgautheron/exago-service/config"
+	"github.com/exago/svc/config"
 )
 
 func GetFileContents(log *log.Entry, repository, path string) ([]byte, error) {

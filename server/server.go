@@ -12,12 +12,12 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/badge"
+	"github.com/exago/svc/config"
+	"github.com/exago/svc/datafetcher"
+	"github.com/exago/svc/rank"
+	"github.com/exago/svc/redis"
 	"github.com/gorilla/context"
-	"github.com/jgautheron/exago-service/badge"
-	"github.com/jgautheron/exago-service/config"
-	"github.com/jgautheron/exago-service/datafetcher"
-	"github.com/jgautheron/exago-service/rank"
-	"github.com/jgautheron/exago-service/redis"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
 )
@@ -32,7 +32,7 @@ func ListenAndServe() {
 	repoHandlers := alice.New(context.ClearHandler, recoverHandler, setLogger, checkRegistry, checkValidRepository, checkCache)
 	router := NewRouter()
 
-	router.Get("/:registry/:username/:repository/badge/:type", repoHandlers.ThenFunc(badgeHandler))
+	router.Get("/:registry/:username/:repository/badge/:type/img.svg", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/:registry/:username/:repository/valid", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/:registry/:username/:repository/loc", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:username/:repository/imports", repoHandlers.ThenFunc(lambdaHandler))
@@ -57,12 +57,14 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	case "imports":
 		out, err := datafetcher.GetImports(rp)
 		if err != nil {
+			log.Error(err)
 			badge.WriteError(w, tp)
 			return
 		}
 		var data []string
 		err = json.Unmarshal(*out, &data)
 		if err != nil {
+			log.Error(err)
 			badge.WriteError(w, tp)
 			return
 		}
@@ -75,6 +77,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		rk.SetRepository(rp)
 		val, err := rk.GetRankFromCache()
 		if err != nil {
+			log.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
