@@ -1,16 +1,17 @@
 package server
 
 import (
+	"bytes"
+	"compress/gzip"
+	"encoding/json"
+	"net"
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/config"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
-
-// TODO:
-// - handlers: return data, err (output automatically jsend)
-// - pass context.Context to the handlers
 
 // Router wraps httprouter.Router.
 type Router struct {
@@ -42,12 +43,12 @@ type cstNotFound struct{}
 
 // ServeHTTP is a custom handler for the "method not allowed" error
 func (wrt cstMethodNotAllowed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	outputJSON(w, r, http.StatusMethodNotAllowed, "Method not allowed")
+	writeData(w, r, http.StatusMethodNotAllowed, "Method not allowed")
 }
 
 // ServeHTTP is a custom handler for the 404 error
 func (wrt cstNotFound) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	outputJSON(w, r, http.StatusNotFound, "Not found")
+	writeData(w, r, http.StatusNotFound, "Not found")
 }
 
 // badRequest is handled by setting the status code in the reply to StatusBadRequest.
@@ -56,16 +57,88 @@ type badRequest struct{ error }
 // notFound is handled by setting the status code in the reply to StatusNotFound.
 type notFound struct{ error }
 
-func handleError(w http.ResponseWriter, r *http.Request, err error) {
+// send is a shorthand
+func send(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
+	if err == nil {
+		writeData(w, r, http.StatusOK, data)
+	} else {
+		writeError(w, r, err)
+	}
+}
+
+// outputJSON handles the response for each endpoint.
+// It follows the JSEND standard for JSON response.
+// See https://labs.omniti.com/labs/jsend
+func writeData(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
+	var err error
+
+	w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
+	w.Header().Set("Content-Type", "application/json")
+	w.Header().Set("Content-Encoding", "gzip")
+	w.WriteHeader(code)
+
+	success := false
+	if code == http.StatusOK {
+		success = true
+	}
+
+	// JSend has three possible statuses: success, fail and error
+	// In case of error, there is no data sent, only an error message.
+	status := "success"
+	dataType := "data"
+	if !success {
+		status = "error"
+		dataType = "message"
+	}
+
+	res := map[string]interface{}{"status": status}
+	if data != nil {
+		res[dataType] = data
+	}
+
+	// Assuming here that all browsers support gzip encoding
+	var b bytes.Buffer
+	gz := gzip.NewWriter(&b)
+	if err = json.NewEncoder(gz).Encode(res); err != nil {
+		writeError(w, r, err)
+		return
+	}
+
+	if err = gz.Close(); err != nil {
+		writeError(w, r, err)
+		return
+	}
+
+	if success {
+		cacheOutput(r, b.Bytes())
+	}
+
+	if _, err = w.Write(b.Bytes()); err != nil {
+		writeError(w, r, err)
+	}
+}
+
+func writeError(w http.ResponseWriter, r *http.Request, err error) {
 	logger := context.Get(r, "logger").(*log.Entry)
 	logger.Error(err)
 
 	switch err.(type) {
 	case badRequest:
-		outputJSON(w, r, http.StatusBadRequest, err.Error())
+		writeData(w, r, http.StatusBadRequest, err.Error())
 	case notFound:
-		outputJSON(w, r, http.StatusNotFound, err.Error())
+		writeData(w, r, http.StatusNotFound, err.Error())
 	default:
-		outputJSON(w, r, http.StatusInternalServerError, err.Error())
+		writeData(w, r, http.StatusInternalServerError, err.Error())
 	}
+}
+
+func getIP(s string) string {
+	if ip, _, err := net.SplitHostPort(s); err == nil {
+		return ip
+	}
+	if ip := net.ParseIP(s); ip != nil {
+		return ip.To4().String()
+	}
+	log.Error("Couldn't parse IP %s", s)
+	return ""
 }
