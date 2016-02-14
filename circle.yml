@@ -6,8 +6,7 @@ machine:
     GOVERSION: "1.5.3"
     GO15VENDOREXPERIMENT: 1
     PATH: "${PATH}:${GOPATH}/bin"
-#    TAG: $CIRCLE_BUILD_NUM
-    TAG: latest
+    TAG: $CIRCLE_BUILD_NUM
   services:
     - docker
   post:
@@ -47,3 +46,4 @@ deployment:
       - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
       - docker build -t jgautheron/exago-svc:$TAG .
       - docker push jgautheron/exago-svc:$TAG
+      - docker push jgautheron/exago-svc:latest
