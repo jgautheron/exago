@@ -1,28 +1,16 @@
 package logger
 
 import (
-	"net"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/config"
 )
 
-// SetUp configures logrus to send logs to Papertrail if
-// we are in a production environment.
+// SetUp configures the logger.
 func SetUp() {
 	setLogLevel()
 }
 
 func With(repository string, ip string) *log.Entry {
-	// Retrieve the user IP
-	if ip != "" {
-		ip, _, err := net.SplitHostPort(ip)
-		if err != nil {
-			log.Error("userip: %q is not IP:port", ip)
-			return &log.Entry{}
-		}
-	}
-
 	return log.WithFields(log.Fields{
 		"repository": repository,
 		"ip":         ip,
