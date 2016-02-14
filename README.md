@@ -25,6 +25,11 @@ REDIS_HOST      | Redis host | No
 ALLOW_ORIGIN   | Origin allowed for API calls (CORS) | Yes
 LOG_LEVEL   | Log level (debug, info, warn, error, fatal) | Yes
 
+#### Third Parties
+
+All third parties are in the `vendor` folder.  
+Don't forget to set `GO15VENDOREXPERIMENT` to `1`.
+
 #### Redis
 
 Redis is used as cache backend.  
