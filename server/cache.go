@@ -37,8 +37,8 @@ func cacheOutput(r *http.Request, output []byte) {
 		lgr.Error(err)
 		return
 	}
-	if _, err := c.Do("EXPIRE", k, timeout); err != nil {
-		lgr.Error(err)
-		return
-	}
+	// if _, err := c.Do("EXPIRE", k, timeout); err != nil {
+	// 	lgr.Error(err)
+	// 	return
+	// }
 }

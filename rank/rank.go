@@ -71,15 +71,20 @@ func (rk *Rank) GetScore() (interface{}, error) {
 	return rk, err
 }
 
+// GetRankFromCache retrieves the rank (A, B, C...) which
 func (rk *Rank) GetRankFromCache() (string, error) {
-	o, err := rk.conn.Do("GET", rk.repository+":rank")
+	o, err := rk.conn.Do("HGET", rk.repository, "rank")
 	if o == nil {
 		return "", errMissingData
 	}
 	if err != nil {
 		return "", err
 	}
-	return string(o.([]byte)), nil
+	b, err := gzipDecode(o.([]byte))
+	if err != nil {
+		return "", err
+	}
+	return string(b), nil
 }
 
 // loadData checks if the data necessary for computing the rank
@@ -94,19 +99,10 @@ func (rk *Rank) loadData() (map[string][]byte, error) {
 		if err != nil {
 			return nil, err
 		}
-		buf := new(bytes.Buffer)
-		if _, err := buf.Write(o.([]byte)); err != nil {
-			return nil, err
-		}
-		rd, err := gzip.NewReader(buf)
+		b, err := gzipDecode(o.([]byte))
 		if err != nil {
 			return nil, err
 		}
-		b, err := ioutil.ReadAll(rd)
-		if err != nil {
-			return nil, err
-		}
-
 		data[idfr] = b
 	}
 
@@ -116,7 +112,7 @@ func (rk *Rank) loadData() (map[string][]byte, error) {
 // save the latest rank in database without TTL.
 // The rank is later retrieved for the badge.
 func (rk *Rank) save() error {
-	_, err := rk.conn.Do("SET", rk.repository+":rank", rk.Score.Rank)
+	_, err := rk.conn.Do("HSET", rk.repository, "rank", rk.Score.Rank)
 	return err
 }
 
@@ -140,6 +136,23 @@ func stripEnvelope(data []byte) []byte {
 	d = strings.Replace(d, `{"data":`, "", 1)
 	d = strings.Replace(d, `,"status":"success"}`, "", 1)
 	return []byte(d)
+}
+
+// gzipDecode decodes the given gzip encoded data.
+func gzipDecode(data []byte) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	if _, err := buf.Write(data); err != nil {
+		return nil, err
+	}
+	rd, err := gzip.NewReader(buf)
+	if err != nil {
+		return nil, err
+	}
+	b, err := ioutil.ReadAll(rd)
+	if err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 type testRunner struct {

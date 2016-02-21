@@ -1,15 +1,23 @@
 package datafetcher
 
-import (
-	"encoding/json"
-	"strings"
-)
+import "encoding/json"
 
-func GetCodeStats(repository string) (*json.RawMessage, error) {
-	sp := strings.Split(repository, "/")
-	return callLambdaFn("loc", lambdaContext{
-		Registry:   sp[0],
-		Username:   sp[1],
-		Repository: sp[2],
-	})
+type codeStats map[string]int
+
+var codeStatsCmd = &lambdaCmd{
+	name:      "loc",
+	unMarshal: unMarshalCodeStats,
+}
+
+func GetCodeStats(repository string) (interface{}, error) {
+	codeStatsCmd.ctxt = lambdaContext{
+		Repository: repository,
+	}
+	return codeStatsCmd.Data()
+}
+
+func unMarshalCodeStats(l *lambdaCmd, b []byte) (interface{}, error) {
+	var cs codeStats
+	err := json.Unmarshal(b, &cs)
+	return cs, err
 }

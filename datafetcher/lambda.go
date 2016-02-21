@@ -2,33 +2,38 @@ package datafetcher
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	"github.com/exago/svc/config"
+	"github.com/exago/svc/leveldb"
 )
 
-const (
-	lambdaRegion = "eu-west-1"
+var (
+	errNoData = errors.New("Empty dataset")
 )
 
 type lambdaContext struct {
-	Registry   string `json:"registry"`
-	Username   string `json:"username"`
 	Repository string `json:"repository"`
 	Branch     string `json:"branch,omitempty"`
-	Linters    string `json:"linters,omitempty"`
-	Indexes    string `json:"indexes,omitempty"`
+	Linter     string `json:"linters,omitempty"`
+}
+
+func (lc lambdaContext) String() string {
+	return fmt.Sprintf("%s-%s-%s", lc.Repository, lc.Branch, lc.Linter)
 }
 
 type LambdaResponse struct {
+	Status   string                 `json:"status"`
 	Data     *json.RawMessage       `json:"data"`
 	Metadata map[string]interface{} `json:"_metadata"`
 }
 
-func callLambdaFn(fn string, ctxt lambdaContext) (*json.RawMessage, error) {
+func callLambdaFn(fn string, ctxt lambdaContext) (lrsp LambdaResponse, err error) {
 	creds := credentials.NewStaticCredentials(
 		config.Get("AwsAccessKeyID"),
 		config.Get("AwsSecretAccessKey"),
@@ -37,12 +42,11 @@ func callLambdaFn(fn string, ctxt lambdaContext) (*json.RawMessage, error) {
 	svc := lambda.New(
 		session.New(),
 		aws.NewConfig().
-			WithRegion(lambdaRegion).
+			WithRegion(config.Get("AwsRegion")).
 			WithCredentials(creds),
 	)
 
 	payload, _ := json.Marshal(ctxt)
-
 	params := &lambda.InvokeInput{
 		FunctionName: aws.String("exago-" + fn),
 		Payload:      payload,
@@ -50,14 +54,81 @@ func callLambdaFn(fn string, ctxt lambdaContext) (*json.RawMessage, error) {
 
 	out, err := svc.Invoke(params)
 	if err != nil {
-		return nil, err
+		return lrsp, err
 	}
 
 	var resp LambdaResponse
-	err = json.Unmarshal(out.Payload, &resp)
-	if err != nil {
+	if err = json.Unmarshal(out.Payload, &resp); err != nil {
+		return lrsp, err
+	}
+
+	// Data is always expected from Lambda
+	if resp.Data == nil {
+		return lrsp, errNoData
+	}
+
+	// If the Lambda request failed, return the message as an error
+	if resp.Status == "fail" {
+		var msg struct {
+			// Message is the only expected field in Data
+			Message string `json:"message"`
+		}
+		if err = json.Unmarshal(*resp.Data, &msg); err != nil {
+			return lrsp, err
+		}
+		return lrsp, errors.New(msg.Message)
+	}
+
+	return resp, err
+}
+
+type lambdaCmd struct {
+	name      string
+	ctxt      lambdaContext
+	score     int
+	data      interface{}
+	unMarshal func(l *lambdaCmd, j []byte) (data interface{}, err error)
+}
+
+// Data retrieves the data for the given command transparently
+// whether the data is already cached or not.
+func (l *lambdaCmd) Data() (interface{}, error) {
+	var data []byte
+
+	// Check if the data is cached
+	isCached, cacheKey := false, l.CacheKey()
+	cres, err := leveldb.FindForRepositoryCmd(cacheKey)
+	if len(cres) > 0 && err == nil {
+		isCached = true
+		data = cres
+	}
+
+	if !isCached {
+		// Fetch the data with Lambda
+		res, err := callLambdaFn(l.name, l.ctxt)
+		if err != nil {
+			return nil, err
+		}
+		data = *res.Data
+	}
+
+	if l.data, err = l.unMarshal(l, data); err != nil {
 		return nil, err
 	}
 
-	return resp.Data, err
+	if !isCached {
+		// Cache the data
+		if err := leveldb.Save(cacheKey, data); err != nil {
+			return nil, err
+		}
+	}
+
+	return l.data, err
+}
+
+// CacheKey generates a key specific to the lambdaCmd.
+func (l *lambdaCmd) CacheKey() []byte {
+	cacheKeyFormat := "%s-%s:%s"
+	ck := fmt.Sprintf(cacheKeyFormat, l.ctxt.String(), l.name)
+	return []byte(ck)
 }

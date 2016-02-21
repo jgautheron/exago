@@ -1,15 +1,23 @@
 package datafetcher
 
-import (
-	"encoding/json"
-	"strings"
-)
+import "encoding/json"
 
-func GetImports(repository string) (*json.RawMessage, error) {
-	sp := strings.Split(repository, "/")
-	return callLambdaFn("imports", lambdaContext{
-		Registry:   sp[0],
-		Username:   sp[1],
-		Repository: sp[2],
-	})
+type imports []string
+
+var importsCmd = &lambdaCmd{
+	name:      "imports",
+	unMarshal: unMarshalImports,
+}
+
+func GetImports(repository string) (interface{}, error) {
+	importsCmd.ctxt = lambdaContext{
+		Repository: repository,
+	}
+	return importsCmd.Data()
+}
+
+func unMarshalImports(l *lambdaCmd, b []byte) (interface{}, error) {
+	var imp imports
+	err := json.Unmarshal(b, &imp)
+	return imp, err
 }

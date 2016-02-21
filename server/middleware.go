@@ -108,8 +108,6 @@ func requestLock(next http.Handler) http.Handler {
 		ps := context.Get(r, "params").(httprouter.Params)
 		rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
-		log.Info("has", rp, getIP(r.RemoteAddr))
-		log.Info(requestlock.Has(rp, getIP(r.RemoteAddr)))
 		if requestlock.Has(rp, getIP(r.RemoteAddr)) {
 			writeError(w, r, errTooManyCalls)
 			return

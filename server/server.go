@@ -1,17 +1,14 @@
 package server
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"golang.org/x/oauth2"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/badge"
 	"github.com/exago/svc/config"
 	"github.com/exago/svc/datafetcher"
 	"github.com/exago/svc/rank"
@@ -35,13 +32,13 @@ func ListenAndServe() {
 		setLogger,
 		checkRegistry,
 		rateLimit,
-		requestLock,
+		// requestLock,
 		checkValidRepository,
-		checkCache,
+		// checkCache,
 	)
 	router := NewRouter()
 
-	router.Get("/:registry/:owner/:repository/badge/:type/img.svg", repoHandlers.ThenFunc(badgeHandler))
+	// router.Get("/:registry/:owner/:repository/badge/:type/img.svg", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/:registry/:owner/:repository/valid", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/:registry/:owner/:repository/loc", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:owner/:repository/imports", repoHandlers.ThenFunc(lambdaHandler))
@@ -57,42 +54,42 @@ func ListenAndServe() {
 	}
 }
 
-func badgeHandler(w http.ResponseWriter, r *http.Request) {
-	ps := context.Get(r, "params").(httprouter.Params)
-	tp := ps.ByName("type")
+// func badgeHandler(w http.ResponseWriter, r *http.Request) {
+// 	ps := context.Get(r, "params").(httprouter.Params)
+// 	tp := ps.ByName("type")
 
-	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
-	switch tp {
-	case "imports":
-		out, err := datafetcher.GetImports(rp)
-		if err != nil {
-			log.Error(err)
-			badge.WriteError(w, tp)
-			return
-		}
-		var data []string
-		err = json.Unmarshal(*out, &data)
-		if err != nil {
-			log.Error(err)
-			badge.WriteError(w, tp)
-			return
-		}
-		ln := strconv.Itoa(len(data))
-		badge.Write(w, "imports", ln, "blue")
-	case "rank":
-		title := "exago"
+// 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
+// 	switch tp {
+// 	case "imports":
+// 		out, err := datafetcher.GetImports(rp)
+// 		if err != nil {
+// 			log.Error(err)
+// 			badge.WriteError(w, tp)
+// 			return
+// 		}
+// 		var data []string
+// 		err = json.Unmarshal(*out, &data)
+// 		if err != nil {
+// 			log.Error(err)
+// 			badge.WriteError(w, tp)
+// 			return
+// 		}
+// 		ln := strconv.Itoa(len(data))
+// 		badge.Write(w, "imports", ln, "blue")
+// 	case "rank":
+// 		title := "exago"
 
-		rk := rank.New()
-		rk.SetRepository(rp)
-		val, err := rk.GetRankFromCache()
-		if err != nil {
-			log.Error(err)
-			badge.WriteError(w, title)
-			return
-		}
-		badge.Write(w, title, val, "blue")
-	}
-}
+// 		rk := rank.New()
+// 		rk.SetRepository(rp)
+// 		val, err := rk.GetRankFromCache()
+// 		if err != nil {
+// 			log.Error(err)
+// 			badge.WriteError(w, title)
+// 			return
+// 		}
+// 		badge.Write(w, title, val, "blue")
+// 	}
+// }
 
 func rankHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
@@ -110,7 +107,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	lambdaFn := strings.Split(r.URL.String()[1:], "/")[3]
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
-	var out *json.RawMessage
+	var out interface{}
 	var err error
 
 	switch lambdaFn {
@@ -119,7 +116,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	case "loc":
 		out, err = datafetcher.GetCodeStats(rp)
 	case "lint":
-		out, err = datafetcher.GetLintResults(rp, ps.ByName("linter"))
+		out, err = datafetcher.GetLint(rp, ps.ByName("linter"))
 	}
 
 	send(w, r, out, err)

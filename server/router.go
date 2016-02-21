@@ -109,10 +109,6 @@ func writeData(w http.ResponseWriter, r *http.Request, code int, data interface{
 		return
 	}
 
-	if success {
-		cacheOutput(r, b.Bytes())
-	}
-
 	if _, err = w.Write(b.Bytes()); err != nil {
 		writeError(w, r, err)
 	}
