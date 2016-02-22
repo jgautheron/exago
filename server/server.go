@@ -32,7 +32,7 @@ func ListenAndServe() {
 		setLogger,
 		checkRegistry,
 		rateLimit,
-		// requestLock,
+		requestLock,
 		checkValidRepository,
 		// checkCache,
 	)
@@ -140,16 +140,15 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
-	lgr := context.Get(r, "logger").(*log.Entry)
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
 	// Add request lock to avoid spawning too many container requests
-	requestlock.Add(rp, getIP(r.RemoteAddr))
+	requestlock.Add(rp, getIP(r.RemoteAddr), r.URL.Path)
 
-	out, err := datafetcher.GetCoverage(lgr, rp)
+	out, err := datafetcher.GetTestResults(rp)
 
 	// Remove the lock once the data is fetched
-	requestlock.Remove(rp, getIP(r.RemoteAddr))
+	requestlock.Remove(rp, getIP(r.RemoteAddr), r.URL.Path)
 
 	send(w, r, out, err)
 }
