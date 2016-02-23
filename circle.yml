@@ -3,7 +3,7 @@ machine:
     Europe/Warsaw
   environment:
     GOPATH: "$HOME/.go"
-    GOVERSION: "1.5.3"
+    GOVERSION: "1.6"
     GO15VENDOREXPERIMENT: 1
     PATH: "${PATH}:${GOPATH}/bin"
     TAG: $CIRCLE_BUILD_NUM
@@ -46,5 +46,5 @@ deployment:
       - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
       - docker build -t jgautheron/exago-svc:$TAG .
       - docker push jgautheron/exago-svc:$TAG
-      - docker build -t jgautheron/exago-svc:latest
+      - docker build -t jgautheron/exago-svc:latest .
       - docker push jgautheron/exago-svc:latest
