@@ -46,4 +46,5 @@ deployment:
       - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
       - docker build -t jgautheron/exago-svc:$TAG .
       - docker push jgautheron/exago-svc:$TAG
+      - docker build -t jgautheron/exago-svc:latest
       - docker push jgautheron/exago-svc:latest
