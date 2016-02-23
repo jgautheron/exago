@@ -94,30 +94,22 @@ func Encode(dst, src []byte) []byte {
 	for len(src) > 0 {
 		p := src
 		src = nil
-		if len(p) > maxInternalEncodeSrcLen {
-			p, src = p[:maxInternalEncodeSrcLen], p[maxInternalEncodeSrcLen:]
+		if len(p) > maxBlockSize {
+			p, src = p[:maxBlockSize], p[maxBlockSize:]
 		}
-		d += encode(dst[d:], p)
+		d += encodeBlock(dst[d:], p)
 	}
 	return dst[:d]
 }
 
-// maxInternalEncodeSrcLen must be less than math.MaxInt32, so that in the
-// (internal) encode function, it is safe to have the s variable (which indexes
-// the src slice), and therefore the hash table entries, to have type int32
-// instead of int.
-const maxInternalEncodeSrcLen = 0x40000000
-
-// encode encodes a non-empty src to a guaranteed-large-enough dst. It assumes
-// that the varint-encoded length of the decompressed bytes has already been
-// written.
+// encodeBlock encodes a non-empty src to a guaranteed-large-enough dst. It
+// assumes that the varint-encoded length of the decompressed bytes has already
+// been written.
 //
 // It also assumes that:
 //	len(dst) >= MaxEncodedLen(len(src)) &&
-// 	0 < len(src) &&
-//	len(src) <= maxInternalEncodeSrcLen &&
-// 	maxInternalEncodeSrcLen < math.MaxInt32.
-func encode(dst, src []byte) (d int) {
+// 	0 < len(src) && len(src) <= maxBlockSize
+func encodeBlock(dst, src []byte) (d int) {
 	// Return early if src is short.
 	if len(src) <= 4 {
 		return emitLiteral(dst, src)
@@ -137,6 +129,22 @@ func encode(dst, src []byte) (d int) {
 		s   int32 // The iterator position.
 		t   int32 // The last position with the same hash as s.
 		lit int32 // The start position of any pending literal bytes.
+
+		// Copied from the C++ snappy implementation:
+		//
+		// Heuristic match skipping: If 32 bytes are scanned with no matches
+		// found, start looking only at every other byte. If 32 more bytes are
+		// scanned, look at every third byte, etc.. When a match is found,
+		// immediately go back to looking at every byte. This is a small loss
+		// (~5% performance, ~0.1% density) for compressible data due to more
+		// bookkeeping, but for non-compressible data (such as JPEG) it's a
+		// huge win since the compressor quickly "realizes" the data is
+		// incompressible and doesn't bother looking for matches everywhere.
+		//
+		// The "skip" variable keeps track of how many bytes there are since
+		// the last match; dividing it by 32 (ie. right-shifting by five) gives
+		// the number of bytes to move ahead for each iteration.
+		skip uint32 = 32
 	)
 	for uint32(s+3) < uint32(len(src)) { // The uint32 conversions catch overflow from the +3.
 		// Update the hash table.
@@ -150,10 +158,11 @@ func encode(dst, src []byte) (d int) {
 		t, *p = *p-1, s+1
 		// If t is invalid or src[s:s+4] differs from src[t:t+4], accumulate a literal byte.
 		if t < 0 || s-t >= maxOffset || b0 != src[t] || b1 != src[t+1] || b2 != src[t+2] || b3 != src[t+3] {
-			// Skip multiple bytes if the last match was >= 32 bytes prior.
-			s += 1 + (s-lit)>>5
+			s += int32(skip >> 5)
+			skip++
 			continue
 		}
+		skip = 32
 		// Otherwise, we have a match. First, emit any pending literal bytes.
 		if lit != s {
 			d += emitLiteral(dst[d:], src[lit:s])
@@ -241,7 +250,7 @@ func NewWriter(w io.Writer) *Writer {
 func NewBufferedWriter(w io.Writer) *Writer {
 	return &Writer{
 		w:    w,
-		ibuf: make([]byte, 0, maxUncompressedChunkLen),
+		ibuf: make([]byte, 0, maxBlockSize),
 		obuf: make([]byte, obufLen),
 	}
 }
@@ -325,8 +334,8 @@ func (w *Writer) write(p []byte) (nRet int, errRet error) {
 		}
 
 		var uncompressed []byte
-		if len(p) > maxUncompressedChunkLen {
-			uncompressed, p = p[:maxUncompressedChunkLen], p[maxUncompressedChunkLen:]
+		if len(p) > maxBlockSize {
+			uncompressed, p = p[:maxBlockSize], p[maxBlockSize:]
 		} else {
 			uncompressed, p = p, nil
 		}
