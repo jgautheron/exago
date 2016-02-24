@@ -13,7 +13,7 @@ type cfg struct {
 	AwsAccessKeyID     string `envconfig:"AWS_ACCESS_KEY_ID" required:"true"`
 	AwsSecretAccessKey string `envconfig:"AWS_SECRET_ACCESS_KEY" required:"true"`
 	HttpPort           string `envconfig:"HTTP_PORT" default:"8080"`
-	DatabasePath       string `envconfig:"DATABASE_PATH" default:"/data/exago.db"`
+	DatabasePath       string `envconfig:"DATABASE_PATH" default:"./exago.db"`
 	AllowOrigin        string `envconfig:"ALLOW_ORIGIN" default:"*"`
 	LogLevel           string `envconfig:"LOG_LEVEL" default:"info"`
 }
