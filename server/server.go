@@ -11,7 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/config"
 	"github.com/exago/svc/datafetcher"
-	"github.com/exago/svc/rank"
+	"github.com/exago/svc/repository"
 	"github.com/exago/svc/requestlock"
 	"github.com/google/go-github/github"
 	"github.com/gorilla/context"
@@ -34,7 +34,6 @@ func ListenAndServe() {
 		rateLimit,
 		requestLock,
 		checkValidRepository,
-		// checkCache,
 	)
 	router := NewRouter()
 
@@ -47,7 +46,7 @@ func ListenAndServe() {
 	router.Get("/:registry/:owner/:repository/rank", repoHandlers.ThenFunc(rankHandler))
 	router.Get("/:registry/:owner/:repository/contents/*path", repoHandlers.ThenFunc(fileHandler))
 
-	hp := config.Get("HttpPort")
+	hp := config.Values.HttpPort
 	log.Info("Listening on port " + hp)
 	if err := http.ListenAndServe(":"+hp, router); err != nil {
 		log.Fatal(err)
@@ -95,9 +94,8 @@ func rankHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
-	rk := rank.New()
-	rk.SetRepository(rp)
-	rank, err := rk.GetScore()
+	repo := repository.New(rp, "")
+	rank, err := repo.Rank()
 	send(w, r, rank, err)
 }
 
@@ -116,7 +114,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	case "loc":
 		out, err = datafetcher.GetCodeStats(rp)
 	case "lint":
-		out, err = datafetcher.GetLint(rp, ps.ByName("linter"))
+		out, err = datafetcher.GetLintMessages(rp, ps.ByName("linter"))
 	}
 
 	send(w, r, out, err)
@@ -157,7 +155,7 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 // and that it is contains Go code.
 func checkRepo(r *http.Request, owner, repo string) (int, error) {
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: config.Get("GithubAccessToken")},
+		&oauth2.Token{AccessToken: config.Values.GithubAccessToken},
 	)
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 

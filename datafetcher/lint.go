@@ -1,15 +1,17 @@
 package datafetcher
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-type lint map[string]map[string][]map[string]interface{}
+	"github.com/exago/svc/repository"
+)
 
 var lintCmd = &lambdaCmd{
 	name:      "lint",
 	unMarshal: unMarshalLint,
 }
 
-func GetLint(repository, linter string) (interface{}, error) {
+func GetLintMessages(repository, linter string) (interface{}, error) {
 	lintCmd.ctxt = lambdaContext{
 		Repository: repository,
 		Linter:     linter,
@@ -18,7 +20,7 @@ func GetLint(repository, linter string) (interface{}, error) {
 }
 
 func unMarshalLint(l *lambdaCmd, b []byte) (interface{}, error) {
-	var lnt lint
+	var lnt repository.LintMessages
 	err := json.Unmarshal(b, &lnt)
 	return lnt, err
 }

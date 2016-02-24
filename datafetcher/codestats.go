@@ -1,11 +1,13 @@
 package datafetcher
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-type codeStats map[string]int
+	"github.com/exago/svc/repository"
+)
 
 var codeStatsCmd = &lambdaCmd{
-	name:      "loc",
+	name:      "codestats",
 	unMarshal: unMarshalCodeStats,
 }
 
@@ -17,7 +19,7 @@ func GetCodeStats(repository string) (interface{}, error) {
 }
 
 func unMarshalCodeStats(l *lambdaCmd, b []byte) (interface{}, error) {
-	var cs codeStats
+	var cs repository.CodeStats
 	err := json.Unmarshal(b, &cs)
 	return cs, err
 }

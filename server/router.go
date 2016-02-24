@@ -72,7 +72,7 @@ func send(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
 func writeData(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	var err error
 
-	w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
+	w.Header().Set("Access-Control-Allow-Origin", config.Values.AllowOrigin)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)

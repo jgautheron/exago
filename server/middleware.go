@@ -11,7 +11,6 @@ import (
 	"github.com/didip/tollbooth"
 	"github.com/exago/svc/config"
 	"github.com/exago/svc/logger"
-	"github.com/exago/svc/redis"
 	"github.com/exago/svc/requestlock"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
@@ -67,42 +66,6 @@ func checkValidRepository(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func checkCache(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ps := context.Get(r, "params").(httprouter.Params)
-		lgr := context.Get(r, "logger").(*log.Entry)
-
-		idfr := getCacheIdentifier(r)
-		k := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
-
-		c := redis.GetConn()
-		o, err := c.Do("HGET", k, idfr)
-		if err != nil {
-			// Log the error and fallback
-			lgr.Error(err)
-			next.ServeHTTP(w, r)
-			return
-		}
-		if o == nil {
-			next.ServeHTTP(w, r)
-			return
-		}
-		lgr.Debugln(k, idfr, "cache hit")
-
-		// Output straight from the cache
-		w.Header().Set("Access-Control-Allow-Origin", config.Get("AllowOrigin"))
-		w.Header().Set("Content-Type", "application/json")
-		w.Header().Set("Content-Encoding", "gzip")
-		w.Header().Set("X-Cache", "HIT")
-		w.WriteHeader(http.StatusOK)
-
-		if _, err := w.Write(o.([]byte)); err != nil {
-			writeError(w, r, err)
-		}
-	}
-	return http.HandlerFunc(fn)
-}
-
 func requestLock(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
@@ -135,7 +98,7 @@ func rateLimit(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		lgr := context.Get(r, "logger").(*log.Entry)
 
-		if r.Header.Get("Origin") == config.Get("AllowOrigin") {
+		if r.Header.Get("Origin") == config.Values.AllowOrigin {
 			next.ServeHTTP(w, r)
 			return
 		}

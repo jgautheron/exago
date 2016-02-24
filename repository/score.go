@@ -1,4 +1,4 @@
-package rank
+package repository
 
 import "fmt"
 
@@ -50,67 +50,68 @@ func (sc *Score) addInfo(str string) {
 	sc.Details = append(sc.Details, str)
 }
 
-func (rk *Rank) calcScore() {
+// TODO: Split the score calculation per Struct (ex. Imports{}.GetScore())
+func (r *Repository) calcScore() {
 	// More third parties means bigger potential for instability, larger attack surface
-	tp := len(rk.imports)
+	tp := len(r.Imports)
 	switch true {
 	case tp == 0:
-		rk.Score.Increase(20, thirdParties, "0")
+		r.Score.Increase(20, thirdParties, "0")
 	case tp < 4:
-		rk.Score.Increase(15, thirdParties, "< 4")
+		r.Score.Increase(15, thirdParties, "< 4")
 	case tp < 6:
-		rk.Score.Increase(10, thirdParties, "< 6")
+		r.Score.Increase(10, thirdParties, "< 6")
 	case tp < 8:
-		rk.Score.Increase(5, thirdParties, "< 8")
+		r.Score.Increase(5, thirdParties, "< 8")
 	}
 
 	// Code doesn't always speak for itself
-	ra := float64(rk.loc["LOC"] / rk.loc["NCLOC"])
+	ra := float64(r.CodeStats["LOC"] / r.CodeStats["NCLOC"])
 	switch true {
 	case ra > 1.4:
-		rk.Score.Increase(20, ratioLocCloc, "> 1.4")
+		r.Score.Increase(20, ratioLocCloc, "> 1.4")
 	case ra > 1.3:
-		rk.Score.Increase(15, ratioLocCloc, "> 1.3")
+		r.Score.Increase(15, ratioLocCloc, "> 1.3")
 	case ra > 1.2:
-		rk.Score.Increase(10, ratioLocCloc, "> 1.2")
+		r.Score.Increase(10, ratioLocCloc, "> 1.2")
 	case ra > 1.1:
-		rk.Score.Increase(8, ratioLocCloc, "> 1.1")
+		r.Score.Increase(8, ratioLocCloc, "> 1.1")
 	}
 
 	// Checklist
-	for _, passed := range rk.tests.Checklist.Passed {
+	for _, passed := range r.TestResults.Checklist.Passed {
 		switch passed.Name {
 		case "projectBuilds":
-			rk.Score.Increase(10, checklist, "projectBuilds")
+			r.Score.Increase(10, checklist, "projectBuilds")
 		case "isFormatted":
-			rk.Score.Increase(10, checklist, "isFormatted")
+			r.Score.Increase(10, checklist, "isFormatted")
 		case "hasReadme":
-			rk.Score.Increase(10, checklist, "hasReadme")
+			r.Score.Increase(10, checklist, "hasReadme")
 		case "isDirMatch":
-			rk.Score.Increase(10, checklist, "isDirMatch")
+			r.Score.Increase(10, checklist, "isDirMatch")
 		case "isLinted":
-			rk.Score.Increase(10, checklist, "isLinted")
+			r.Score.Increase(10, checklist, "isLinted")
 		case "hasBenches":
-			rk.Score.Increase(10, checklist, "hasBenches")
+			r.Score.Increase(10, checklist, "hasBenches")
 		}
 	}
-	for _, failed := range rk.tests.Checklist.Failed {
+	for _, failed := range r.TestResults.Checklist.Failed {
 		switch failed.Name {
 		case "isFormatted":
-			rk.Score.Decrease(25, checklist, "isFormatted")
+			r.Score.Decrease(25, checklist, "isFormatted")
 		case "isLinted":
-			rk.Score.Decrease(10, checklist, "isLinted")
+			r.Score.Decrease(10, checklist, "isLinted")
 		case "hasReadme":
-			rk.Score.Decrease(20, checklist, "hasReadme")
+			r.Score.Decrease(20, checklist, "hasReadme")
 		case "isDirMatch":
-			rk.Score.Decrease(10, checklist, "isDirMatch")
+			r.Score.Decrease(10, checklist, "isDirMatch")
 		}
 	}
 
 	// Initialise values from test results
 	var cov, duration []float64
 	success := true
-	for _, pkg := range rk.tests.Packages {
+	for _, pkg := range r.TestResults.Packages {
 		cov = append(cov, pkg.Coverage)
 		duration = append(duration, pkg.ExecutionTime)
 
@@ -135,28 +136,28 @@ func (rk *Rank) calcScore() {
 	}
 
 	if !success {
-		rk.Score.Decrease(15, testPass, "")
+		r.Score.Decrease(15, testPass, "")
 	}
 
 	// 100% is not necessarily an achievement
 	switch true {
 	case covMean > 80:
-		rk.Score.Increase(20, testCoverage, "> 80")
+		r.Score.Increase(20, testCoverage, "> 80")
 	case covMean > 60:
-		rk.Score.Increase(15, testCoverage, "> 60")
+		r.Score.Increase(15, testCoverage, "> 60")
 	case covMean > 40:
-		rk.Score.Increase(10, testCoverage, "> 40")
+		r.Score.Increase(10, testCoverage, "> 40")
 	case covMean == 0:
-		rk.Score.Decrease(20, testCoverage, "= 0")
+		r.Score.Decrease(20, testCoverage, "= 0")
 	}
 
 	// Fast test suites are important
 	switch true {
 	case durationMean > 10:
-		rk.Score.Decrease(15, testDuration, "> 10")
+		r.Score.Decrease(15, testDuration, "> 10")
 	case durationMean < 2:
-		rk.Score.Increase(10, testDuration, "< 2")
+		r.Score.Increase(10, testDuration, "< 2")
 	}
 
-	rk.Score.StampRank()
+	r.Score.StampRank()
 }
