@@ -183,7 +183,12 @@ func (d *Decoder) mapValue(v reflect.Value) error {
 
 func (e *Encoder) encodeStruct(strct reflect.Value) error {
 	structFields := structs.Fields(strct.Type())
-	fields := structFields.OmitEmpty(strct)
+	fields := make([]*field, 0, structFields.Len())
+	for _, f := range structFields.List {
+		if !f.Omit(strct) {
+			fields = append(fields, f)
+		}
+	}
 
 	if err := e.EncodeMapLen(len(fields)); err != nil {
 		return err
