@@ -1,11 +1,15 @@
 package repository
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/exago/svc/leveldb"
+)
+
+var (
+	errMissingData = errors.New("Not enough data to calculate the rank")
 )
 
 type Repository struct {
@@ -36,14 +40,36 @@ func (r *Repository) LoadFromDB() error {
 		return errors.New("No data found in database for this repository")
 	}
 
+	passed := 0
 	for k, v := range data {
-		logrus.Infoln(k.Type, v)
+		switch k.Type {
+		case "codestats":
+			if err := json.Unmarshal(v, &r.CodeStats); err != nil {
+				return err
+			}
+			passed++
+		case "imports":
+			if err := json.Unmarshal(v, &r.Imports); err != nil {
+				return err
+			}
+			passed++
+		case "testrunner":
+			if err := json.Unmarshal(v, &r.TestResults); err != nil {
+				return err
+			}
+			passed++
+		}
 	}
 
+	// All three are required to determine the rank
+	if passed != 3 {
+		return errMissingData
+	}
+
+	r.calcScore()
 	return nil
 }
 
-func (r *Repository) Rank() (rnk Rank, err error) {
-	err = r.LoadFromDB()
-	return rnk, err
+func (r *Repository) Rank() Rank {
+	return r.Score.Rank
 }

@@ -23,5 +23,5 @@ type TestResults struct {
 }
 
 type Imports []string
-type LintMessages map[string]map[string][]map[string]interface{}
 type CodeStats map[string]int
+type LintMessages map[string]map[string][]map[string]interface{}

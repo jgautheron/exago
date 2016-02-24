@@ -1,12 +1,12 @@
 package repository
 
 const (
-	A Rank = iota
-	B
-	C
-	D
-	E
-	F
+	A Rank = "A"
+	B      = "B"
+	C      = "C"
+	D      = "D"
+	E      = "E"
+	F      = "F"
 )
 
-type Rank byte
+type Rank string

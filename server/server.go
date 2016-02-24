@@ -9,6 +9,7 @@ import (
 	"golang.org/x/oauth2"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/badge"
 	"github.com/exago/svc/config"
 	"github.com/exago/svc/datafetcher"
 	"github.com/exago/svc/repository"
@@ -22,7 +23,6 @@ import (
 var (
 	errInvalidParameter  = errors.New("Invalid parameter passed")
 	errInvalidRepository = errors.New("The repository doesn't contain Go code")
-	errBadgeError        = errors.New("The badge cannot be fetched")
 )
 
 func ListenAndServe() {
@@ -37,9 +37,9 @@ func ListenAndServe() {
 	)
 	router := NewRouter()
 
-	// router.Get("/:registry/:owner/:repository/badge/:type/img.svg", repoHandlers.ThenFunc(badgeHandler))
+	router.Get("/:registry/:owner/:repository/badge/:type/img.svg", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/:registry/:owner/:repository/valid", repoHandlers.ThenFunc(repoValidHandler))
-	router.Get("/:registry/:owner/:repository/loc", repoHandlers.ThenFunc(lambdaHandler))
+	router.Get("/:registry/:owner/:repository/codestats", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:owner/:repository/imports", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:owner/:repository/lint/:linter", repoHandlers.ThenFunc(lambdaHandler))
 	router.Get("/:registry/:owner/:repository/test", repoHandlers.ThenFunc(testHandler))
@@ -53,49 +53,32 @@ func ListenAndServe() {
 	}
 }
 
-// func badgeHandler(w http.ResponseWriter, r *http.Request) {
-// 	ps := context.Get(r, "params").(httprouter.Params)
-// 	tp := ps.ByName("type")
+func badgeHandler(w http.ResponseWriter, r *http.Request) {
+	ps := context.Get(r, "params").(httprouter.Params)
+	lgr := context.Get(r, "logger").(*log.Entry)
+	tp := ps.ByName("type")
 
-// 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
-// 	switch tp {
-// 	case "imports":
-// 		out, err := datafetcher.GetImports(rp)
-// 		if err != nil {
-// 			log.Error(err)
-// 			badge.WriteError(w, tp)
-// 			return
-// 		}
-// 		var data []string
-// 		err = json.Unmarshal(*out, &data)
-// 		if err != nil {
-// 			log.Error(err)
-// 			badge.WriteError(w, tp)
-// 			return
-// 		}
-// 		ln := strconv.Itoa(len(data))
-// 		badge.Write(w, "imports", ln, "blue")
-// 	case "rank":
-// 		title := "exago"
-
-// 		rk := rank.New()
-// 		rk.SetRepository(rp)
-// 		val, err := rk.GetRankFromCache()
-// 		if err != nil {
-// 			log.Error(err)
-// 			badge.WriteError(w, title)
-// 			return
-// 		}
-// 		badge.Write(w, title, val, "blue")
-// 	}
-// }
+	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
+	switch tp {
+	case "rank":
+		title := "exago"
+		repo := repository.New(rp, "")
+		err, rank := repo.LoadFromDB(), repo.Rank()
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, string(rank), "blue")
+	}
+}
 
 func rankHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
 	repo := repository.New(rp, "")
-	rank, err := repo.Rank()
+	err, rank := repo.LoadFromDB(), repo.Rank()
 	send(w, r, rank, err)
 }
 
@@ -111,7 +94,7 @@ func lambdaHandler(w http.ResponseWriter, r *http.Request) {
 	switch lambdaFn {
 	case "imports":
 		out, err = datafetcher.GetImports(rp)
-	case "loc":
+	case "codestats":
 		out, err = datafetcher.GetCodeStats(rp)
 	case "lint":
 		out, err = datafetcher.GetLintMessages(rp, ps.ByName("linter"))

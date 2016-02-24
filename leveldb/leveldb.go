@@ -62,13 +62,15 @@ func FindAllForRepository(prefix []byte) (map[CodeInfoKey][]byte, error) {
 		cval := make([]byte, len(val))
 		copy(cval, val)
 
+		// Unpack the data
 		out := []byte{}
 		if err := msgpack.Unmarshal(cval, &out); err != nil {
 			return nil, err
 		}
 
-		ks := extractKey(ckey)
-		m[ks] = out
+		// Strip the prefix from the key
+		ks := strings.Replace(string(ckey), string(prefix), "", 1)
+		m[extractKey(ks)] = out
 	}
 	return m, iter.Error()
 }
@@ -82,15 +84,11 @@ func Save(key, data []byte) error {
 	return err
 }
 
-func extractKey(key []byte) CodeInfoKey {
-	sp := strings.Split(string(key), "-")
-	return CodeInfoKey{
-		sp[1],
-		sp[2],
-		sp[3],
-	}
+func extractKey(key string) CodeInfoKey {
+	sp := strings.Split(key, "-")
+	return CodeInfoKey{sp[1], sp[2]}
 }
 
 type CodeInfoKey struct {
-	Branch, Linter, Type string
+	Linter, Type string
 }

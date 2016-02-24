@@ -15,7 +15,7 @@ type scoreType string
 
 type Score struct {
 	Value   int      `json:"value"`
-	Rank    string   `json:"rank"`
+	Rank    Rank     `json:"rank"`
 	Details []string `json:"details"`
 }
 
@@ -32,17 +32,17 @@ func (sc *Score) Decrease(score int, category scoreType, comment string) {
 func (sc *Score) StampRank() {
 	switch true {
 	case sc.Value >= 80:
-		sc.Rank = "A"
+		sc.Rank = A
 	case sc.Value >= 60:
-		sc.Rank = "B"
+		sc.Rank = B
 	case sc.Value >= 40:
-		sc.Rank = "C"
+		sc.Rank = C
 	case sc.Value >= 20:
-		sc.Rank = "D"
+		sc.Rank = D
 	case sc.Value >= 0:
-		sc.Rank = "E"
+		sc.Rank = E
 	default:
-		sc.Rank = "F"
+		sc.Rank = F
 	}
 }
 
