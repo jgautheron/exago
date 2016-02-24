@@ -19,29 +19,16 @@ Variable               | Description | Mandatory
 GITHUB_ACCESS_TOKEN       | Necessary to consume GitHub's API | Yes
 AWS_ACCESS_KEY_ID        | Required for AWS Lambda | Yes
 AWS_SECRET_ACCESS_KEY     | Required for AWS Lambda | Yes
-RUNNER_IMAGE_NAME      | Required for running tests | Yes
+AWS_REGION     | Required for AWS Lambda | Yes
 HTTP_PORT      | HTTP port to bind | Yes
-REDIS_HOST      | Redis host | No
+DATABASE_PATH      | Path to the database | No
 ALLOW_ORIGIN   | Origin allowed for API calls (CORS) | Yes
 LOG_LEVEL   | Log level (debug, info, warn, error, fatal) | Yes
 
 #### Third Parties
 
 All third parties are in the `vendor` folder.  
-Don't forget to set `GO15VENDOREXPERIMENT` to `1`.
-
-#### Redis
-
-Redis is used as cache backend.  
-The service will degrade gracefully if there's no Redis available for the given `REDIS_HOST`.
-
-#### Docker
-
-The tests are run in a container (see `RUNNER_IMAGE_NAME` above). Docker should be up and the container available.
-
-  $ docker pull jgautheron/exago-runner
-  
-The `DOCKER_HOST` environment variable should be defined as well. It's automatically set on OSX when using Docker Machine, on Linux, it would look like something like this: `DOCKER_HOST="unix:///var/run/docker.sock"`
+:warning: Don't forget to set `GO15VENDOREXPERIMENT` to `1` if you're not running at least Go 1.6.
 
 ## Contributing
 
