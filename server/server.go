@@ -6,15 +6,13 @@ import (
 	"net/http"
 	"strings"
 
-	"golang.org/x/oauth2"
-
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/badge"
 	"github.com/exago/svc/config"
 	"github.com/exago/svc/datafetcher"
+	"github.com/exago/svc/github"
 	"github.com/exago/svc/repository"
 	"github.com/exago/svc/requestlock"
-	"github.com/google/go-github/github"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 	"github.com/justinas/alice"
@@ -112,11 +110,8 @@ func repoValidHandler(w http.ResponseWriter, r *http.Request) {
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
-	lgr := context.Get(r, "logger").(*log.Entry)
-
-	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
-	out, err := datafetcher.GetFileContents(lgr, rp, ps.ByName("path")[1:])
-	send(w, r, string(out), err)
+	content, err := github.GetFileContent(ps.ByName("owner"), ps.ByName("repository"), ps.ByName("path")[1:])
+	send(w, r, content, err)
 }
 
 func testHandler(w http.ResponseWriter, r *http.Request) {
@@ -137,15 +132,8 @@ func testHandler(w http.ResponseWriter, r *http.Request) {
 // checkRepo ensures that the repository exists on GitHub
 // and that it is contains Go code.
 func checkRepo(r *http.Request, owner, repo string) (int, error) {
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: config.Values.GithubAccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-
-	client := github.NewClient(tc)
-
 	// Attempt to load the repo
-	rp, _, err := client.Repositories.Get(owner, repo)
+	rp, _, err := github.Repositories.Get(owner, repo)
 	if err != nil {
 		return http.StatusNotFound, fmt.Errorf("Repository %s not found in Github.", repo)
 	}
