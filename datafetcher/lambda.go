@@ -35,14 +35,14 @@ type LambdaResponse struct {
 
 func callLambdaFn(fn string, ctxt lambdaContext) (lrsp LambdaResponse, err error) {
 	creds := credentials.NewStaticCredentials(
-		config.Get("AwsAccessKeyID"),
-		config.Get("AwsSecretAccessKey"),
+		config.Values.AwsAccessKeyID,
+		config.Values.AwsSecretAccessKey,
 		"",
 	)
 	svc := lambda.New(
 		session.New(),
 		aws.NewConfig().
-			WithRegion(config.Get("AwsRegion")).
+			WithRegion(config.Values.AwsRegion).
 			WithCredentials(creds),
 	)
 
@@ -96,7 +96,7 @@ func (l *lambdaCmd) Data() (interface{}, error) {
 	var data []byte
 
 	// Check if the data is cached
-	isCached, cacheKey := false, l.CacheKey()
+	isCached, cacheKey := false, l.cacheKey()
 	cres, err := leveldb.FindForRepositoryCmd(cacheKey)
 	if len(cres) > 0 && err == nil {
 		isCached = true
@@ -126,9 +126,8 @@ func (l *lambdaCmd) Data() (interface{}, error) {
 	return l.data, err
 }
 
-// CacheKey generates a key specific to the lambdaCmd.
-func (l *lambdaCmd) CacheKey() []byte {
-	cacheKeyFormat := "%s-%s:%s"
-	ck := fmt.Sprintf(cacheKeyFormat, l.ctxt.String(), l.name)
+// cacheKey generates a key that will be used to identify the entry in database.
+func (l *lambdaCmd) cacheKey() []byte {
+	ck := fmt.Sprintf("%s-%s", l.ctxt.String(), l.name)
 	return []byte(ck)
 }

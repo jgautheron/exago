@@ -1,61 +1,25 @@
 package config
 
 import (
-	"log"
-	"os"
+	log "github.com/Sirupsen/logrus"
+	"github.com/exago/envconfig"
 )
 
-var data map[string]*configItem
+var Values cfg
 
-type configItem struct {
-	value, defaultValue string
-	required            bool
+type cfg struct {
+	GithubAccessToken  string `envconfig:"GITHUB_ACCESS_TOKEN" required:"true"`
+	AwsRegion          string `envconfig:"AWS_REGION" default:"eu-west1"`
+	AwsAccessKeyID     string `envconfig:"AWS_ACCESS_KEY_ID" required:"true"`
+	AwsSecretAccessKey string `envconfig:"AWS_SECRET_ACCESS_KEY" required:"true"`
+	HttpPort           string `envconfig:"HTTP_PORT" default:"8080"`
+	DatabasePath       string `envconfig:"DATABASE_PATH" default:"./exago.db"`
+	AllowOrigin        string `envconfig:"ALLOW_ORIGIN" default:"*"`
+	LogLevel           string `envconfig:"LOG_LEVEL" default:"info"`
 }
 
 func SetUp() {
-	data = map[string]*configItem{
-		"GithubAccessToken": {
-			os.Getenv("GITHUB_ACCESS_TOKEN"), "", true,
-		},
-		"AwsRegion": {
-			os.Getenv("AWS_REGION"), "eu-west-1", false,
-		},
-		"AwsAccessKeyID": {
-			os.Getenv("AWS_ACCESS_KEY_ID"), "", true,
-		},
-		"AwsSecretAccessKey": {
-			os.Getenv("AWS_SECRET_ACCESS_KEY"), "", true,
-		},
-		"RunnerImageName": {
-			os.Getenv("RUNNER_IMAGE_NAME"), "jgautheron/exago-runner", false,
-		},
-		"HttpPort": {
-			os.Getenv("HTTP_PORT"), "8080", false,
-		},
-		"DatabasePath": {
-			os.Getenv("DATABASE_PATH"), "/data/exago.db", false,
-		},
-		"AllowOrigin": {
-			os.Getenv("ALLOW_ORIGIN"), "", true,
-		},
-		"LogLevel": {
-			os.Getenv("LOG_LEVEL"), "info", false,
-		},
+	if err := envconfig.Process("", &Values); err != nil {
+		log.Fatal(err.Error())
 	}
-
-	for k, m := range data {
-		if m.required && len(m.value) == 0 {
-			log.Fatalf("Missing value for %s", k)
-		}
-		if len(m.value) == 0 && len(m.defaultValue) > 0 {
-			m.value = m.defaultValue
-		}
-	}
-}
-
-func Get(key string) string {
-	if _, exists := data[key]; !exists {
-		return ""
-	}
-	return data[key].value
 }

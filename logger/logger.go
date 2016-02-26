@@ -18,7 +18,7 @@ func With(repository string, ip string) *log.Entry {
 }
 
 func setLogLevel() {
-	logLevel := config.Get("LOG_LEVEL")
+	logLevel := config.Values.LogLevel
 
 	if logLevel == "" {
 		log.Info("Log level default to info")

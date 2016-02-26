@@ -1,8 +1,10 @@
 package datafetcher
 
-import "encoding/json"
+import (
+	"encoding/json"
 
-type imports []string
+	"github.com/exago/svc/repository"
+)
 
 var importsCmd = &lambdaCmd{
 	name:      "imports",
@@ -17,7 +19,7 @@ func GetImports(repository string) (interface{}, error) {
 }
 
 func unMarshalImports(l *lambdaCmd, b []byte) (interface{}, error) {
-	var imp imports
+	var imp repository.Imports
 	err := json.Unmarshal(b, &imp)
 	return imp, err
 }
