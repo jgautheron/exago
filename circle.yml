@@ -22,10 +22,9 @@ dependencies:
     - sudo rm -rf /usr/local/go
     - sudo ln -snf $HOME/goinstall /usr/local/go
     - go version
-    #- go get github.com/alecthomas/gometalinter
-    #- gometalinter --install
   override:
-    - echo "nothing to do here"
+    - go get github.com/Masterminds/glide
+    - glide install
 
   # cache the go install
   cache_directories:

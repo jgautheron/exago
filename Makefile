@@ -22,6 +22,6 @@ check:
 # but does not run the tests.
 .PHONY: test
 test:
-	$(GO) test
+	$(GO) test $(glide novendor)
 
 default: build
