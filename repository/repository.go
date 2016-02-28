@@ -10,6 +10,7 @@ import (
 
 var (
 	errMissingData = errors.New("Not enough data to calculate the rank")
+	errNoDataFound = errors.New("No data found in database for this repository")
 )
 
 type Repository struct {
@@ -37,7 +38,7 @@ func (r *Repository) LoadFromDB() error {
 		return err
 	}
 	if len(data) == 0 {
-		return errors.New("No data found in database for this repository")
+		return errNoDataFound
 	}
 
 	passed := 0

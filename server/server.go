@@ -76,7 +76,7 @@ func rankHandler(w http.ResponseWriter, r *http.Request) {
 	rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
 	repo := repository.New(rp, "")
-	err, rank := repo.LoadFromDB(), repo.Rank()
+	err, rank := repo.LoadFromDB(), repo.Score
 	send(w, r, rank, err)
 }
 
