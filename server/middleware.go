@@ -41,18 +41,6 @@ func recoverHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func checkRegistry(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		params := context.Get(r, "params").(httprouter.Params)
-		if !strings.HasPrefix(params.ByName("repository")[1:], "github.com") {
-			writeData(w, r, http.StatusNotImplemented, "Only GitHub is implemented right now")
-			return
-		}
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
 func initDB(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		_ = leveldb.Instance()
@@ -64,11 +52,28 @@ func initDB(next http.Handler) http.Handler {
 func checkValidRepository(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
-		re := regexp.MustCompile(`^github\.com/[\w\d\-_]+/[\w\d\-_]+$`)
-		if !re.MatchString(ps.ByName("repository")[1:]) {
+		repository := ps.ByName("repository")[1:]
+
+		if !strings.HasPrefix(repository, "github.com") {
+			writeData(w, r, http.StatusNotImplemented, "Only GitHub is implemented right now")
+			return
+		}
+		re := regexp.MustCompile(`^github\.com/[\w\d\-_]+/[\w\d\-_]+`)
+		if !re.MatchString(repository) {
 			writeError(w, r, errInvalidParameter)
 			return
 		}
+
+		// Split the project path
+		sp := strings.Split(repository, "/")
+		context.Set(r, "provider", sp[0])
+		context.Set(r, "owner", sp[1])
+		context.Set(r, "project", sp[2])
+
+		if len(sp) > 3 {
+			context.Set(r, "path", strings.Join(sp[3:], "/"))
+		}
+
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)

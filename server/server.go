@@ -30,7 +30,6 @@ func ListenAndServe() {
 		recoverHandler,
 		initDB,
 		setLogger,
-		checkRegistry,
 		checkValidRepository,
 		// rateLimit,
 		// requestLock,
@@ -40,7 +39,7 @@ func ListenAndServe() {
 	router.Get("/project/*repository", repoHandlers.ThenFunc(repositoryHandler))
 	router.Get("/badge/*repository", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/valid/*repository", repoHandlers.ThenFunc(repoValidHandler))
-	// router.Get("/:registry/:owner/:repository/contents/*path", repoHandlers.ThenFunc(fileHandler))
+	router.Get("/contents/*repository", repoHandlers.ThenFunc(fileHandler))
 
 	log.Infof("Listening on port %d", Config.HttpPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), router))
@@ -171,15 +170,17 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func repoValidHandler(w http.ResponseWriter, r *http.Request) {
-	ps := context.Get(r, "params").(httprouter.Params)
-	owner, repository := ps.ByName("owner"), ps.ByName("repository")
-	code, err := checkRepo(r, owner, repository)
+	owner := context.Get(r, "owner").(string)
+	project := context.Get(r, "project").(string)
+	code, err := checkRepo(r, owner, project)
 	writeData(w, r, code, err)
 }
 
 func fileHandler(w http.ResponseWriter, r *http.Request) {
-	ps := context.Get(r, "params").(httprouter.Params)
-	content, err := github.GetFileContent(ps.ByName("owner"), ps.ByName("repository"), ps.ByName("path")[1:])
+	owner := context.Get(r, "owner").(string)
+	project := context.Get(r, "project").(string)
+	path := context.Get(r, "path").(string)
+	content, err := github.GetFileContent(owner, project, path)
 	send(w, r, content, err)
 }
 
