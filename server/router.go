@@ -8,7 +8,7 @@ import (
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/config"
+	. "github.com/exago/svc/config"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
@@ -66,13 +66,13 @@ func send(w http.ResponseWriter, r *http.Request, data interface{}, err error) {
 	}
 }
 
-// outputJSON handles the response for each endpoint.
+// writeData handles the response for each endpoint.
 // It follows the JSEND standard for JSON response.
 // See https://labs.omniti.com/labs/jsend
 func writeData(w http.ResponseWriter, r *http.Request, code int, data interface{}) {
 	var err error
 
-	w.Header().Set("Access-Control-Allow-Origin", config.Values.AllowOrigin)
+	w.Header().Set("Access-Control-Allow-Origin", Config.AllowOrigin)
 	w.Header().Set("Content-Type", "application/json")
 	w.Header().Set("Content-Encoding", "gzip")
 	w.WriteHeader(code)
@@ -135,6 +135,6 @@ func getIP(s string) string {
 	if ip := net.ParseIP(s); ip != nil {
 		return ip.To4().String()
 	}
-	log.Error("Couldn't parse IP %s", s)
+	log.Errorf("Couldn't parse IP %s", s)
 	return ""
 }

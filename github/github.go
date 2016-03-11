@@ -3,7 +3,7 @@ package github
 import (
 	"encoding/base64"
 
-	"github.com/exago/svc/config"
+	. "github.com/exago/svc/config"
 	gh "github.com/google/go-github/github"
 	"golang.org/x/oauth2"
 )
@@ -17,7 +17,7 @@ var (
 
 func SetUp() {
 	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: config.Values.GithubAccessToken},
+		&oauth2.Token{AccessToken: Config.GithubAccessToken},
 	)
 	tc := oauth2.NewClient(oauth2.NoContext, ts)
 	client = gh.NewClient(tc)
