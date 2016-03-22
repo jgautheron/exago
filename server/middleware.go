@@ -70,6 +70,9 @@ func checkValidRepository(next http.Handler) http.Handler {
 		context.Set(r, "owner", sp[1])
 		context.Set(r, "project", sp[2])
 
+		// Entire path
+		context.Set(r, "repository", repository)
+
 		if len(sp) > 3 {
 			context.Set(r, "path", strings.Join(sp[3:], "/"))
 		}

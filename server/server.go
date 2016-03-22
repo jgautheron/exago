@@ -40,6 +40,7 @@ func ListenAndServe() {
 	router.Get("/badge/*repository", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/valid/*repository", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/contents/*repository", repoHandlers.ThenFunc(fileHandler))
+	router.Get("/cached/*repository", repoHandlers.ThenFunc(cachedHandler))
 
 	log.Infof("Listening on port %d", Config.HttpPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), router))
@@ -129,8 +130,7 @@ func (rc *RepositoryChecker) RunAll() {
 }
 
 func repositoryHandler(w http.ResponseWriter, r *http.Request) {
-	ps := context.Get(r, "params").(httprouter.Params)
-	rp := ps.ByName("repository")[1:]
+	repo := context.Get(r, "repository").(string)
 
 	srv := eventsource.NewServer()
 	srv.Gzip = true
@@ -138,7 +138,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	rc := &RepositoryChecker{
 		srv:        srv,
-		repository: repository.New(rp, ""),
+		repository: repository.New(repo, ""),
 		types:      []string{"imports", "codestats", "testresults", "lintmessages"},
 		data:       make(chan interface{}, 10),
 		dataLoaded: make(chan bool, 1),
@@ -146,7 +146,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	go rc.RunAll()
 	go rc.Stamp()
-	srv.Handler(rp)(w, r)
+	srv.Handler(repo)(w, r)
 }
 
 func badgeHandler(w http.ResponseWriter, r *http.Request) {
@@ -182,6 +182,12 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 	path := context.Get(r, "path").(string)
 	content, err := github.GetFileContent(owner, project, path)
 	send(w, r, content, err)
+}
+
+func cachedHandler(w http.ResponseWriter, r *http.Request) {
+	repo := context.Get(r, "repository").(string)
+	rp := repository.New(repo, "")
+	send(w, r, rp.IsCached(), nil)
 }
 
 // checkRepo ensures that the repository exists on GitHub
