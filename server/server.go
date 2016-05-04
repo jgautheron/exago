@@ -8,7 +8,6 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/donovanhide/eventsource"
 	"github.com/exago/svc/badge"
 	. "github.com/exago/svc/config"
 	"github.com/exago/svc/github"
@@ -47,21 +46,12 @@ func ListenAndServe() {
 }
 
 type RepositoryChecker struct {
-	srv            *eventsource.Server
 	repository     *repository.Repository
 	types, linters []string
 	data           chan interface{}
 	dataLoaded     chan bool
-	hasError       bool
-}
-
-func (rc *RepositoryChecker) Done(tp string, out interface{}) {
-	rc.publishMessage(tp, out)
-}
-
-func (rc *RepositoryChecker) Error(tp string, err error) {
-	rc.publishError(tp, err)
-	rc.hasError = true
+	stamped        chan bool
+	output         map[string]interface{}
 }
 
 func (rc *RepositoryChecker) Stamp() {
@@ -69,17 +59,19 @@ func (rc *RepositoryChecker) Stamp() {
 
 	sc, err := rc.repository.GetScore()
 	if err != nil {
-		rc.Error("score", err)
+		rc.output["score"] = err
 	} else {
-		rc.Done("score", sc)
+		rc.output["score"] = sc
 	}
 
 	date, err := rc.repository.GetDate()
 	if err != nil {
-		rc.Error("date", err)
+		rc.output["date"] = err
 	} else {
-		rc.Done("date", date)
+		rc.output["date"] = date
 	}
+
+	rc.stamped <- true
 }
 
 func (rc *RepositoryChecker) RunAll() {
@@ -114,13 +106,13 @@ func (rc *RepositoryChecker) RunAll() {
 		case out := <-rc.data:
 			switch out.(type) {
 			case error:
-				rc.Error(tp, out.(error))
+				rc.output[tp] = out.(error)
 			default:
+				rc.output[tp] = out
 				i++
-				rc.Done(tp, out)
 			}
 		case <-time.After(time.Minute * 5):
-			rc.Error(tp, errRoutineTimeout)
+			rc.output[tp] = errRoutineTimeout
 		}
 	}
 
@@ -132,21 +124,20 @@ func (rc *RepositoryChecker) RunAll() {
 func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
 
-	srv := eventsource.NewServer()
-	srv.Gzip = true
-	srv.AllowCORS = true
-
 	rc := &RepositoryChecker{
-		srv:        srv,
 		repository: repository.New(repo, ""),
 		types:      []string{"imports", "codestats", "testresults", "lintmessages"},
 		data:       make(chan interface{}, 10),
 		dataLoaded: make(chan bool, 1),
+		stamped:    make(chan bool, 1),
 		linters:    repository.DefaultLinters,
+		output:     map[string]interface{}{},
 	}
 	go rc.RunAll()
 	go rc.Stamp()
-	srv.Handler(repo)(w, r)
+
+	<-rc.stamped
+	send(w, r, rc.output, nil)
 }
 
 func badgeHandler(w http.ResponseWriter, r *http.Request) {
