@@ -25,7 +25,8 @@ type Repository struct {
 
 	Score Score
 
-	LastUpdate time.Time
+	LastUpdate    time.Time
+	ExecutionTime string
 }
 
 func New(repo, branch string) *Repository {

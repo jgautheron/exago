@@ -133,10 +133,37 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 		linters:    repository.DefaultLinters,
 		output:     map[string]interface{}{},
 	}
-	go rc.RunAll()
-	go rc.Stamp()
 
-	<-rc.stamped
+	// Initialise the timer
+	start := time.Now()
+
+	go rc.RunAll()
+	<-rc.dataLoaded
+
+	// Add the Score
+	sc, err := rc.repository.GetScore()
+	if err != nil {
+		rc.output["score"] = err
+	} else {
+		rc.output["score"] = sc
+	}
+
+	// Add the timestamp
+	date, err := rc.repository.GetDate()
+	if err != nil {
+		rc.output["date"] = err
+	} else {
+		rc.output["date"] = date
+	}
+
+	// Add the execution time
+	et, err := rc.repository.GetExecutionTime(start)
+	if err != nil {
+		rc.output["executionTime"] = err
+	} else {
+		rc.output["executionTime"] = et
+	}
+
 	send(w, r, rc.output, nil)
 }
 

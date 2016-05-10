@@ -45,6 +45,23 @@ func (r *Repository) GetDate() (string, error) {
 	return date, nil
 }
 
+func (r *Repository) GetExecutionTime(start time.Time) (string, error) {
+	data, err := r.getCachedData("executiontime")
+	if err != nil {
+		return "", err
+	}
+	if data != nil {
+		r.ExecutionTime = string(data)
+		return r.ExecutionTime, nil
+	}
+
+	r.ExecutionTime = time.Since(start).String()
+	if err := leveldb.Save(r.cacheKey("executiontime"), []byte(r.ExecutionTime)); err != nil {
+		return "", err
+	}
+	return r.ExecutionTime, nil
+}
+
 func (r *Repository) GetScore() (sc Score, err error) {
 	data, err := r.getCachedData("score")
 	if err != nil {
