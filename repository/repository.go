@@ -1,11 +1,13 @@
 package repository
 
 import (
-	"encoding/json"
 	"errors"
 	"fmt"
+	"reflect"
+	"time"
 
 	"github.com/exago/svc/leveldb"
+	"github.com/exago/svc/repository/model"
 )
 
 var (
@@ -14,63 +16,69 @@ var (
 )
 
 type Repository struct {
-	name, branch string
+	Name, Branch string
 
-	CodeStats    CodeStats
-	Imports      Imports
-	TestResults  TestResults
-	LintMessages LintMessages
+	CodeStats    model.CodeStats
+	Imports      model.Imports
+	TestResults  model.TestResults
+	LintMessages model.LintMessages
 
 	Score Score
+
+	LastUpdate    time.Time
+	ExecutionTime string
 }
 
 func New(repo, branch string) *Repository {
 	return &Repository{
-		name:   repo,
-		branch: branch,
+		Name:   repo,
+		Branch: branch,
 	}
 }
 
-func (r *Repository) LoadFromDB() error {
-	prefix := fmt.Sprintf("%s-%s", r.name, r.branch)
+func (r *Repository) IsCached() bool {
+	prefix := fmt.Sprintf("%s-%s", r.Name, r.Branch)
 	data, err := leveldb.FindAllForRepository([]byte(prefix))
-	if err != nil {
+	if err != nil || len(data) != 6 {
+		return false
+	}
+	return true
+}
+
+func (r *Repository) IsLoaded() bool {
+	if r.CodeStats == nil {
+		return false
+	}
+	if r.Imports == nil {
+		return false
+	}
+	if reflect.DeepEqual(r.TestResults, model.TestResults{}) {
+		return false
+	}
+	if r.LintMessages == nil {
+		return false
+	}
+	return true
+}
+
+func (r *Repository) Load() (err error) {
+	if _, err = r.GetImports(); err != nil {
 		return err
 	}
-	if len(data) == 0 {
-		return errNoDataFound
+	if _, err = r.GetCodeStats(); err != nil {
+		return err
 	}
-
-	passed := 0
-	for k, v := range data {
-		switch k.Type {
-		case "codestats":
-			if err := json.Unmarshal(v, &r.CodeStats); err != nil {
-				return err
-			}
-			passed++
-		case "imports":
-			if err := json.Unmarshal(v, &r.Imports); err != nil {
-				return err
-			}
-			passed++
-		case "testrunner":
-			if err := json.Unmarshal(v, &r.TestResults); err != nil {
-				return err
-			}
-			passed++
-		}
+	if _, err = r.GetLintMessages(DefaultLinters); err != nil {
+		return err
 	}
-
-	// All three are required to determine the rank
-	if passed != 3 {
-		return errMissingData
+	if _, err = r.GetTestResults(); err != nil {
+		return err
 	}
-
-	r.calcScore()
-	return nil
-}
-
-func (r *Repository) Rank() Rank {
-	return r.Score.Rank
+	if _, err = r.GetScore(); err != nil {
+		return err
+	}
+	if _, err = r.GetDate(); err != nil {
+		return err
+	}
+	return err
 }

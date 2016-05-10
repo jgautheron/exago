@@ -1,6 +1,10 @@
 package repository
 
-import "fmt"
+import (
+	"fmt"
+
+	"github.com/Sirupsen/logrus"
+)
 
 const (
 	thirdParties scoreType = "thirdParties"
@@ -29,7 +33,7 @@ func (sc *Score) Decrease(score int, category scoreType, comment string) {
 	sc.Value -= score
 }
 
-func (sc *Score) StampRank() {
+func (sc *Score) stampRank() {
 	switch true {
 	case sc.Value >= 80:
 		sc.Rank = A
@@ -51,7 +55,7 @@ func (sc *Score) addInfo(str string) {
 }
 
 // TODO: Split the score calculation per Struct (ex. Imports{}.GetScore())
-func (r *Repository) calcScore() {
+func (r *Repository) calcScore() Score {
 	// More third parties means bigger potential for instability, larger attack surface
 	tp := len(r.Imports)
 	switch true {
@@ -66,6 +70,7 @@ func (r *Repository) calcScore() {
 	}
 
 	// Code doesn't always speak for itself
+	logrus.Info("CodeStats", r.CodeStats)
 	ra := float64(r.CodeStats["LOC"] / r.CodeStats["NCLOC"])
 	switch true {
 	case ra > 1.4:
@@ -159,5 +164,8 @@ func (r *Repository) calcScore() {
 		r.Score.Increase(10, testDuration, "< 2")
 	}
 
-	r.Score.StampRank()
+	// Stamp the rank
+	r.Score.stampRank()
+
+	return r.Score
 }

@@ -10,3 +10,7 @@ const (
 )
 
 type Rank string
+
+func (r *Repository) Rank() Rank {
+	return r.Score.Rank
+}

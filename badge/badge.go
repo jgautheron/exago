@@ -7,19 +7,23 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-func Write(w http.ResponseWriter, name, val, color string) {
+const (
+	title = "exago"
+)
+
+func Write(w http.ResponseWriter, val, color string) {
 	// TODO: Should work directly instead on the raw SVG file
-	resp, err := http.Get("https://img.shields.io/badge/" + name + "-" + val + "-" + color + ".svg")
+	resp, err := http.Get("https://img.shields.io/badge/" + title + "-" + val + "-" + color + ".svg")
 	if err != nil {
 		log.Error(err)
-		WriteError(w, name)
+		WriteError(w)
 		return
 	}
 	defer resp.Body.Close()
 	img, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Error(err)
-		WriteError(w, name)
+		WriteError(w)
 		return
 	}
 	w.Header().Set("Content-Type", "image/svg+xml")
@@ -27,6 +31,6 @@ func Write(w http.ResponseWriter, name, val, color string) {
 	w.Write(img)
 }
 
-func WriteError(w http.ResponseWriter, name string) {
-	Write(w, name, "error", "lightgrey")
+func WriteError(w http.ResponseWriter) {
+	Write(w, "error", "lightgrey")
 }

@@ -1,4 +1,4 @@
-package repository
+package model
 
 // TestResults received from the test runner.
 type TestResults struct {
@@ -25,3 +25,23 @@ type TestResults struct {
 type Imports []string
 type CodeStats map[string]int
 type LintMessages map[string]map[string][]map[string]interface{}
+
+type RepositoryData interface {
+	Name() string
+}
+
+func (t TestResults) Name() string {
+	return "testresults"
+}
+
+func (i Imports) Name() string {
+	return "imports"
+}
+
+func (c CodeStats) Name() string {
+	return "codestats"
+}
+
+func (l LintMessages) Name() string {
+	return "lintmessages"
+}

@@ -2,7 +2,7 @@ package logger
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/config"
+	. "github.com/exago/svc/config"
 )
 
 // SetUp configures the logger.
@@ -18,8 +18,7 @@ func With(repository string, ip string) *log.Entry {
 }
 
 func setLogLevel() {
-	logLevel := config.Values.LogLevel
-
+	logLevel := Config.LogLevel
 	if logLevel == "" {
 		log.Info("Log level default to info")
 		log.SetLevel(log.InfoLevel)

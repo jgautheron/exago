@@ -1,12 +1,8 @@
 package leveldb
 
 import (
-	"strings"
-
-	"gopkg.in/vmihailenco/msgpack.v2"
-
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/config"
+	. "github.com/exago/svc/config"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/filter"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -18,13 +14,16 @@ var (
 )
 
 // connect initiates a LevelDB connection.
+// connect cannot be called concurrently or it will crash with the infamous error:
+// "resource temporarily unavailable", which is why the middleware initDB
+// ensures the DB connection is instantiated before anything happens.
 func connect() *ldb.DB {
 	var err error
-	db, err = ldb.OpenFile(config.Values.DatabasePath, &opt.Options{
+	db, err = ldb.OpenFile(Config.DatabasePath, &opt.Options{
 		Filter: filter.NewBloomFilter(10),
 	})
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("An error occurred while trying to open the DB: %s", err)
 	}
 	return db
 }
@@ -37,18 +36,19 @@ func Instance() *ldb.DB {
 	return connect()
 }
 
-func FindForRepositoryCmd(key []byte) ([]byte, error) {
-	b, err := Instance().Get(key, nil)
+func FindForRepositoryCmd(key []byte) (b []byte, err error) {
+	b, err = Instance().Get(key, nil)
 	if err != nil {
+		if err == ldb.ErrNotFound {
+			return nil, nil
+		}
 		return nil, err
 	}
-	var out []byte
-	err = msgpack.Unmarshal(b, &out)
-	return out, err
+	return
 }
 
-func FindAllForRepository(prefix []byte) (map[CodeInfoKey][]byte, error) {
-	m := map[CodeInfoKey][]byte{}
+func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
+	m := map[string][]byte{}
 	iter := Instance().NewIterator(util.BytesPrefix(prefix), nil)
 	defer iter.Release()
 	for iter.Next() {
@@ -62,33 +62,11 @@ func FindAllForRepository(prefix []byte) (map[CodeInfoKey][]byte, error) {
 		cval := make([]byte, len(val))
 		copy(cval, val)
 
-		// Unpack the data
-		out := []byte{}
-		if err := msgpack.Unmarshal(cval, &out); err != nil {
-			return nil, err
-		}
-
-		// Strip the prefix from the key
-		ks := strings.Replace(string(ckey), string(prefix), "", 1)
-		m[extractKey(ks)] = out
+		m[string(ckey)] = cval
 	}
 	return m, iter.Error()
 }
 
-func Save(key, data []byte) error {
-	b, err := msgpack.Marshal(data)
-	if err != nil {
-		return err
-	}
-	err = Instance().Put(key, b, nil)
-	return err
-}
-
-func extractKey(key string) CodeInfoKey {
-	sp := strings.Split(key, "-")
-	return CodeInfoKey{sp[1], sp[2]}
-}
-
-type CodeInfoKey struct {
-	Linter, Type string
+func Save(key []byte, data []byte) error {
+	return Instance().Put(key, data, nil)
 }
