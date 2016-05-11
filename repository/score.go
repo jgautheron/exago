@@ -1,10 +1,6 @@
 package repository
 
-import (
-	"fmt"
-
-	"github.com/Sirupsen/logrus"
-)
+import "fmt"
 
 const (
 	thirdParties scoreType = "thirdParties"
@@ -70,7 +66,6 @@ func (r *Repository) calcScore() Score {
 	}
 
 	// Code doesn't always speak for itself
-	logrus.Info("CodeStats", r.CodeStats)
 	ra := float64(r.CodeStats["LOC"] / r.CodeStats["NCLOC"])
 	switch true {
 	case ra > 1.4:

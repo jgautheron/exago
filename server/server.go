@@ -36,6 +36,7 @@ func ListenAndServe() {
 	router := NewRouter()
 
 	router.Get("/project/*repository", repoHandlers.ThenFunc(repositoryHandler))
+	router.Get("/refresh/*repository", repoHandlers.ThenFunc(refreshHandler))
 	router.Get("/badge/*repository", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/valid/*repository", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/contents/*repository", repoHandlers.ThenFunc(fileHandler))
@@ -50,28 +51,7 @@ type RepositoryChecker struct {
 	types, linters []string
 	data           chan interface{}
 	dataLoaded     chan bool
-	stamped        chan bool
 	output         map[string]interface{}
-}
-
-func (rc *RepositoryChecker) Stamp() {
-	<-rc.dataLoaded
-
-	sc, err := rc.repository.GetScore()
-	if err != nil {
-		rc.output["score"] = err
-	} else {
-		rc.output["score"] = sc
-	}
-
-	date, err := rc.repository.GetDate()
-	if err != nil {
-		rc.output["date"] = err
-	} else {
-		rc.output["date"] = date
-	}
-
-	rc.stamped <- true
 }
 
 func (rc *RepositoryChecker) RunAll() {
@@ -129,7 +109,6 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 		types:      []string{"imports", "codestats", "testresults", "lintmessages"},
 		data:       make(chan interface{}, 10),
 		dataLoaded: make(chan bool, 1),
-		stamped:    make(chan bool, 1),
 		linters:    repository.DefaultLinters,
 		output:     map[string]interface{}{},
 	}
@@ -165,6 +144,12 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	send(w, r, rc.output, nil)
+}
+
+func refreshHandler(w http.ResponseWriter, r *http.Request) {
+	rp := repository.New(context.Get(r, "repository").(string), "")
+	rp.ClearCache()
+	repositoryHandler(w, r)
 }
 
 func badgeHandler(w http.ResponseWriter, r *http.Request) {

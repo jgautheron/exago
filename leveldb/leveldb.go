@@ -67,6 +67,22 @@ func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
 	return m, iter.Error()
 }
 
+func DeleteAllMatchingPrefix(prefix []byte) error {
+	iter := Instance().NewIterator(util.BytesPrefix(prefix), nil)
+	defer iter.Release()
+	for iter.Next() {
+		// Get the key
+		key := iter.Key()
+		ckey := make([]byte, len(key))
+		copy(ckey, key)
+
+		if err := db.Delete(ckey, nil); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func Save(key []byte, data []byte) error {
 	return Instance().Put(key, data, nil)
 }
