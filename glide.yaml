@@ -1,91 +1,63 @@
 package: github.com/exago/svc
 import:
 - package: github.com/Sirupsen/logrus
-  version: f7f79f729e0fbe2fcc061db48a9ba0263f588252
+  version: 57cce1ed6103dce7791881d3e69e55f90d986aa5
 - package: github.com/aws/aws-sdk-go
-  version: bc2c5714d312337494394909e7cc3a19a2e68530
+  version: d17da62685915c25ab5b429b1d1e5b67faa98ac2
   subpackages:
   - aws
-  - aws/awserr
-  - aws/awsutil
-  - aws/client
-  - aws/client/metadata
-  - aws/corehandlers
-  - aws/credentials
-  - aws/credentials/ec2rolecreds
-  - aws/defaults
-  - aws/ec2metadata
-  - aws/request
-  - aws/session
   - private/endpoints
   - private/protocol
-  - private/protocol/json/jsonutil
-  - private/protocol/jsonrpc
-  - private/protocol/rest
-  - private/protocol/restjson
   - private/signer/v4
-  - private/waiter
-  - service/dynamodb
-  - service/dynamodb/dynamodbattribute
   - service/lambda
+  - aws/credentials
+  - aws/session
 - package: github.com/didip/tollbooth
   version: be7d4891cc860c1d3d4004e99b898ddfd419ceb1
+- package: github.com/garyburd/redigo
+  version: 836b6e58b3358112c8291565d01c35b8764070d7
   subpackages:
-  - config
-  - errors
-  - libstring
-- package: github.com/exago/envconfig
-  version: 8b1c59eae986013d3be5deddbf1e89f18d25ffaa
+  - internal
+  - redis
 - package: github.com/go-ini/ini
-  version: afbd495e5aaea13597b5e14fe514ddeaa4d76fc3
+  version: 776aa739ce9373377cd16f526cdf06cb4c89b40f
 - package: github.com/golang/snappy
-  version: c2359a1bd0bd4a2de4f1bd92ccd045fb60d0a994
+  version: 939eddc12b3be18dfc77ed573344c3c689527ef3
 - package: github.com/google/go-github
-  version: 39d75606a4cbec14d6f9f9d4e295dad4e3711682
+  version: 5f4a113632721ba57574522ed9bc7e0f63b48bb2
   subpackages:
   - github
 - package: github.com/google/go-querystring
-  version: 2a60fc2ba6c19de80291203597d752e9ba58e4c0
+  version: 6bb77fe6f42b85397288d4f6f67ac72f8f400ee7
   subpackages:
   - query
 - package: github.com/gorilla/context
   version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
 - package: github.com/jmespath/go-jmespath
-  version: c01cf91b011868172fdcd9f41838e80c9d716264
+  version: 0b12d6b521d83fc7f755e7cfc1b1fbdd35a01a74
 - package: github.com/juju/ratelimit
   version: 77ed1c8a01217656d2080ad51981f6e99adaa177
 - package: github.com/julienschmidt/httprouter
-  version: 2c34ec888a7359c0750064e0a4c8df360806c255
+  version: 77366a47451a56bb3ba682481eed85b64fea14e8
 - package: github.com/justinas/alice
-  version: 82db91fe6d1db4c070fed544cb5d0b5cc08fe276
+  version: 78131a09b9e7bcccbb8a99d8e2f2168bb576e67a
 - package: github.com/syndtr/goleveldb
-  version: e7e6f5b5ef25adb580feac515f9ccec514d0bda8
+  version: ad0d8b2ab58a55ed5c58073aa46451d5e1ca1280
   subpackages:
   - leveldb
-  - leveldb/cache
-  - leveldb/comparer
-  - leveldb/errors
   - leveldb/filter
-  - leveldb/iterator
-  - leveldb/journal
-  - leveldb/memdb
   - leveldb/opt
-  - leveldb/storage
-  - leveldb/table
   - leveldb/util
 - package: golang.org/x/net
-  version: 7f88271ea9913b72aca44fa7fc8af919eacc17ce
+  version: 0899459b4d84739aa2600ba248120318d78f8997
   subpackages:
   - context
 - package: golang.org/x/oauth2
-  version: 8a57ed94ffd43444c0879fe75701732a38afc985
-  subpackages:
-  - internal
+  version: 2cd4472c321b6cba78e029d99f0e7fe51032fd21
 - package: golang.org/x/sys
-  version: 833a04a10549a95dc34458c195cbad61bbb6cb4d
+  version: 20457ee8ea8546920d3f4e19e405da45250dc5a5
   subpackages:
   - unix
 - package: gopkg.in/vmihailenco/msgpack.v2
-  version: 5731fae55dfe5ba533d3a420a1cede799df2e23e
-  subpackages:
-  - codes
+  version: 775d4b0cf44d799d42a1f6fded02252340f4e33d
+- package: github.com/exago/envconfig
