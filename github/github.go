@@ -11,7 +11,7 @@ import (
 var (
 	client *gh.Client
 
-	// Short-hands
+	// Short-hand
 	Repositories *gh.RepositoriesService
 )
 
@@ -35,4 +35,18 @@ func GetFileContent(owner, repository, path string) (string, error) {
 		return string(b), err
 	}
 	return *file.Content, nil
+}
+
+func Get(owner, repository string) (map[string]string, error) {
+	repo, _, err := Repositories.Get(owner, repository)
+	if err != nil {
+		return nil, err
+	}
+
+	// Export everything that could be useful
+	return map[string]string{
+		"avatarURL":   *repo.Owner.AvatarURL,
+		"description": *repo.Description,
+		"language":    *repo.Language,
+	}, nil
 }

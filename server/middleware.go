@@ -11,6 +11,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/didip/tollbooth"
 	. "github.com/exago/svc/config"
+	"github.com/exago/svc/github"
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/logger"
 	"github.com/exago/svc/requestlock"
@@ -25,6 +26,7 @@ const (
 var (
 	errTooManyCalls      = errors.New("Too many calls in a short period of time")
 	errRateLimitExceeded = errors.New("Rate limit exceeded")
+	errInvalidLanguage   = errors.New("The repository does not contain Go code")
 )
 
 func recoverHandler(next http.Handler) http.Handler {
@@ -69,6 +71,18 @@ func checkValidRepository(next http.Handler) http.Handler {
 		context.Set(r, "provider", sp[0])
 		context.Set(r, "owner", sp[1])
 		context.Set(r, "project", sp[2])
+
+		// Check with the GitHub API if the repository contains Go code
+		data, err := github.Get(sp[1], sp[2])
+		if err != nil {
+			writeError(w, r, err)
+			return
+		}
+
+		if !strings.Contains(data["language"], "Go") {
+			writeError(w, r, errInvalidLanguage)
+			return
+		}
 
 		// Entire path
 		context.Set(r, "repository", repository)

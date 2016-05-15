@@ -75,6 +75,7 @@ func (rc *RepositoryChecker) RunAll() {
 			}
 
 			if err != nil {
+				log.WithField("type", tp).Error(err)
 				rc.data <- err
 				return
 			}
@@ -84,12 +85,12 @@ func (rc *RepositoryChecker) RunAll() {
 
 		select {
 		case out := <-rc.data:
+			i++
 			switch out.(type) {
 			case error:
-				rc.output[tp] = out.(error)
+				rc.output[tp] = out.(error).Error()
 			default:
 				rc.output[tp] = out
-				i++
 			}
 		case <-time.After(time.Minute * 5):
 			rc.output[tp] = errRoutineTimeout
