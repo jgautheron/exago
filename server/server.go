@@ -48,6 +48,7 @@ func ListenAndServe() {
 
 type RepositoryChecker struct {
 	repository     *repository.Repository
+	logger         *log.Entry
 	types, linters []string
 	data           chan interface{}
 	dataLoaded     chan bool
@@ -75,7 +76,6 @@ func (rc *RepositoryChecker) RunAll() {
 			}
 
 			if err != nil {
-				log.WithField("type", tp).Error(err)
 				rc.data <- err
 				return
 			}
@@ -88,7 +88,11 @@ func (rc *RepositoryChecker) RunAll() {
 			i++
 			switch out.(type) {
 			case error:
-				rc.output[tp] = out.(error).Error()
+				err := out.(error)
+				rc.logger.WithField("type", tp).Error(err)
+				rc.output[tp] = struct {
+					Error string `json:"error"`
+				}{err.Error()}
 			default:
 				rc.output[tp] = out
 			}
@@ -107,6 +111,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	rc := &RepositoryChecker{
 		repository: repository.New(repo, ""),
+		logger:     log.WithField("repository", repo),
 		types:      []string{"imports", "codestats", "testresults", "lintmessages"},
 		data:       make(chan interface{}, 10),
 		dataLoaded: make(chan bool, 1),
