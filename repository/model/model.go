@@ -19,7 +19,19 @@ type TestResults struct {
 		ExecutionTime float64 `json:"execution_time"`
 		Name          string  `json:"name"`
 		Success       bool    `json:"success"`
+		Tests         []struct {
+			Name          string `json:"name"`
+			ExecutionTime int    `json:"execution_time"`
+			Passed        bool   `json:"passed"`
+		} `json:"tests"`
 	} `json:"packages"`
+	ExecutionTime struct {
+		Goprove string `json:"goprove"`
+		Gotest  string `json:"gotest"`
+	} `json:"execution_time"`
+	RawOutput struct {
+		Gotest string `json:"gotest"`
+	} `json:"raw_output"`
 }
 
 type Imports []string
