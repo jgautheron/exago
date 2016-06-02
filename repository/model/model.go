@@ -20,12 +20,13 @@ type TestResults struct {
 		Name          string  `json:"name"`
 		Success       bool    `json:"success"`
 		Tests         []struct {
-			Name          string `json:"name"`
-			ExecutionTime int    `json:"execution_time"`
-			Passed        bool   `json:"passed"`
+			Name          string  `json:"name"`
+			ExecutionTime float64 `json:"execution_time"`
+			Passed        bool    `json:"passed"`
 		} `json:"tests"`
 	} `json:"packages"`
 	ExecutionTime struct {
+		Goget   string `json:"goget,omitempty"`
 		Goprove string `json:"goprove"`
 		Gotest  string `json:"gotest"`
 	} `json:"execution_time"`

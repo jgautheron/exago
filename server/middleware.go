@@ -24,9 +24,10 @@ const (
 )
 
 var (
-	errTooManyCalls      = errors.New("Too many calls in a short period of time")
-	errRateLimitExceeded = errors.New("Rate limit exceeded")
-	errInvalidLanguage   = errors.New("The repository does not contain Go code")
+	ErrInvalidParameter  = errors.New("Invalid parameter passed")
+	ErrTooManyCalls      = errors.New("Too many calls in a short period of time")
+	ErrRateLimitExceeded = errors.New("Rate limit exceeded")
+	ErrInvalidLanguage   = errors.New("The repository does not contain Go code")
 )
 
 func recoverHandler(next http.Handler) http.Handler {
@@ -62,7 +63,7 @@ func checkValidRepository(next http.Handler) http.Handler {
 		}
 		re := regexp.MustCompile(`^github\.com/[\w\d\-_]+/[\w\d\-_]+`)
 		if !re.MatchString(repository) {
-			writeError(w, r, errInvalidParameter)
+			writeError(w, r, ErrInvalidParameter)
 			return
 		}
 
@@ -80,7 +81,7 @@ func checkValidRepository(next http.Handler) http.Handler {
 		}
 
 		if !strings.Contains(data["language"], "Go") {
-			writeError(w, r, errInvalidLanguage)
+			writeError(w, r, ErrInvalidLanguage)
 			return
 		}
 
@@ -102,7 +103,7 @@ func requestLock(next http.Handler) http.Handler {
 		rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
 		if requestlock.Has(rp, getIP(r.RemoteAddr)) {
-			writeError(w, r, errTooManyCalls)
+			writeError(w, r, ErrTooManyCalls)
 			return
 		}
 
@@ -136,7 +137,7 @@ func rateLimit(next http.Handler) http.Handler {
 		if httpErr != nil {
 			w.Header().Add("Content-Type", limiter.MessageContentType)
 			lgr.WithField("URL", r.URL.String()).Error("Rate limit exceeded")
-			writeError(w, r, errRateLimitExceeded)
+			writeError(w, r, ErrRateLimitExceeded)
 			return
 		}
 		next.ServeHTTP(w, r)

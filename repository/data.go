@@ -12,6 +12,7 @@ import (
 )
 
 var (
+	// DefaultLinters run by default in Lambda
 	DefaultLinters = []string{
 		"errcheck",
 		"gofmt",
@@ -25,8 +26,18 @@ var (
 		"vet",
 		"vetshadow",
 	}
+
+	// DefaultTypes represents the data types.
+	// The name matches automatically to a Lambda function.
+	DefaultTypes = []string{
+		"imports",
+		"codestats",
+		"testresults",
+		"lintmessages",
+	}
 )
 
+// GetDate retrieves the check timestamp.
 func (r *Repository) GetDate() (string, error) {
 	data, err := r.getCachedData("date")
 	if err != nil {
@@ -45,7 +56,9 @@ func (r *Repository) GetDate() (string, error) {
 	return date, nil
 }
 
-func (r *Repository) GetExecutionTime(start time.Time) (string, error) {
+// GetExecutionTime retrieves the last execution time.
+// The value is used to determine an ETA for a project refresh.
+func (r *Repository) GetExecutionTime() (string, error) {
 	data, err := r.getCachedData("executiontime")
 	if err != nil {
 		return "", err
@@ -55,13 +68,14 @@ func (r *Repository) GetExecutionTime(start time.Time) (string, error) {
 		return r.ExecutionTime, nil
 	}
 
-	r.ExecutionTime = time.Since(start).String()
+	r.ExecutionTime = time.Since(r.StartTime).String()
 	if err := leveldb.Save(r.cacheKey("executiontime"), []byte(r.ExecutionTime)); err != nil {
 		return "", err
 	}
 	return r.ExecutionTime, nil
 }
 
+// GetScore retrieves the Exago score (A-F).
 func (r *Repository) GetScore() (sc Score, err error) {
 	data, err := r.getCachedData("score")
 	if err != nil {
@@ -80,6 +94,7 @@ func (r *Repository) GetScore() (sc Score, err error) {
 	return sc, nil
 }
 
+// GetImports retrieves the third party imports.
 func (r *Repository) GetImports() (model.Imports, error) {
 	data, err := r.getCachedData(r.Imports.Name())
 	if err != nil {
@@ -102,6 +117,7 @@ func (r *Repository) GetImports() (model.Imports, error) {
 	return r.Imports, nil
 }
 
+// GetCodeStats retrieves the code statistics (LOC...).
 func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 	var (
 		data []byte
@@ -129,6 +145,7 @@ func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 	return r.CodeStats, nil
 }
 
+// GetTestResults retrieves the test and checklist results.
 func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
 	data, err := r.getCachedData(r.TestResults.Name())
 	if err != nil {
@@ -151,6 +168,7 @@ func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
 	return r.TestResults, nil
 }
 
+// GetLintMessages retrieves the linter warnings emitted by gometalinter.
 func (r *Repository) GetLintMessages(linters []string) (model.LintMessages, error) {
 	data, err := r.getCachedData(r.LintMessages.Name())
 	if err != nil {
@@ -173,14 +191,17 @@ func (r *Repository) GetLintMessages(linters []string) (model.LintMessages, erro
 	return r.LintMessages, nil
 }
 
+// cacheKey formats the suffix as a standardised key.
 func (r *Repository) cacheKey(suffix string) []byte {
 	return []byte(fmt.Sprintf("%s-%s-%s", r.Name, r.Branch, suffix))
 }
 
+// getCachedData attempts to load the data type from database.
 func (r *Repository) getCachedData(suffix string) ([]byte, error) {
 	return leveldb.FindForRepositoryCmd(r.cacheKey(suffix))
 }
 
+// cacheData persists the data type results in database.
 func (r *Repository) cacheData(suffix string, data interface{}) error {
 	b, err := msgpack.Marshal(data)
 	if err != nil {
