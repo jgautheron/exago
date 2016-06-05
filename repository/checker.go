@@ -5,6 +5,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/indexer"
 )
 
 const (
@@ -90,6 +91,7 @@ func (rc *Checker) Run() {
 	// If every check has been ran
 	if i == len(rc.types) {
 		rc.StampEntry()
+		indexer.ProcessRepository(rc.Repository)
 	}
 }
 
