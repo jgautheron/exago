@@ -35,7 +35,13 @@ func ListenAndServe() {
 	router.Get("/valid/*repository", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/contents/*repository", repoHandlers.ThenFunc(fileHandler))
 	router.Get("/cached/*repository", repoHandlers.ThenFunc(cachedHandler))
-	router.Get("/projects/recent", repoHandlers.ThenFunc(recentHandler))
+
+	projectHandlers := alice.New(
+		context.ClearHandler,
+		recoverHandler,
+		initDB,
+	)
+	router.Get("/projects/recent", projectHandlers.ThenFunc(recentHandler))
 
 	log.Infof("Listening on port %d", Config.HttpPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), router))

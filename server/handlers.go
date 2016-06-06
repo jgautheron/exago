@@ -6,6 +6,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/badge"
 	"github.com/exago/svc/github"
+	"github.com/exago/svc/indexer"
 	"github.com/exago/svc/repository"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
@@ -75,7 +76,6 @@ func cachedHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func recentHandler(w http.ResponseWriter, r *http.Request) {
-	rp := repository.New(context.Get(r, "repository").(string), "")
-	rp.ClearCache()
-	repositoryHandler(w, r)
+	repos := indexer.GetRecentRepositories()
+	send(w, r, repos, nil)
 }
