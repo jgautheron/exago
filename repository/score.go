@@ -153,6 +153,8 @@ func (r *Repository) calcScore() Score {
 
 	// Fast test suites are important
 	switch true {
+	case durationMean == 0:
+		// Do nothing
 	case durationMean > 10:
 		r.Score.Decrease(15, testDuration, "> 10")
 	case durationMean < 2:

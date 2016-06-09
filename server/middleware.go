@@ -12,7 +12,6 @@ import (
 	"github.com/didip/tollbooth"
 	. "github.com/exago/svc/config"
 	"github.com/exago/svc/github"
-	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/logger"
 	"github.com/exago/svc/requestlock"
 	"github.com/gorilla/context"
@@ -39,14 +38,6 @@ func recoverHandler(next http.Handler) http.Handler {
 			}
 		}()
 
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
-func initDB(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		_ = leveldb.Instance()
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)

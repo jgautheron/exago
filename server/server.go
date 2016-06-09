@@ -21,7 +21,6 @@ func ListenAndServe() {
 	repoHandlers := alice.New(
 		context.ClearHandler,
 		recoverHandler,
-		initDB,
 		setLogger,
 		checkValidRepository,
 		// rateLimit,
@@ -39,9 +38,10 @@ func ListenAndServe() {
 	projectHandlers := alice.New(
 		context.ClearHandler,
 		recoverHandler,
-		initDB,
 	)
 	router.Get("/projects/recent", projectHandlers.ThenFunc(recentHandler))
+	router.Get("/projects/top", projectHandlers.ThenFunc(topHandler))
+	router.Get("/projects/popular", projectHandlers.ThenFunc(popularHandler))
 
 	log.Infof("Listening on port %d", Config.HttpPort)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), router))

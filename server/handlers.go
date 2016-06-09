@@ -77,5 +77,27 @@ func cachedHandler(w http.ResponseWriter, r *http.Request) {
 
 func recentHandler(w http.ResponseWriter, r *http.Request) {
 	repos := indexer.GetRecentRepositories()
-	send(w, r, repos, nil)
+	out := map[string]interface{}{
+		"type":         "recent",
+		"repositories": repos,
+	}
+	send(w, r, out, nil)
+}
+
+func topHandler(w http.ResponseWriter, r *http.Request) {
+	repos := indexer.GetTopRankedRepositories()
+	out := map[string]interface{}{
+		"type":         "top",
+		"repositories": repos,
+	}
+	send(w, r, out, nil)
+}
+
+func popularHandler(w http.ResponseWriter, r *http.Request) {
+	repos := indexer.GetPopularRepositories()
+	out := map[string]interface{}{
+		"type":         "popular",
+		"repositories": repos,
+	}
+	send(w, r, out, nil)
 }
