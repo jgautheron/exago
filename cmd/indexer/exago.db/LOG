@@ -1,0 +1,93 @@
+=============== Jun 13, 2016 (CEST) ===============
+23:23:18.838324 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+23:23:18.846568 db@open opening
+23:23:18.847527 version@stat F·[] S·0B[] Sc·[]
+23:23:18.847837 db@janitor F·2 G·0
+23:23:18.847868 db@open done T·1.270264ms
+=============== Jun 13, 2016 (CEST) ===============
+23:36:26.064710 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+23:36:26.065055 version@stat F·[] S·0B[] Sc·[]
+23:36:26.065079 db@open opening
+23:36:26.065125 journal@recovery F·1
+23:36:26.065670 journal@recovery recovering @1
+23:36:26.069146 memdb@flush created L0@2 N·84 S·47KiB "git..ats,v2":"git..lts,v80"
+23:36:26.069445 version@stat F·[1] S·47KiB[47KiB] Sc·[0.25]
+23:36:26.070449 db@janitor F·3 G·0
+23:36:26.070469 db@open done T·5.380744ms
+=============== Jun 14, 2016 (CEST) ===============
+00:05:58.734768 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+00:05:58.735090 version@stat F·[1] S·47KiB[47KiB] Sc·[0.25]
+00:05:58.735107 db@open opening
+00:05:58.735175 journal@recovery F·1
+00:05:58.735663 journal@recovery recovering @3
+00:05:58.746503 memdb@flush created L0@5 N·164 S·51KiB "git..ats,v171":"git..lts,v137"
+00:05:58.746805 version@stat F·[2] S·98KiB[98KiB] Sc·[0.50]
+00:05:58.747591 db@janitor F·4 G·0
+00:05:58.747611 db@open done T·12.495544ms
+=============== Jun 14, 2016 (CEST) ===============
+22:18:27.949697 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+22:18:27.958735 version@stat F·[2] S·98KiB[98KiB] Sc·[0.50]
+22:18:27.958759 db@open opening
+22:18:27.958838 journal@recovery F·1
+22:18:27.959332 journal@recovery recovering @6
+22:18:27.961458 memdb@flush created L0@8 N·10 S·5KiB "git..ats,v252":"git..ges,v260"
+22:18:27.962087 version@stat F·[3] S·103KiB[103KiB] Sc·[0.75]
+22:18:27.962902 db@janitor F·5 G·0
+22:18:27.962931 db@open done T·4.154491ms
+=============== Jun 14, 2016 (CEST) ===============
+22:39:01.983713 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+22:39:01.984089 version@stat F·[3] S·103KiB[103KiB] Sc·[0.75]
+22:39:01.984104 db@open opening
+22:39:01.984153 journal@recovery F·1
+22:39:01.984684 journal@recovery recovering @9
+22:39:01.997093 memdb@flush created L0@11 N·108 S·82KiB "git..ats,v291":"git..lts,v271"
+22:39:01.997390 version@stat F·[4] S·185KiB[185KiB] Sc·[1.00]
+22:39:01.998281 db@janitor F·6 G·0
+22:39:01.998301 db@open done T·14.188409ms
+22:39:01.998421 table@compaction L0·4 -> L1·0 S·185KiB Q·370
+22:39:02.005764 table@build created L1@14 N·366 S·184KiB "git..ats,v171":"git..lts,v80"
+22:39:02.005827 version@stat F·[0 1] S·184KiB[0B 184KiB] Sc·[0.00 0.00]
+22:39:02.006097 table@compaction committed F-3 S-663B Ke·0 D·0 T·7.632955ms
+22:39:02.006278 table@remove removed @11
+22:39:02.006401 table@remove removed @8
+22:39:02.006473 table@remove removed @5
+22:39:02.006571 table@remove removed @2
+=============== Jun 14, 2016 (CEST) ===============
+22:43:02.207364 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+22:43:02.207715 version@stat F·[0 1] S·184KiB[0B 184KiB] Sc·[0.00 0.00]
+22:43:02.207730 db@open opening
+22:43:02.207778 journal@recovery F·1
+22:43:02.208351 journal@recovery recovering @12
+22:43:02.208592 version@stat F·[0 1] S·184KiB[0B 184KiB] Sc·[0.00 0.00]
+22:43:02.217605 db@janitor F·3 G·0
+22:43:02.217635 db@open done T·9.894272ms
+=============== Jun 14, 2016 (CEST) ===============
+22:55:37.680123 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+22:55:37.680454 version@stat F·[0 1] S·184KiB[0B 184KiB] Sc·[0.00 0.00]
+22:55:37.680467 db@open opening
+22:55:37.680520 journal@recovery F·1
+22:55:37.681071 journal@recovery recovering @15
+22:55:37.693331 memdb@flush created L0@17 N·174 S·85KiB "git..ats,v407":"git..rts,v497"
+22:55:37.693628 version@stat F·[1 1] S·269KiB[85KiB 184KiB] Sc·[0.25 0.00]
+22:55:37.694716 db@janitor F·4 G·0
+22:55:37.694756 db@open done T·14.270144ms
+=============== Jun 14, 2016 (CEST) ===============
+23:29:09.800048 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+23:29:09.808036 version@stat F·[1 1] S·269KiB[85KiB 184KiB] Sc·[0.25 0.00]
+23:29:09.808058 db@open opening
+23:29:09.808158 journal@recovery F·1
+23:29:09.808650 journal@recovery recovering @18
+23:29:09.809949 memdb@flush created L0@20 N·26 S·2KiB "git..ats,v549":"git..rts,v560"
+23:29:09.810295 version@stat F·[2 1] S·272KiB[87KiB 184KiB] Sc·[0.50 0.00]
+23:29:09.811078 db@janitor F·5 G·0
+23:29:09.811099 db@open done T·3.032877ms
+=============== Jun 15, 2016 (CEST) ===============
+19:56:28.416630 log@legend F·NumFile S·FileSize N·Entry C·BadEntry B·BadBlock Ke·KeyError D·DroppedEntry L·Level Q·SeqNum T·TimeElapsed
+19:56:28.424060 version@stat F·[2 1] S·272KiB[87KiB 184KiB] Sc·[0.50 0.00]
+19:56:28.424079 db@open opening
+19:56:28.424157 journal@recovery F·1
+19:56:28.424954 journal@recovery recovering @21
+19:56:28.426539 memdb@flush created L0@23 N·8 S·904B "git..ats,v574":"git..rts,v579"
+19:56:28.426823 version@stat F·[3 1] S·273KiB[88KiB 184KiB] Sc·[0.75 0.00]
+19:56:28.427502 db@janitor F·6 G·0
+19:56:28.427521 db@open done T·3.433573ms
