@@ -31,8 +31,13 @@ type TestResults struct {
 		Gotest  string `json:"gotest"`
 	} `json:"execution_time"`
 	RawOutput struct {
+		Goget  string `json:"goget"`
 		Gotest string `json:"gotest"`
 	} `json:"raw_output"`
+	Errors struct {
+		Goget  string `json:"goget"`
+		Gotest string `json:"gotest"`
+	} `json:"errors"`
 }
 
 type Imports []string
