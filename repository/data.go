@@ -2,6 +2,7 @@ package repository
 
 import (
 	"fmt"
+	"regexp"
 	"time"
 
 	"gopkg.in/vmihailenco/msgpack.v2"
@@ -106,6 +107,24 @@ func (r *Repository) GetImports() (model.Imports, error) {
 			return nil, err
 		}
 		r.Imports = res.(model.Imports)
+
+		// Dedupe third party packages
+		// One repository corresponds to one third party
+		imports, filtered := []string{}, map[string]int{}
+		reg, _ := regexp.Compile(`^([\w\d\.]+)/([\w\d\-]+)/([\w\d\-]+)`)
+		for _, im := range r.Imports {
+			m := reg.FindStringSubmatch(im)
+			if len(m) > 0 {
+				filtered[m[0]] = 1
+			} else {
+				filtered[im] = 1
+			}
+		}
+		for im, _ := range filtered {
+			imports = append(imports, im)
+		}
+		r.Imports = imports
+
 		if err = r.cacheData(r.Imports.Name(), r.Imports); err != nil {
 			return nil, err
 		}

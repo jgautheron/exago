@@ -19,6 +19,23 @@ var (
 	ErrRoutineTimeout = errors.New("The analysis timed out")
 )
 
+type processingError struct {
+	tp, message, output string
+}
+
+func (e processingError) Error() string {
+	return fmt.Sprintf(
+		`%s returned the error: "%s"; output: %s`,
+		e.tp, e.message, e.output,
+	)
+}
+
+type errorOutput struct {
+	Type   string `json:"type,omitempty"`
+	Error  string `json:"error"`
+	Output string `json:"output,omitempty"`
+}
+
 type Checker struct {
 	logger         *log.Entry
 	types, linters []string
@@ -67,17 +84,9 @@ func (rc *Checker) Run() {
 				// Expose isolated errors
 				switch ts := out.(model.TestResults); {
 				case ts.Errors.Goget != "":
-					err = fmt.Errorf(
-						`go get returned the error: "%v"; output: %s`,
-						ts.Errors.Goget,
-						ts.RawOutput.Goget,
-					)
+					err = processingError{"goget", ts.Errors.Goget, ts.RawOutput.Goget}
 				case ts.Errors.Gotest != "":
-					err = fmt.Errorf(
-						`go test returned the error: "%v"; output: %s`,
-						ts.Errors.Gotest,
-						ts.RawOutput.Gotest,
-					)
+					err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
 				}
 			case "lintmessages":
 				out, err = rc.Repository.GetLintMessages(rc.linters)
@@ -157,7 +166,9 @@ func (rc *Checker) Abort() {
 }
 
 func wrapError(err error) interface{} {
-	return struct {
-		Error string `json:"error"`
-	}{err.Error()}
+	switch err := err.(type) {
+	case processingError:
+		return errorOutput{err.tp, err.message, err.output}
+	}
+	return errorOutput{Error: err.Error()}
 }
