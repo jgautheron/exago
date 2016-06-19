@@ -1,6 +1,7 @@
 package server
 
 import (
+	"fmt"
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
@@ -22,9 +23,10 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Wait until the data is ready
 	rc.Run()
+	// Wait until the data is ready
 	<-rc.Done
+
 	send(w, r, rc.Output, nil)
 }
 
@@ -41,17 +43,65 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	repo := repository.New(ps.ByName("repository")[1:], "")
 	isCached := repo.IsCached()
 	if !isCached {
-		badge.WriteError(w)
+		badge.WriteError(w, "")
 		return
 	}
 
-	err, rank := repo.Load(), repo.Score.Rank
-	if err != nil {
-		lgr.Error(err)
-		badge.WriteError(w)
-		return
+	switch tp := ps.ByName("type"); tp {
+	case "rank":
+		err, rank := repo.Load(), repo.Score.Rank
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, "")
+			return
+		}
+		badge.Write(w, "", string(rank), "blue")
+	case "cov":
+		title := "Coverage"
+		err, cov := repo.Load(), repo.GetAvgCodeCov()
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
+	case "duration":
+		title := "Tests Duration"
+		err, avg := repo.Load(), repo.GetAvgTestDuration()
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), "blue")
+	case "tests":
+		title := "Tests"
+		err, tests := repo.Load(), repo.CodeStats["Test"]
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, fmt.Sprintf("%d", tests), "blue")
+	case "thirdparties":
+		title := "Third Parties"
+		err, thirdParties := repo.Load(), len(repo.Imports)
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
+	case "loc":
+		title := "LOC"
+		err, thirdParties := repo.Load(), repo.CodeStats["LOC"]
+		if err != nil {
+			lgr.Error(err)
+			badge.WriteError(w, title)
+			return
+		}
+		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
 	}
-	badge.Write(w, string(rank), "blue")
 }
 
 func repoValidHandler(w http.ResponseWriter, r *http.Request) {

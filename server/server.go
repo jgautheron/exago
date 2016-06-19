@@ -30,10 +30,10 @@ func ListenAndServe() {
 
 	router.Get("/project/*repository", repoHandlers.ThenFunc(repositoryHandler))
 	router.Get("/refresh/*repository", repoHandlers.ThenFunc(refreshHandler))
-	router.Get("/badge/*repository", repoHandlers.ThenFunc(badgeHandler))
 	router.Get("/valid/*repository", repoHandlers.ThenFunc(repoValidHandler))
 	router.Get("/contents/*repository", repoHandlers.ThenFunc(fileHandler))
 	router.Get("/cached/*repository", repoHandlers.ThenFunc(cachedHandler))
+	router.Get("/badge/:type/*repository", repoHandlers.ThenFunc(badgeHandler))
 
 	projectHandlers := alice.New(
 		context.ClearHandler,
