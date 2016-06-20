@@ -9,6 +9,7 @@ import:
   - aws/session
   - service/lambda
 - package: github.com/codegangsta/cli
+- package: github.com/dgryski/go-topk
 - package: github.com/didip/tollbooth
 - package: github.com/exago/envconfig
 - package: github.com/google/go-github
@@ -21,8 +22,6 @@ import:
 - package: github.com/syndtr/goleveldb
   subpackages:
   - leveldb
-  - leveldb/filter
   - leveldb/opt
   - leveldb/util
 - package: golang.org/x/oauth2
-- package: gopkg.in/vmihailenco/msgpack.v2
