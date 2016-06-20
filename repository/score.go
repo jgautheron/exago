@@ -88,7 +88,7 @@ func (r *Repository) calcScore() Score {
 		case "hasReadme":
 			r.Score.Increase(10, checklist, "hasReadme")
 		case "isDirMatch":
-			r.Score.Increase(10, checklist, "isDirMatch")
+			r.Score.Increase(5, checklist, "isDirMatch")
 		case "isLinted":
 			r.Score.Increase(10, checklist, "isLinted")
 		case "hasBenches":
@@ -104,7 +104,7 @@ func (r *Repository) calcScore() Score {
 		case "hasReadme":
 			r.Score.Decrease(20, checklist, "hasReadme")
 		case "isDirMatch":
-			r.Score.Decrease(10, checklist, "isDirMatch")
+			r.Score.Decrease(5, checklist, "isDirMatch")
 		}
 	}
 
@@ -148,7 +148,10 @@ func (r *Repository) calcScore() Score {
 	case covMean > 40:
 		r.Score.Increase(10, testCoverage, "> 40")
 	case covMean == 0:
-		r.Score.Decrease(20, testCoverage, "= 0")
+		// If there are tests but we couldn't run them, do not decrease points
+		if r.CodeStats["Test"] == 0 {
+			r.Score.Decrease(20, testCoverage, "= 0")
+		}
 	}
 
 	// Fast test suites are important
