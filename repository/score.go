@@ -11,13 +11,13 @@ const (
 	testDuration           = "testDuration"
 )
 
-type scoreType string
-
 type Score struct {
 	Value   int      `json:"value"`
 	Rank    Rank     `json:"rank"`
 	Details []string `json:"details"`
 }
+
+type scoreType string
 
 func (sc *Score) Increase(score int, category scoreType, comment string) {
 	sc.addInfo(fmt.Sprintf("+%d: %s %s", score, category, comment))

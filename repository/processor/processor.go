@@ -1,4 +1,4 @@
-package repository
+package processor
 
 import (
 	"errors"
@@ -7,6 +7,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/indexer"
+	"github.com/exago/svc/repository"
 	"github.com/exago/svc/repository/model"
 )
 
@@ -40,7 +41,7 @@ type Checker struct {
 	logger         *log.Entry
 	types, linters []string
 	data           chan interface{}
-	Repository     *Repository
+	Repository     *repository.Repository
 	HasError       bool
 	Errors         chan error
 	Done           chan bool
@@ -50,10 +51,10 @@ type Checker struct {
 func NewChecker(repo string) *Checker {
 	return &Checker{
 		logger:     log.WithField("repository", repo),
-		types:      DefaultTypes,
-		linters:    DefaultLinters,
+		types:      repository.DefaultTypes,
+		linters:    repository.DefaultLinters,
 		data:       make(chan interface{}),
-		Repository: New(repo, ""),
+		Repository: repository.New(repo, ""),
 		HasError:   false,
 		Errors:     make(chan error),
 		Done:       make(chan bool, 1),
@@ -125,14 +126,14 @@ func (rc *Checker) Run() {
 		// The entire dataset is ready
 		rc.Done <- true
 
-		go indexer.ProcessRepository(rc.Repository.Name)
+		go indexer.ProcessRepository(*rc.Repository)
 	}
 }
 
 // StampEntry is called once the entire dataset is loaded.
 func (rc *Checker) StampEntry() {
 	if rc.HasError {
-		rc.Output["score"] = Score{Rank: ""}
+		rc.Output["score"] = repository.Score{Rank: ""}
 	} else {
 		// Add the score
 		sc, err := rc.Repository.GetScore()

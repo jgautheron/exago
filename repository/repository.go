@@ -9,6 +9,32 @@ import (
 	"github.com/exago/svc/repository/model"
 )
 
+var (
+	// DefaultLinters run by default in Lambda
+	DefaultLinters = []string{
+		"errcheck",
+		"gofmt",
+		"goimports",
+		"golint",
+		"deadcode",
+		"dupl",
+		"gocyclo",
+		"ineffassign",
+		"varcheck",
+		"vet",
+		"vetshadow",
+	}
+
+	// DefaultTypes represents the data types.
+	// The name matches automatically to a Lambda function.
+	DefaultTypes = []string{
+		"imports",
+		"codestats",
+		"testresults",
+		"lintmessages",
+	}
+)
+
 type Repository struct {
 	Name, Branch string
 

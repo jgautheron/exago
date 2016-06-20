@@ -1,41 +1,14 @@
 package repository
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"time"
 
-	"gopkg.in/vmihailenco/msgpack.v2"
-
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/lambda"
 	"github.com/exago/svc/repository/model"
-)
-
-var (
-	// DefaultLinters run by default in Lambda
-	DefaultLinters = []string{
-		"errcheck",
-		"gofmt",
-		"goimports",
-		"golint",
-		"deadcode",
-		"dupl",
-		"gocyclo",
-		"ineffassign",
-		"varcheck",
-		"vet",
-		"vetshadow",
-	}
-
-	// DefaultTypes represents the data types.
-	// The name matches automatically to a Lambda function.
-	DefaultTypes = []string{
-		"imports",
-		"codestats",
-		"testresults",
-		"lintmessages",
-	}
 )
 
 // GetDate retrieves the check timestamp.
@@ -83,7 +56,7 @@ func (r *Repository) GetScore() (sc Score, err error) {
 		return sc, err
 	}
 	if data != nil {
-		if err := msgpack.Unmarshal(data, &r.Score); err != nil {
+		if err := json.Unmarshal(data, &r.Score); err != nil {
 			return sc, err
 		}
 		return r.Score, nil
@@ -130,7 +103,7 @@ func (r *Repository) GetImports() (model.Imports, error) {
 		}
 		return r.Imports, nil
 	}
-	if err := msgpack.Unmarshal(data, &r.Imports); err != nil {
+	if err := json.Unmarshal(data, &r.Imports); err != nil {
 		return nil, err
 	}
 	return r.Imports, nil
@@ -158,7 +131,7 @@ func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 		}
 		return r.CodeStats, nil
 	}
-	if err := msgpack.Unmarshal(data, &r.CodeStats); err != nil {
+	if err := json.Unmarshal(data, &r.CodeStats); err != nil {
 		return nil, err
 	}
 	return r.CodeStats, nil
@@ -181,7 +154,7 @@ func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
 		}
 		return r.TestResults, nil
 	}
-	if err := msgpack.Unmarshal(data, &r.TestResults); err != nil {
+	if err := json.Unmarshal(data, &r.TestResults); err != nil {
 		return tr, err
 	}
 	return r.TestResults, nil
@@ -204,7 +177,7 @@ func (r *Repository) GetLintMessages(linters []string) (model.LintMessages, erro
 		}
 		return r.LintMessages, nil
 	}
-	if err := msgpack.Unmarshal(data, &r.LintMessages); err != nil {
+	if err := json.Unmarshal(data, &r.LintMessages); err != nil {
 		return nil, err
 	}
 	return r.LintMessages, nil
@@ -222,7 +195,7 @@ func (r *Repository) getCachedData(suffix string) ([]byte, error) {
 
 // cacheData persists the data type results in database.
 func (r *Repository) cacheData(suffix string, data interface{}) error {
-	b, err := msgpack.Marshal(data)
+	b, err := json.Marshal(data)
 	if err != nil {
 		return err
 	}

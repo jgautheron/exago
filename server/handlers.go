@@ -9,13 +9,14 @@ import (
 	"github.com/exago/svc/github"
 	"github.com/exago/svc/indexer"
 	"github.com/exago/svc/repository"
+	"github.com/exago/svc/repository/processor"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
 
 func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rc := repository.NewChecker(repo)
+	rc := processor.NewChecker(repo)
 
 	if rc.Repository.IsCached() {
 		err := rc.Repository.Load()

@@ -12,7 +12,7 @@ func init() {
 	InitializeConfig()
 	logger.SetUp()
 	github.SetUp()
-	_ = leveldb.Instance()
+	leveldb.Init()
 }
 
 func main() {
