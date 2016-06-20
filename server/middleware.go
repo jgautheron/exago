@@ -12,7 +12,6 @@ import (
 	"github.com/didip/tollbooth"
 	. "github.com/exago/svc/config"
 	"github.com/exago/svc/github"
-	"github.com/exago/svc/logger"
 	"github.com/exago/svc/requestlock"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
@@ -106,7 +105,12 @@ func requestLock(next http.Handler) http.Handler {
 func setLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
-		context.Set(r, "logger", logger.With(ps.ByName("repository")[1:], getIP(r.RemoteAddr)))
+
+		lgr := log.WithFields(log.Fields{
+			"repository": ps.ByName("repository")[1:],
+			"ip":         getIP(r.RemoteAddr),
+		})
+		context.Set(r, "logger", lgr)
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)

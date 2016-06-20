@@ -6,7 +6,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
-	"github.com/exago/svc/repository"
+	"github.com/exago/svc/repository/processor"
 )
 
 const (
@@ -92,7 +92,7 @@ type item struct {
 func (i *item) process() {
 	lgr := log.WithField("repository", i.name)
 
-	rc := repository.NewChecker(i.name)
+	rc := processor.NewChecker(i.name)
 	if rc.Repository.IsCached() {
 		lgr.Debugf("Already cached")
 		return
