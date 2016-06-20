@@ -169,3 +169,37 @@ func (r *Repository) calcScore() Score {
 
 	return r.Score
 }
+
+func (r *Repository) GetAvgCodeCov() float64 {
+	var cov []float64
+	for _, pkg := range r.TestResults.Packages {
+		cov = append(cov, pkg.Coverage)
+	}
+
+	var covMean float64 = 0
+	if len(cov) > 0 {
+		for _, v := range cov {
+			covMean += v
+		}
+		covMean /= float64(len(cov))
+	}
+
+	return covMean
+}
+
+func (r *Repository) GetAvgTestDuration() float64 {
+	var duration []float64
+	for _, pkg := range r.TestResults.Packages {
+		duration = append(duration, pkg.ExecutionTime)
+	}
+
+	var durationMean float64 = 0
+	if len(duration) > 0 {
+		for _, v := range duration {
+			durationMean += v
+		}
+		durationMean /= float64(len(duration))
+	}
+
+	return durationMean
+}

@@ -2,10 +2,12 @@ package repository
 
 import (
 	"errors"
+	"fmt"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/indexer"
+	"github.com/exago/svc/repository/model"
 )
 
 const (
@@ -17,11 +19,30 @@ var (
 	ErrRoutineTimeout = errors.New("The analysis timed out")
 )
 
+type processingError struct {
+	tp, message, output string
+}
+
+func (e processingError) Error() string {
+	return fmt.Sprintf(
+		`%s returned the error: "%s"; output: %s`,
+		e.tp, e.message, e.output,
+	)
+}
+
+type errorOutput struct {
+	Type   string `json:"type,omitempty"`
+	Error  string `json:"error"`
+	Output string `json:"output,omitempty"`
+}
+
 type Checker struct {
 	logger         *log.Entry
 	types, linters []string
 	data           chan interface{}
 	Repository     *Repository
+	HasError       bool
+	Errors         chan error
 	Done           chan bool
 	Output         map[string]interface{}
 }
@@ -33,12 +54,14 @@ func NewChecker(repo string) *Checker {
 		linters:    DefaultLinters,
 		data:       make(chan interface{}),
 		Repository: New(repo, ""),
+		HasError:   false,
+		Errors:     make(chan error),
 		Done:       make(chan bool, 1),
 		Output:     map[string]interface{}{},
 	}
 }
 
-// Run launches concurrently every check and gathers the output.
+// Run launches concurrently every check and merges the output.
 func (rc *Checker) Run() {
 	rc.Repository.StartTime = time.Now()
 
@@ -57,12 +80,21 @@ func (rc *Checker) Run() {
 				out, err = rc.Repository.GetCodeStats()
 			case "testresults":
 				out, err = rc.Repository.GetTestResults()
+
+				// Expose isolated errors
+				switch ts := out.(model.TestResults); {
+				case ts.Errors.Goget != "":
+					err = processingError{"goget", ts.Errors.Goget, ts.RawOutput.Goget}
+				case ts.Errors.Gotest != "":
+					err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
+				}
 			case "lintmessages":
 				out, err = rc.Repository.GetLintMessages(rc.linters)
 			}
 
 			if err != nil {
-				rc.data <- err
+				rc.Errors <- err
+				rc.HasError = true
 				return
 			}
 
@@ -72,37 +104,43 @@ func (rc *Checker) Run() {
 		lgr := rc.logger.WithField("type", tp)
 
 		select {
-		case out := <-rc.data:
+		case err := <-rc.Errors:
+			rc.Output[tp] = wrapError(err)
+			lgr.Error(err)
 			i++
-			switch out.(type) {
-			case error:
-				err := out.(error)
-				rc.Output[tp] = wrapError(err)
-				lgr.Error(err)
-			default:
-				rc.Output[tp] = out
-			}
+		case out := <-rc.data:
+			rc.Output[tp] = out
+			i++
 		case <-time.After(RoutineTimeout):
 			rc.Output[tp] = wrapError(ErrRoutineTimeout)
 			lgr.Error(ErrRoutineTimeout)
+			i++
 		}
 	}
 
 	// If every check has been ran
 	if i == len(rc.types) {
 		rc.StampEntry()
-		indexer.ProcessRepository(rc.Repository.Name)
+
+		// The entire dataset is ready
+		rc.Done <- true
+
+		go indexer.ProcessRepository(rc.Repository.Name)
 	}
 }
 
 // StampEntry is called once the entire dataset is loaded.
 func (rc *Checker) StampEntry() {
-	// Add the score
-	sc, err := rc.Repository.GetScore()
-	if err != nil {
-		rc.Output["score"] = wrapError(err)
+	if rc.HasError {
+		rc.Output["score"] = Score{Rank: ""}
 	} else {
-		rc.Output["score"] = sc
+		// Add the score
+		sc, err := rc.Repository.GetScore()
+		if err != nil {
+			rc.Output["score"] = wrapError(err)
+		} else {
+			rc.Output["score"] = sc
+		}
 	}
 
 	// Add the timestamp
@@ -120,13 +158,17 @@ func (rc *Checker) StampEntry() {
 	} else {
 		rc.Output["execution_time"] = et
 	}
+}
 
-	// The entire dataset is ready
+// Abort declares the task as done and skips the processing.
+func (rc *Checker) Abort() {
 	rc.Done <- true
 }
 
 func wrapError(err error) interface{} {
-	return struct {
-		Error string `json:"error"`
-	}{err.Error()}
+	switch err := err.(type) {
+	case processingError:
+		return errorOutput{err.tp, err.message, err.output}
+	}
+	return errorOutput{Error: err.Error()}
 }
