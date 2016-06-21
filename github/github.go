@@ -37,16 +37,18 @@ func GetFileContent(owner, repository, path string) (string, error) {
 	return *file.Content, nil
 }
 
-func Get(owner, repository string) (map[string]string, error) {
+func Get(owner, repository string) (map[string]interface{}, error) {
 	repo, _, err := Repositories.Get(owner, repository)
 	if err != nil {
 		return nil, err
 	}
 
 	// Export everything that could be useful
-	return map[string]string{
-		"avatarURL":   *repo.Owner.AvatarURL,
+	return map[string]interface{}{
+		"avatar_url":  *repo.Owner.AvatarURL,
 		"description": *repo.Description,
 		"language":    *repo.Language,
+		"stargazers":  *repo.StargazersCount,
+		"last_push":   *repo.PushedAt,
 	}, nil
 }
