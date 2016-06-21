@@ -1,5 +1,7 @@
 package model
 
+// ImportsName, CodeStatsName etc.. are spread and reused many times in the code
+// have them as constants makes us compliant with the DRY principle
 const (
 	ImportsName       = "imports"
 	CodeStatsName     = "codestats"
@@ -50,23 +52,30 @@ type TestResults struct {
 	} `json:"errors"`
 }
 
+// Imports stores the list of imports
 type Imports []string
+
+// CodeStats stores infos about code such as ratio of LOC vs CLOC etc..
 type CodeStats map[string]int
+
+// LintMessages stores messages returned by Go linters
 type LintMessages map[string]map[string][]map[string]interface{}
 
+// Score stores the overall rank and raw score computed from criterias
 type Score struct {
 	Value   float64  `json:"value"`
 	Rank    string   `json:"rank"`
 	Details []string `json:"details"`
 }
 
+// GetAvgTestDuration returns the average test duration
 func (t TestResults) GetAvgTestDuration() float64 {
 	var duration []float64
 	for _, pkg := range t.Packages {
 		duration = append(duration, pkg.ExecutionTime)
 	}
 
-	var durationMean float64 = 0
+	var durationMean float64
 	if len(duration) > 0 {
 		for _, v := range duration {
 			durationMean += v
@@ -77,13 +86,14 @@ func (t TestResults) GetAvgTestDuration() float64 {
 	return durationMean
 }
 
+// GetAvgCodeCov returns the code coverage average
 func (t TestResults) GetAvgCodeCov() float64 {
 	var cov []float64
 	for _, pkg := range t.Packages {
 		cov = append(cov, pkg.Coverage)
 	}
 
-	var covMean float64 = 0
+	var covMean float64
 	if len(cov) > 0 {
 		for _, v := range cov {
 			covMean += v
