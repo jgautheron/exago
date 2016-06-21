@@ -53,7 +53,7 @@ func New(repo, branch string) *Repository {
 func (r *Repository) IsCached() bool {
 	prefix := fmt.Sprintf("%s-%s", r.Name, r.Branch)
 	data, err := leveldb.FindAllForRepository([]byte(prefix))
-	if err != nil || len(data) != 7 {
+	if err != nil || len(data) != 8 {
 		return false
 	}
 	return true

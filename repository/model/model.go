@@ -1,5 +1,7 @@
 package model
 
+import "time"
+
 // ImportsName, CodeStatsName etc.. are spread and reused many times in the code
 // have them as constants makes us compliant with the DRY principle
 const (
@@ -70,10 +72,10 @@ type Score struct {
 }
 
 type Metadata struct {
-	Image       string `json:"image"`
-	Description string `json:"description"`
-	Stars       int    `json:"stars"`
-	LastPush    string `json:"last_push"`
+	Image       string    `json:"image"`
+	Description string    `json:"description"`
+	Stars       int       `json:"stars"`
+	LastPush    time.Time `json:"last_push"`
 }
 
 // GetAvgTestDuration returns the average test duration

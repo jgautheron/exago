@@ -49,6 +49,6 @@ func Get(owner, repository string) (map[string]interface{}, error) {
 		"description": *repo.Description,
 		"language":    *repo.Language,
 		"stargazers":  *repo.StargazersCount,
-		"last_push":   *repo.PushedAt,
+		"last_push":   repo.PushedAt.Time,
 	}, nil
 }

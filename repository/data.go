@@ -35,7 +35,7 @@ func (r *Repository) GetMetadata() (d model.Metadata, err error) {
 			Image:       res["avatar_url"].(string),
 			Description: res["description"].(string),
 			Stars:       res["stargazers"].(int),
-			LastPush:    res["avatar_url"].(string),
+			LastPush:    res["last_push"].(time.Time),
 		}
 		if err = r.cacheData(model.MetadataName, r.Metadata); err != nil {
 			return d, err

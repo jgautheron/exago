@@ -3,13 +3,15 @@ package indexer
 type RepositoryInfo struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
-	Image       string `json:"avatar"`
+	Image       string `json:"image"`
 	Rank        string `json:"rank"`
 }
 
 func GetRecentRepositories() []RepositoryInfo {
 	var repos []RepositoryInfo
-	for _, repo := range data.recent {
+
+	for i := len(data.recent) - 1; i >= 0; i-- {
+		repo := data.recent[i]
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.Name,
 			Description: repo.Metadata.Description,
