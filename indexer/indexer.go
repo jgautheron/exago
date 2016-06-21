@@ -2,64 +2,122 @@
 package indexer
 
 import (
+	"encoding/json"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
+	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository"
 )
 
 var data IndexedData
 
 type IndexedData struct {
-	Recent  []repository.Repository
-	Top     []repository.Repository
-	Popular []repository.Repository
+	recent    []repository.Repository
+	topRanked []repository.Repository
+	popular   []repository.Repository
 
 	// How many items per category
-	items int
-	tk    *topk.Stream
+	itemCount int
+	tk        *topk.Stream
 }
 
 // AddRecent pushes to the stack latest new items, pops the old ones.
 func (d *IndexedData) AddRecent(repo repository.Repository) {
-	d.Recent = append(d.Recent, repo)
-	if len(d.Recent) > d.items {
-		d.Recent = d.Recent[1:]
+	d.recent = append(d.recent, repo)
+	if len(d.recent) > d.itemCount {
+		d.recent = d.recent[1:]
 	}
 }
 
-// AddTop inserts the repository name into the topk data structure.
-func (d *IndexedData) AddTop(repo repository.Repository) {
+// AddTopRanked pushes to the stack latest new A-ranked items, pops the old ones.
+func (d *IndexedData) AddTopRanked(repo repository.Repository) {
+	d.topRanked = append(d.topRanked, repo)
+	if len(d.topRanked) > 50 {
+		d.topRanked = d.topRanked[1:]
+	}
+}
+
+// AddPopular inserts the repository name into the topk data structure.
+func (d *IndexedData) AddPopular(repo repository.Repository) {
 	d.tk.Insert(repo.Name, 1)
 }
 
-// updateTopK rebuilds the topk from the stream periodically.
-func (d *IndexedData) updateTopK() {
+// updatePopular rebuilds the data slice from the stream periodically.
+func (d *IndexedData) updatePopular() {
 	for {
 		time.Sleep(5 * time.Minute)
 
 		top := []repository.Repository{}
 		for i, v := range d.tk.Keys() {
-			if i > d.items {
+			if i <= d.itemCount {
 				rp := repository.New(v.Key, "")
 				rp.Load()
 				top = append(top, *rp)
 			}
 		}
-		d.Top = top
+		d.popular = top
+	}
+}
+
+// serialize the index as an easily loadable format.
+func (d *IndexedData) serialize() ([]byte, error) {
+	s := struct {
+		recent    []string
+		topRanked []string
+		popular   []string
+		tk        []byte
+	}{}
+
+	for _, r := range d.recent {
+		s.recent = append(s.recent, r.Name)
+	}
+
+	for _, r := range d.topRanked {
+		s.recent = append(s.topRanked, r.Name)
+	}
+
+	for _, r := range d.popular {
+		s.recent = append(s.popular, r.Name)
+	}
+
+	tk, err := d.tk.GobEncode()
+	if err != nil {
+		return nil, err
+	}
+
+	return json.Marshal(tk)
+}
+
+// save persists periodically the index in database.
+func (d *IndexedData) save() {
+	for {
+		time.Sleep(20 * time.Minute)
+
+		b, err := d.serialize()
+		if err != nil {
+			log.Errorf("Error while serializing index: %v", err)
+			return
+		}
+
+		leveldb.Save([]byte("indexer"), b)
+		log.Debug("Index persisted in database")
 	}
 }
 
 func ProcessRepository(repo repository.Repository) {
 	data.AddRecent(repo)
-	data.AddTop(repo)
+	data.AddPopular(repo)
+	data.AddTopRanked(repo)
 }
 
 func init() {
 	data = IndexedData{
-		items: 6,
-		tk:    topk.New(20),
+		itemCount: 6,
+		tk:        topk.New(100),
 	}
 
-	go data.updateTopK()
+	go data.updatePopular()
+	go data.save()
 }
