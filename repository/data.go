@@ -56,7 +56,7 @@ func (r *Repository) GetScore() (sc model.Score, err error) {
 		return sc, err
 	}
 	if data != nil {
-		if err := json.Unmarshal(data, &r.Score); err != nil {
+		if err = json.Unmarshal(data, &r.Score); err != nil {
 			return sc, err
 		}
 		return r.Score, nil
@@ -93,7 +93,7 @@ func (r *Repository) GetImports() (model.Imports, error) {
 				filtered[im] = 1
 			}
 		}
-		for im, _ := range filtered {
+		for im := range filtered {
 			imports = append(imports, im)
 		}
 		r.Imports = imports

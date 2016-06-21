@@ -1,6 +1,7 @@
 package score
 
 import (
+	"fmt"
 	"sync"
 )
 
@@ -38,8 +39,13 @@ func Messages() []string {
 
 	m := []string{}
 
-	for _, c := range criterias {
-		m = append(m, c.Message())
+	for n, c := range criterias {
+		m = append(m, fmt.Sprintf(
+			"%s: %s [score = %.2f][weight = %.2f%%]",
+			n, c.Message(),
+			c.Score(),
+			c.Weight(),
+		))
 	}
 
 	return m
@@ -88,9 +94,6 @@ func Process(params map[string]interface{}) float64 {
 
 	sw, avg := 0.0, 0.0
 	for i, v := range s {
-		if v == 0 {
-			continue
-		}
 		sw += w[i]
 		avg += float64(v) * w[i]
 	}
