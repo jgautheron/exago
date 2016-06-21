@@ -70,7 +70,7 @@ func checkValidRepository(next http.Handler) http.Handler {
 			return
 		}
 
-		if !strings.Contains(data["language"], "Go") {
+		if !strings.Contains(data["language"].(string), "Go") {
 			writeError(w, r, ErrInvalidLanguage)
 			return
 		}

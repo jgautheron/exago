@@ -25,15 +25,6 @@ var (
 		"vet",
 		"vetshadow",
 	}
-
-	// DefaultTypes represents the data types.
-	// The name matches automatically to a Lambda function.
-	DefaultTypes = []string{
-		"imports",
-		"codestats",
-		"testresults",
-		"lintmessages",
-	}
 )
 
 type Repository struct {
@@ -44,8 +35,9 @@ type Repository struct {
 	Imports      model.Imports
 	TestResults  model.TestResults
 	LintMessages model.LintMessages
+	Metadata     model.Metadata
+	Score        model.Score
 
-	Score                 model.Score
 	StartTime, LastUpdate time.Time
 	ExecutionTime         string
 }
@@ -101,7 +93,10 @@ func (r *Repository) Load() (err error) {
 	if _, err = r.GetScore(); err != nil {
 		return err
 	}
-	if _, err = r.GetDate(); err != nil {
+	if _, err = r.GetMetadata(); err != nil {
+		return err
+	}
+	if _, err = r.GetLastUpdate(); err != nil {
 		return err
 	}
 	if _, err = r.GetExecutionTime(); err != nil {
@@ -124,6 +119,7 @@ func (r *Repository) AsMap() map[string]interface{} {
 		model.LintMessagesName:  r.LintMessages,
 		model.TestResultsName:   r.TestResults,
 		model.ScoreName:         r.Score,
+		model.MetadataName:      r.Metadata,
 		model.LastUpdateName:    r.LastUpdate,
 		model.ExecutionTimeName: r.ExecutionTime,
 	}

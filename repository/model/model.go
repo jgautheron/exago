@@ -8,6 +8,7 @@ const (
 	ScoreName         = "score"
 	ExecutionTimeName = "execution_time"
 	LastUpdateName    = "last_update"
+	MetadataName      = "metadata"
 )
 
 // TestResults received from the test runner.
@@ -58,6 +59,13 @@ type Score struct {
 	Value   float64  `json:"value"`
 	Rank    string   `json:"rank"`
 	Details []string `json:"details"`
+}
+
+type Metadata struct {
+	Image       string `json:"image"`
+	Description string `json:"description"`
+	Stars       int    `json:"stars"`
+	LastPush    string `json:"last_push"`
 }
 
 func (t TestResults) GetAvgTestDuration() float64 {

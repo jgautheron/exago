@@ -18,6 +18,14 @@ const (
 
 var (
 	ErrRoutineTimeout = errors.New("The analysis timed out")
+
+	// DefaultTypes represents the default processors enabled.
+	DefaultTypes = []string{
+		"imports",
+		"codestats",
+		"testresults",
+		"lintmessages",
+	}
 )
 
 type processingError struct {
@@ -51,7 +59,7 @@ type Checker struct {
 func NewChecker(repo string) *Checker {
 	return &Checker{
 		logger:     log.WithField("repository", repo),
-		types:      repository.DefaultTypes,
+		types:      DefaultTypes,
 		linters:    repository.DefaultLinters,
 		data:       make(chan interface{}),
 		Repository: repository.New(repo, ""),
@@ -75,11 +83,11 @@ func (rc *Checker) Run() {
 			)
 
 			switch tp {
-			case "imports":
+			case model.ImportsName:
 				out, err = rc.Repository.GetImports()
-			case "codestats":
+			case model.CodeStatsName:
 				out, err = rc.Repository.GetCodeStats()
-			case "testresults":
+			case model.TestResultsName:
 				out, err = rc.Repository.GetTestResults()
 
 				// Expose isolated errors
@@ -89,7 +97,7 @@ func (rc *Checker) Run() {
 				case ts.Errors.Gotest != "":
 					err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
 				}
-			case "lintmessages":
+			case model.LintMessagesName:
 				out, err = rc.Repository.GetLintMessages(rc.linters)
 			}
 
@@ -132,32 +140,42 @@ func (rc *Checker) Run() {
 
 // StampEntry is called once the entire dataset is loaded.
 func (rc *Checker) StampEntry() {
-	if rc.HasError {
-		rc.Output["score"] = model.Score{Rank: ""}
+	// Add the metadata
+	md, err := rc.Repository.GetMetadata()
+	if err != nil {
+		rc.Output[model.MetadataName] = wrapError(err)
 	} else {
-		// Add the score
+		rc.Output[model.MetadataName] = md
+	}
+
+	// Add the score
+	if rc.HasError {
+		// If something went wrong during the processing
+		// then we cannot calculate the rank
+		rc.Output[model.ScoreName] = model.Score{Rank: ""}
+	} else {
 		sc, err := rc.Repository.GetScore()
 		if err != nil {
-			rc.Output["score"] = wrapError(err)
+			rc.Output[model.ScoreName] = wrapError(err)
 		} else {
-			rc.Output["score"] = sc
+			rc.Output[model.ScoreName] = sc
 		}
 	}
 
 	// Add the timestamp
-	date, err := rc.Repository.GetDate()
+	date, err := rc.Repository.GetLastUpdate()
 	if err != nil {
-		rc.Output["date"] = wrapError(err)
+		rc.Output[model.LastUpdateName] = wrapError(err)
 	} else {
-		rc.Output["date"] = date
+		rc.Output[model.LastUpdateName] = date
 	}
 
 	// Add the execution time
 	et, err := rc.Repository.GetExecutionTime()
 	if err != nil {
-		rc.Output["execution_time"] = wrapError(err)
+		rc.Output[model.ExecutionTimeName] = wrapError(err)
 	} else {
-		rc.Output["execution_time"] = et
+		rc.Output[model.ExecutionTimeName] = et
 	}
 }
 

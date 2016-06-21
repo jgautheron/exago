@@ -2,18 +2,55 @@ package repository
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"regexp"
 	"time"
 
+	"github.com/exago/svc/github"
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/lambda"
 	"github.com/exago/svc/repository/model"
 )
 
-// GetDate retrieves the check timestamp.
-func (r *Repository) GetDate() (string, error) {
-	data, err := r.getCachedData("date")
+// GetMetadata retrieves repository metadata such as description, stars...
+func (r *Repository) GetMetadata() (d model.Metadata, err error) {
+	data, err := r.getCachedData(model.MetadataName)
+	if err != nil {
+		return d, err
+	}
+	if data == nil {
+		reg, _ := regexp.Compile(`^github\.com/([\w\d\-]+)/([\w\d\-]+)`)
+		m := reg.FindStringSubmatch(r.Name)
+		if len(m) == 0 {
+			return d, errors.New("Can only get metadata for GitHub repositories")
+		}
+
+		res, err := github.Get(m[1], m[2])
+		if err != nil {
+			return d, err
+		}
+
+		r.Metadata = model.Metadata{
+			Image:       res["avatar_url"].(string),
+			Description: res["description"].(string),
+			Stars:       res["stargazers"].(int),
+			LastPush:    res["avatar_url"].(string),
+		}
+		if err = r.cacheData(model.MetadataName, r.Metadata); err != nil {
+			return d, err
+		}
+		return r.Metadata, nil
+	}
+	if err := json.Unmarshal(data, &r.Metadata); err != nil {
+		return d, err
+	}
+	return r.Metadata, nil
+}
+
+// GetLastUpdate retrieves the last update timestamp.
+func (r *Repository) GetLastUpdate() (string, error) {
+	data, err := r.getCachedData(model.LastUpdateName)
 	if err != nil {
 		return "", err
 	}
@@ -24,7 +61,7 @@ func (r *Repository) GetDate() (string, error) {
 
 	r.LastUpdate = time.Now()
 	date := r.LastUpdate.Format(time.RFC3339)
-	if err := leveldb.Save(r.cacheKey("date"), []byte(date)); err != nil {
+	if err := leveldb.Save(r.cacheKey(model.LastUpdateName), []byte(date)); err != nil {
 		return "", err
 	}
 	return date, nil
@@ -33,7 +70,7 @@ func (r *Repository) GetDate() (string, error) {
 // GetExecutionTime retrieves the last execution time.
 // The value is used to determine an ETA for a project refresh.
 func (r *Repository) GetExecutionTime() (string, error) {
-	data, err := r.getCachedData("executiontime")
+	data, err := r.getCachedData(model.ExecutionTimeName)
 	if err != nil {
 		return "", err
 	}
@@ -42,8 +79,9 @@ func (r *Repository) GetExecutionTime() (string, error) {
 		return r.ExecutionTime, nil
 	}
 
-	r.ExecutionTime = time.Since(r.StartTime).String()
-	if err := leveldb.Save(r.cacheKey("executiontime"), []byte(r.ExecutionTime)); err != nil {
+	duration := time.Since(r.StartTime)
+	r.ExecutionTime = (duration - (duration % time.Second)).String()
+	if err := leveldb.Save(r.cacheKey(model.ExecutionTimeName), []byte(r.ExecutionTime)); err != nil {
 		return "", err
 	}
 	return r.ExecutionTime, nil
@@ -84,7 +122,7 @@ func (r *Repository) GetImports() (model.Imports, error) {
 		// Dedupe third party packages
 		// One repository corresponds to one third party
 		imports, filtered := []string{}, map[string]int{}
-		reg, _ := regexp.Compile(`^([\w\d\.]+)/([\w\d\-]+)/([\w\d\-]+)`)
+		reg, _ := regexp.Compile(`^github\.com/([\w\d\-]+)/([\w\d\-]+)`)
 		for _, im := range r.Imports {
 			m := reg.FindStringSubmatch(im)
 			if len(m) > 0 {
@@ -111,12 +149,7 @@ func (r *Repository) GetImports() (model.Imports, error) {
 
 // GetCodeStats retrieves the code statistics (LOC...).
 func (r *Repository) GetCodeStats() (model.CodeStats, error) {
-	var (
-		data []byte
-		err  error
-	)
-
-	data, err = r.getCachedData(model.CodeStatsName)
+	data, err := r.getCachedData(model.CodeStatsName)
 	if err != nil {
 		return nil, err
 	}
