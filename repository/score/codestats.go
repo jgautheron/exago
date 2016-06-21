@@ -3,7 +3,7 @@ package score
 import "github.com/exago/svc/repository/model"
 
 func init() {
-	Register(model.CodeStatsName, &CodeStatsEvaluator{Evaluator{100, .2, ""}})
+	Register(model.CodeStatsName, &CodeStatsEvaluator{Evaluator{100, .1, ""}})
 }
 
 // CodeStatsEvaluator measure a score based on various metrics of code stats

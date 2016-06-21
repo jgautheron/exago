@@ -3,7 +3,7 @@ package score
 import "github.com/exago/svc/repository/model"
 
 func init() {
-	Register(model.ImportsName, &ImportsEvaluator{Evaluator{100, .5, ""}})
+	Register(model.ImportsName, &ImportsEvaluator{Evaluator{100, .15, ""}})
 }
 
 // ImportsEvaluator measure a score based on various metrics of imports
