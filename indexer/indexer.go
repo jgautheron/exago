@@ -25,6 +25,13 @@ type IndexedData struct {
 
 // AddRecent pushes to the stack latest new items, pops the old ones.
 func (d *IndexedData) AddRecent(repo repository.Repository) {
+	// Prevent duplicates
+	for _, item := range d.recent {
+		if item.Name == repo.Name {
+			return
+		}
+	}
+
 	d.recent = append(d.recent, repo)
 	if len(d.recent) > d.itemCount {
 		d.recent = d.recent[1:]
@@ -33,6 +40,13 @@ func (d *IndexedData) AddRecent(repo repository.Repository) {
 
 // AddTopRanked pushes to the stack latest new A-ranked items, pops the old ones.
 func (d *IndexedData) AddTopRanked(repo repository.Repository) {
+	// Prevent duplicates
+	for _, item := range d.topRanked {
+		if item.Name == repo.Name {
+			return
+		}
+	}
+
 	d.topRanked = append(d.topRanked, repo)
 	if len(d.topRanked) > 50 {
 		d.topRanked = d.topRanked[1:]
@@ -40,6 +54,7 @@ func (d *IndexedData) AddTopRanked(repo repository.Repository) {
 }
 
 // AddPopular inserts the repository name into the topk data structure.
+// The collection will not be updated in real-time (see updatePopular).
 func (d *IndexedData) AddPopular(repo repository.Repository) {
 	d.tk.Insert(repo.Name, 1)
 }
