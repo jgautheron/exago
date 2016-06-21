@@ -7,18 +7,18 @@ import (
 )
 
 var codeStatsCmd = &cmd{
-	name:      new(model.CodeStats).Name(),
+	name:      model.CodeStatsName,
 	unMarshal: unMarshalCodeStats,
 }
 
-func GetCodeStats(repository string) (model.RepositoryData, error) {
+func GetCodeStats(repository string) (interface{}, error) {
 	codeStatsCmd.ctxt = context{
 		Repository: repository,
 	}
 	return codeStatsCmd.Data()
 }
 
-func unMarshalCodeStats(l *cmd, b []byte) (model.RepositoryData, error) {
+func unMarshalCodeStats(l *cmd, b []byte) (interface{}, error) {
 	var cs model.CodeStats
 	err := json.Unmarshal(b, &cs)
 	return cs, err

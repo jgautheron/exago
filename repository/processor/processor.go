@@ -133,7 +133,7 @@ func (rc *Checker) Run() {
 // StampEntry is called once the entire dataset is loaded.
 func (rc *Checker) StampEntry() {
 	if rc.HasError {
-		rc.Output["score"] = repository.Score{Rank: ""}
+		rc.Output["score"] = model.Score{Rank: ""}
 	} else {
 		// Add the score
 		sc, err := rc.Repository.GetScore()

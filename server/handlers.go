@@ -20,7 +20,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	if rc.Repository.IsCached() {
 		err := rc.Repository.Load()
-		send(w, r, rc.Repository.FormatOutput(), err)
+		send(w, r, rc.Repository.AsMap(), err)
 		return
 	}
 
@@ -59,7 +59,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, "", string(rank), "blue")
 	case "cov":
 		title := "Coverage"
-		err, cov := repo.Load(), repo.GetAvgCodeCov()
+		err, cov := repo.Load(), repo.TestResults.GetAvgCodeCov()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -68,7 +68,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
 	case "duration":
 		title := "Tests Duration"
-		err, avg := repo.Load(), repo.GetAvgTestDuration()
+		err, avg := repo.Load(), repo.TestResults.GetAvgTestDuration()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)

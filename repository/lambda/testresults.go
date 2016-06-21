@@ -7,18 +7,18 @@ import (
 )
 
 var testRunnerCmd = &cmd{
-	name:      new(model.TestResults).Name(),
+	name:      model.TestResultsName,
 	unMarshal: unMarshalTestResults,
 }
 
-func GetTestResults(repository string) (model.RepositoryData, error) {
+func GetTestResults(repository string) (interface{}, error) {
 	testRunnerCmd.ctxt = context{
 		Repository: repository,
 	}
 	return testRunnerCmd.Data()
 }
 
-func unMarshalTestResults(l *cmd, b []byte) (model.RepositoryData, error) {
+func unMarshalTestResults(l *cmd, b []byte) (interface{}, error) {
 	var tr model.TestResults
 	err := json.Unmarshal(b, &tr)
 	return tr, err

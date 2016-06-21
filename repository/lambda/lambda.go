@@ -9,7 +9,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	. "github.com/exago/svc/config"
-	"github.com/exago/svc/repository/model"
 )
 
 const (
@@ -36,12 +35,12 @@ type Response struct {
 type cmd struct {
 	name      string
 	ctxt      context
-	data      model.RepositoryData
-	unMarshal func(l *cmd, j []byte) (data model.RepositoryData, err error)
+	data      interface{}
+	unMarshal func(l *cmd, j []byte) (data interface{}, err error)
 }
 
 // Data returns the response from Lambda.
-func (l *cmd) Data() (model.RepositoryData, error) {
+func (l *cmd) Data() (interface{}, error) {
 	res, err := l.call()
 	if err != nil {
 		return nil, err

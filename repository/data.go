@@ -50,8 +50,8 @@ func (r *Repository) GetExecutionTime() (string, error) {
 }
 
 // GetScore retrieves the Exago score (A-F).
-func (r *Repository) GetScore() (sc Score, err error) {
-	data, err := r.getCachedData("score")
+func (r *Repository) GetScore() (sc model.Score, err error) {
+	data, err := r.getCachedData(model.ScoreName)
 	if err != nil {
 		return sc, err
 	}
@@ -61,16 +61,16 @@ func (r *Repository) GetScore() (sc Score, err error) {
 		}
 		return r.Score, nil
 	}
-	sc = r.calcScore()
-	if err = r.cacheData("score", sc); err != nil {
-		return sc, err
+	r.calcScore()
+	if err = r.cacheData(model.ScoreName, r.Score); err != nil {
+		return r.Score, err
 	}
-	return sc, nil
+	return r.Score, nil
 }
 
 // GetImports retrieves the third party imports.
 func (r *Repository) GetImports() (model.Imports, error) {
-	data, err := r.getCachedData(r.Imports.Name())
+	data, err := r.getCachedData(model.ImportsName)
 	if err != nil {
 		return nil, err
 	}
@@ -98,7 +98,7 @@ func (r *Repository) GetImports() (model.Imports, error) {
 		}
 		r.Imports = imports
 
-		if err = r.cacheData(r.Imports.Name(), r.Imports); err != nil {
+		if err = r.cacheData(model.ImportsName, r.Imports); err != nil {
 			return nil, err
 		}
 		return r.Imports, nil
@@ -116,7 +116,7 @@ func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 		err  error
 	)
 
-	data, err = r.getCachedData(r.CodeStats.Name())
+	data, err = r.getCachedData(model.CodeStatsName)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 			return nil, err
 		}
 		r.CodeStats = res.(model.CodeStats)
-		if err = r.cacheData(r.CodeStats.Name(), r.CodeStats); err != nil {
+		if err = r.cacheData(model.CodeStatsName, r.CodeStats); err != nil {
 			return nil, err
 		}
 		return r.CodeStats, nil
@@ -139,7 +139,7 @@ func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 
 // GetTestResults retrieves the test and checklist results.
 func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
-	data, err := r.getCachedData(r.TestResults.Name())
+	data, err := r.getCachedData(model.TestResultsName)
 	if err != nil {
 		return tr, err
 	}
@@ -149,7 +149,7 @@ func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
 			return tr, err
 		}
 		r.TestResults = res.(model.TestResults)
-		if err = r.cacheData(r.TestResults.Name(), r.TestResults); err != nil {
+		if err = r.cacheData(model.TestResultsName, r.TestResults); err != nil {
 			return tr, err
 		}
 		return r.TestResults, nil
@@ -162,7 +162,7 @@ func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
 
 // GetLintMessages retrieves the linter warnings emitted by gometalinter.
 func (r *Repository) GetLintMessages(linters []string) (model.LintMessages, error) {
-	data, err := r.getCachedData(r.LintMessages.Name())
+	data, err := r.getCachedData(model.LintMessagesName)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (r *Repository) GetLintMessages(linters []string) (model.LintMessages, erro
 			return nil, err
 		}
 		r.LintMessages = res.(model.LintMessages)
-		if err = r.cacheData(r.LintMessages.Name(), r.LintMessages); err != nil {
+		if err = r.cacheData(model.LintMessagesName, r.LintMessages); err != nil {
 			return nil, err
 		}
 		return r.LintMessages, nil

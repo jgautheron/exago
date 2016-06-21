@@ -8,11 +8,11 @@ import (
 )
 
 var lintCmd = &cmd{
-	name:      new(model.LintMessages).Name(),
+	name:      model.LintMessagesName,
 	unMarshal: unMarshalLint,
 }
 
-func GetLintMessages(repository string, linters []string) (model.RepositoryData, error) {
+func GetLintMessages(repository string, linters []string) (interface{}, error) {
 	lintCmd.ctxt = context{
 		Repository: repository,
 		Linters:    strings.Join(linters, ","),
@@ -20,7 +20,7 @@ func GetLintMessages(repository string, linters []string) (model.RepositoryData,
 	return lintCmd.Data()
 }
 
-func unMarshalLint(l *cmd, b []byte) (model.RepositoryData, error) {
+func unMarshalLint(l *cmd, b []byte) (interface{}, error) {
 	var lnt model.LintMessages
 	err := json.Unmarshal(b, &lnt)
 	return lnt, err

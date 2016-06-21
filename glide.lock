@@ -1,10 +1,10 @@
 hash: eaec67c09342e58c48c91ae3a663b5dbf82c3cef467a994751d338da43a8dd16
-updated: 2016-06-20T17:29:36.505851459+02:00
+updated: 2016-06-21T13:41:01.084920992+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
 - name: github.com/aws/aws-sdk-go
-  version: d3b6d25135b4e09ecd39ea3c2a5cad35279b0515
+  version: d17da62685915c25ab5b429b1d1e5b67faa98ac2
   subpackages:
   - aws
   - aws/credentials
@@ -27,11 +27,11 @@ imports:
   - private/protocol/rest
   - private/protocol/json/jsonutil
 - name: github.com/codegangsta/cli
-  version: b438abf775124d32be72016935a9553dbffe8473
+  version: 6011f165dc288c72abd8acd7722f837c5c64198d
 - name: github.com/dgryski/go-topk
   version: 1b30445672a470f5658d1877192cbe84e30d3454
 - name: github.com/didip/tollbooth
-  version: 9adc32f5171e833befc340a64b63602529fc0373
+  version: be7d4891cc860c1d3d4004e99b898ddfd419ceb1
   subpackages:
   - config
   - errors
@@ -39,7 +39,7 @@ imports:
 - name: github.com/exago/envconfig
   version: 8b1c59eae986013d3be5deddbf1e89f18d25ffaa
 - name: github.com/go-ini/ini
-  version: 72ba3e6b9e6b87e0c74c9a7a4dc86e8dd8ba4355
+  version: 776aa739ce9373377cd16f526cdf06cb4c89b40f
 - name: github.com/golang/freetype
   version: 9ce4eec92a4b5e260b4622c873355647ecf68304
   subpackages:
@@ -50,17 +50,17 @@ imports:
   subpackages:
   - proto
 - name: github.com/golang/snappy
-  version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
+  version: 939eddc12b3be18dfc77ed573344c3c689527ef3
 - name: github.com/google/go-github
-  version: 5c1b3a05b41ae630de925007cd8f3e52909d1dbb
+  version: 5f4a113632721ba57574522ed9bc7e0f63b48bb2
   subpackages:
   - github
 - name: github.com/google/go-querystring
-  version: 9235644dd9e52eeae6fa48efd539fdc351a0af53
+  version: 6bb77fe6f42b85397288d4f6f67ac72f8f400ee7
   subpackages:
   - query
 - name: github.com/gorilla/context
-  version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
+  version: 1c83b3eabd45b6d76072b66b746c20815fb2872d
 - name: github.com/jmespath/go-jmespath
   version: 0b12d6b521d83fc7f755e7cfc1b1fbdd35a01a74
 - name: github.com/juju/ratelimit
@@ -68,7 +68,7 @@ imports:
 - name: github.com/julienschmidt/httprouter
   version: 77366a47451a56bb3ba682481eed85b64fea14e8
 - name: github.com/justinas/alice
-  version: 8f06f3153579369bb91f084f39f86f5d5030d4dc
+  version: 78131a09b9e7bcccbb8a99d8e2f2168bb576e67a
 - name: github.com/narqo/go-badge
   version: 3014a17b062a7131301593113f579a8da169b99d
   subpackages:
@@ -76,9 +76,9 @@ imports:
 - name: github.com/PuerkitoBio/goquery
   version: 77cbaef46a3af185a3afb87f88a366f3dee2a904
 - name: github.com/Sirupsen/logrus
-  version: f3cfb454f4c209e6668c95216c4744b8fddb2356
+  version: 57cce1ed6103dce7791881d3e69e55f90d986aa5
 - name: github.com/syndtr/goleveldb
-  version: fa5b5c78794bc5c18f330361059f871ae8c2b9d6
+  version: ad0d8b2ab58a55ed5c58073aa46451d5e1ca1280
   subpackages:
   - leveldb
   - leveldb/opt
@@ -98,26 +98,27 @@ imports:
   - font
   - math/fixed
 - name: golang.org/x/net
-  version: 8bf2b39827dbadfd566c4fae7a8790d12be8b23c
+  version: 0899459b4d84739aa2600ba248120318d78f8997
   subpackages:
   - html
   - context
   - html/atom
 - name: golang.org/x/oauth2
-  version: 65a8d08c6292395d47053be10b3c5e91960def76
+  version: 2cd4472c321b6cba78e029d99f0e7fe51032fd21
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 62bee037599929a6e9146f29d10dd5208c43507d
+  version: 20457ee8ea8546920d3f4e19e405da45250dc5a5
   subpackages:
   - unix
 - name: google.golang.org/appengine
-  version: 7f59a8c76b8594d06044bfe0bcbe475cb2020482
+  version: 267c27e7492265b84fc6719503b14a1e17975d79
   subpackages:
   - urlfetch
   - internal
   - internal/urlfetch
   - internal/base
   - internal/datastore
+  - internal/log
   - internal/remote_api
 devImports: []

@@ -7,6 +7,7 @@ import (
 
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/model"
+	"github.com/exago/svc/repository/score"
 )
 
 var (
@@ -44,7 +45,7 @@ type Repository struct {
 	TestResults  model.TestResults
 	LintMessages model.LintMessages
 
-	Score                 Score
+	Score                 model.Score
 	StartTime, LastUpdate time.Time
 	ExecutionTime         string
 }
@@ -115,15 +116,21 @@ func (r *Repository) ClearCache() (err error) {
 	return leveldb.DeleteAllMatchingPrefix([]byte(prefix))
 }
 
-// FormatOutput prepares a map ready for output.
-func (r *Repository) FormatOutput() map[string]interface{} {
+// AsMap generates a map out of repository fields
+func (r *Repository) AsMap() map[string]interface{} {
 	return map[string]interface{}{
-		"imports":        r.Imports,
-		"codestats":      r.CodeStats,
-		"lintmessages":   r.LintMessages,
-		"testresults":    r.TestResults,
-		"score":          r.Score,
-		"date":           r.LastUpdate,
-		"execution_time": r.ExecutionTime,
+		model.ImportsName:       r.Imports,
+		model.CodeStatsName:     r.CodeStats,
+		model.LintMessagesName:  r.LintMessages,
+		model.TestResultsName:   r.TestResults,
+		model.ScoreName:         r.Score,
+		model.LastUpdateName:    r.LastUpdate,
+		model.ExecutionTimeName: r.ExecutionTime,
 	}
+}
+
+func (r *Repository) calcScore() {
+	r.Score.Value = score.Process(r.AsMap())
+	r.Score.Rank = score.Rank(r.Score.Value)
+	r.Score.Details = score.Messages()
 }
