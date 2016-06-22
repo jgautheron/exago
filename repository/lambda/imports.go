@@ -14,6 +14,7 @@ var importsCmd = &cmd{
 func GetImports(repository string) (interface{}, error) {
 	importsCmd.ctxt = context{
 		Repository: repository,
+		Cleanup:    true,
 	}
 	return importsCmd.Data()
 }

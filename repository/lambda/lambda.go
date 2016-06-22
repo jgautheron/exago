@@ -23,6 +23,7 @@ type context struct {
 	Repository string `json:"repository"`
 	Branch     string `json:"branch,omitempty"`
 	Linters    string `json:"linters,omitempty"`
+	Cleanup    bool   `json:"cleanup,omitempty"`
 }
 
 // Response contains the generic JSend response sent by Lambda functions.

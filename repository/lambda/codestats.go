@@ -14,6 +14,7 @@ var codeStatsCmd = &cmd{
 func GetCodeStats(repository string) (interface{}, error) {
 	codeStatsCmd.ctxt = context{
 		Repository: repository,
+		Cleanup:    true,
 	}
 	return codeStatsCmd.Data()
 }

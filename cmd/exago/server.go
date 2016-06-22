@@ -12,7 +12,7 @@ func ServerCommand() cli.Command {
 		Name:  "server",
 		Usage: "Start the HTTP server",
 		Action: func(ctx *cli.Context) {
-			github.SetUp()
+			github.Init()
 			server.ListenAndServe()
 		},
 	}

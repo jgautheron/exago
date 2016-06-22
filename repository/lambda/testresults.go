@@ -14,6 +14,7 @@ var testRunnerCmd = &cmd{
 func GetTestResults(repository string) (interface{}, error) {
 	testRunnerCmd.ctxt = context{
 		Repository: repository,
+		Cleanup:    true,
 	}
 	return testRunnerCmd.Data()
 }

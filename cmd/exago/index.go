@@ -6,6 +6,7 @@ import (
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
 	"github.com/codegangsta/cli"
+	"github.com/exago/svc/github"
 	"github.com/exago/svc/repository/processor"
 )
 
@@ -19,6 +20,7 @@ func IndexCommand() cli.Command {
 		Name:  "index",
 		Usage: "Save the Godoc index in DB",
 		Action: func(ctx *cli.Context) {
+			github.Init()
 			indexGodoc()
 		},
 	}
@@ -43,16 +45,13 @@ func indexGodoc() {
 
 	log.Infof("Found %d unique GitHub repositories in the Godoc index", len(out))
 
-	idx := indexer{
-		QueueConcurrent: 20,
-	}
+	idx := indexer{}
 	idx.addItems(out)
 	idx.index()
 }
 
 type indexer struct {
-	QueueItems      []item
-	QueueConcurrent int
+	QueueItems []item
 }
 
 func (idx *indexer) addItems(items map[string]bool) {

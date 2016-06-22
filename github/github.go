@@ -15,7 +15,7 @@ var (
 	Repositories *gh.RepositoriesService
 )
 
-func SetUp() {
+func Init() {
 	ts := oauth2.StaticTokenSource(
 		&oauth2.Token{AccessToken: Config.GithubAccessToken},
 	)
@@ -43,11 +43,21 @@ func Get(owner, repository string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	language := ""
+	if repo.Language != nil {
+		language = *repo.Language
+	}
+
+	desc := ""
+	if repo.Description != nil {
+		desc = *repo.Description
+	}
+
 	// Export everything that could be useful
 	return map[string]interface{}{
 		"avatar_url":  *repo.Owner.AvatarURL,
-		"description": *repo.Description,
-		"language":    *repo.Language,
+		"description": desc,
+		"language":    language,
 		"stargazers":  *repo.StargazersCount,
 		"last_push":   repo.PushedAt.Time,
 	}, nil

@@ -120,6 +120,8 @@ func (rc *Checker) Run() {
 		case out := <-rc.data:
 			rc.Output[tp] = out
 			i++
+		case <-rc.Done:
+			lgr.Warn("Shutting down (aborted)")
 		case <-time.After(RoutineTimeout):
 			rc.Output[tp] = wrapError(ErrRoutineTimeout)
 			lgr.Error(ErrRoutineTimeout)

@@ -16,6 +16,7 @@ func GetLintMessages(repository string, linters []string) (interface{}, error) {
 	lintCmd.ctxt = context{
 		Repository: repository,
 		Linters:    strings.Join(linters, ","),
+		Cleanup:    true,
 	}
 	return lintCmd.Data()
 }
