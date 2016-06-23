@@ -3,6 +3,8 @@ package score
 import (
 	"fmt"
 	"sync"
+
+	"simonwaldherr.de/go/golibs/xmath"
 )
 
 var (
@@ -15,12 +17,14 @@ var (
 func Register(name string, criteria CriteriaEvaluator) {
 	criteriasMu.Lock()
 	defer criteriasMu.Unlock()
+
 	if criteria == nil {
 		panic("score: Register criteria is nil")
 	}
 	if _, dup := criterias[name]; dup {
 		panic("score: Register called twice for criteria " + name)
 	}
+
 	criterias[name] = criteria
 }
 
@@ -41,10 +45,9 @@ func Messages() []string {
 
 	for n, c := range criterias {
 		m = append(m, fmt.Sprintf(
-			"%s: %s [score = %.2f][weight = %.2f%%]",
+			"%s: %s [score = %.2f]",
 			n, c.Message(),
 			c.Score(),
-			c.Weight(),
 		))
 	}
 
@@ -60,6 +63,11 @@ func Weights() []float64 {
 
 	for _, c := range criterias {
 		w = append(w, c.Weight())
+	}
+
+	factor := xmath.Sum(w) / 100
+	for i := range w {
+		w[i] /= factor
 	}
 
 	return w
