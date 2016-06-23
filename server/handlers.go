@@ -7,9 +7,9 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/badge"
 	"github.com/exago/svc/github"
-	"github.com/exago/svc/indexer"
 	"github.com/exago/svc/repository"
 	"github.com/exago/svc/repository/processor"
+	"github.com/exago/svc/showcaser"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
@@ -25,10 +25,14 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	rc.Run()
-	// Wait until the data is ready
-	<-rc.Done
 
-	send(w, r, rc.Output, nil)
+	// Wait until the data is ready
+	select {
+	case <-rc.Done:
+		send(w, r, rc.Output, nil)
+	case <-rc.Aborted:
+		send(w, r, rc.Output, nil)
+	}
 }
 
 func refreshHandler(w http.ResponseWriter, r *http.Request) {
@@ -127,7 +131,7 @@ func cachedHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func recentHandler(w http.ResponseWriter, r *http.Request) {
-	repos := indexer.GetRecentRepositories()
+	repos := showcaser.GetRecentRepositories()
 	out := map[string]interface{}{
 		"type":         "recent",
 		"repositories": repos,
@@ -136,7 +140,7 @@ func recentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
-	repos := indexer.GetTopRankedRepositories()
+	repos := showcaser.GetTopRankedRepositories()
 	out := map[string]interface{}{
 		"type":         "top",
 		"repositories": repos,
@@ -145,7 +149,7 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func popularHandler(w http.ResponseWriter, r *http.Request) {
-	repos := indexer.GetPopularRepositories()
+	repos := showcaser.GetPopularRepositories()
 	out := map[string]interface{}{
 		"type":         "popular",
 		"repositories": repos,

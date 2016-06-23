@@ -4,9 +4,11 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/codegangsta/cli"
 	. "github.com/exago/svc/config"
+	"github.com/exago/svc/github"
 	"github.com/exago/svc/leveldb"
+	"github.com/exago/svc/showcaser"
+	"github.com/urfave/cli"
 )
 
 var (
@@ -30,6 +32,12 @@ func init() {
 
 	// Open the database
 	leveldb.Init()
+
+	// Authenticate on GitHub
+	github.Init()
+
+	// Initialise the dataset
+	showcaser.Init()
 }
 
 func main() {

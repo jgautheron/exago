@@ -6,9 +6,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/indexer"
 	"github.com/exago/svc/repository"
 	"github.com/exago/svc/repository/model"
+	"github.com/exago/svc/showcaser"
 )
 
 const (
@@ -52,6 +52,7 @@ type Checker struct {
 	Repository     *repository.Repository
 	HasError       bool
 	Errors         chan error
+	Aborted        chan bool
 	Done           chan bool
 	Output         map[string]interface{}
 }
@@ -65,6 +66,7 @@ func NewChecker(repo string) *Checker {
 		Repository: repository.New(repo, ""),
 		HasError:   false,
 		Errors:     make(chan error),
+		Aborted:    make(chan bool, 1),
 		Done:       make(chan bool, 1),
 		Output:     map[string]interface{}{},
 	}
@@ -120,7 +122,7 @@ func (rc *Checker) Run() {
 		case out := <-rc.data:
 			rc.Output[tp] = out
 			i++
-		case <-rc.Done:
+		case <-rc.Aborted:
 			lgr.Warn("Shutting down (aborted)")
 		case <-time.After(RoutineTimeout):
 			rc.Output[tp] = wrapError(ErrRoutineTimeout)
@@ -136,7 +138,7 @@ func (rc *Checker) Run() {
 		// The entire dataset is ready
 		rc.Done <- true
 
-		go indexer.ProcessRepository(*rc.Repository)
+		go showcaser.ProcessRepository(*rc.Repository)
 	}
 }
 
@@ -183,7 +185,7 @@ func (rc *Checker) StampEntry() {
 
 // Abort declares the task as done and skips the processing.
 func (rc *Checker) Abort() {
-	rc.Done <- true
+	rc.Aborted <- true
 }
 
 func wrapError(err error) interface{} {

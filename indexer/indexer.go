@@ -1,138 +1,155 @@
-// Package indexer processes repositories to determine occurrences, top-k, popularity.
+// Package indexer enables mass processing of repositories.
 package indexer
 
 import (
-	"encoding/json"
+	"os"
+	"os/signal"
+	"runtime"
+	"sync"
+	"syscall"
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/dgryski/go-topk"
-	"github.com/exago/svc/leveldb"
-	"github.com/exago/svc/repository"
+	"github.com/exago/svc/repository/processor"
 )
 
-var data IndexedData
+type Indexer struct {
+	Done    chan bool
+	Aborted chan bool
 
-type IndexedData struct {
-	recent    []repository.Repository
-	topRanked []repository.Repository
-	popular   []repository.Repository
+	items           map[string]itemState
+	processingItems map[string]bool
+	concurrency     int
+	processedItems  chan processedItem
+	processedCount  int
 
-	// How many items per category
-	itemCount int
-	tk        *topk.Stream
+	mutex *sync.Mutex
 }
 
-// AddRecent pushes to the stack latest new items, pops the old ones.
-func (d *IndexedData) AddRecent(repo repository.Repository) {
-	// Prevent duplicates
-	for _, item := range d.recent {
-		if item.Name == repo.Name {
-			return
-		}
+// New instantiates a new indexer.
+func New(items []string) *Indexer {
+	c := runtime.NumCPU()
+
+	mp := map[string]itemState{}
+	for _, item := range items {
+		mp[item] = itemState{nil, false}
 	}
 
-	d.recent = append(d.recent, repo)
-	if len(d.recent) > d.itemCount {
-		d.recent = d.recent[1:]
-	}
-}
-
-// AddTopRanked pushes to the stack latest new A-ranked items, pops the old ones.
-func (d *IndexedData) AddTopRanked(repo repository.Repository) {
-	// Prevent duplicates
-	for _, item := range d.topRanked {
-		if item.Name == repo.Name {
-			return
-		}
-	}
-
-	d.topRanked = append(d.topRanked, repo)
-	if len(d.topRanked) > 50 {
-		d.topRanked = d.topRanked[1:]
+	return &Indexer{
+		make(chan bool, 1),
+		make(chan bool, 1),
+		mp,
+		make(map[string]bool, c),
+		c,
+		make(chan processedItem, len(mp)),
+		0,
+		&sync.Mutex{},
 	}
 }
 
-// AddPopular inserts the repository name into the topk data structure.
-// The collection will not be updated in real-time (see updatePopular).
-func (d *IndexedData) AddPopular(repo repository.Repository) {
-	d.tk.Insert(repo.Name, 1)
-}
+// Start runs the indexer.
+func (idx *Indexer) Start() {
+	start := time.Now()
+	mutex := &sync.Mutex{}
 
-// updatePopular rebuilds the data slice from the stream periodically.
-func (d *IndexedData) updatePopular() {
-	for {
-		time.Sleep(5 * time.Minute)
-
-		top := []repository.Repository{}
-		for i, v := range d.tk.Keys() {
-			if i <= d.itemCount {
-				rp := repository.New(v.Key, "")
-				rp.Load()
-				top = append(top, *rp)
+	go func() {
+		for item := range idx.processedItems {
+			state := itemState{nil, true}
+			if item.err != nil {
+				state = itemState{item.err, true}
 			}
+
+			mutex.Lock()
+			idx.items[item.name] = state
+			delete(idx.processingItems, item.name)
+			idx.processedCount++
+			mutex.Unlock()
+
+			if idx.processedCount == len(idx.items) {
+				idx.Done <- true
+				break
+			}
+
+			// Process the next available item
+			go idx.ProcessItem()
 		}
-		d.popular = top
+	}()
+
+	for i := 0; i < idx.concurrency; i++ {
+		go idx.ProcessItem()
+	}
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+
+	select {
+	case <-idx.Done:
+		elapsed := time.Since(start)
+		log.Infof("Processed %d item(s) in %s", len(idx.items), elapsed)
+	case <-signals:
+		log.Warn("Termination signal caught, stopping the indexer")
+		idx.Aborted <- true
 	}
 }
 
-// serialize the index as an easily loadable format.
-func (d *IndexedData) serialize() ([]byte, error) {
-	s := struct {
-		recent    []string
-		topRanked []string
-		popular   []string
-		tk        []byte
-	}{}
-
-	for _, r := range d.recent {
-		s.recent = append(s.recent, r.Name)
-	}
-
-	for _, r := range d.topRanked {
-		s.recent = append(s.topRanked, r.Name)
-	}
-
-	for _, r := range d.popular {
-		s.recent = append(s.popular, r.Name)
-	}
-
-	tk, err := d.tk.GobEncode()
-	if err != nil {
-		return nil, err
-	}
-
-	return json.Marshal(tk)
-}
-
-// save persists periodically the index in database.
-func (d *IndexedData) save() {
-	for {
-		time.Sleep(20 * time.Minute)
-
-		b, err := d.serialize()
-		if err != nil {
-			log.Errorf("Error while serializing index: %v", err)
-			return
+// ProcessItem evaluates the next available item.
+func (idx *Indexer) ProcessItem() {
+	for item, state := range idx.items {
+		// Has the item already been processed?
+		if state.processed {
+			continue
 		}
 
-		leveldb.Save([]byte("indexer"), b)
-		log.Debug("Index persisted in database")
+		// Is the item currently being processed?
+		idx.mutex.Lock()
+		if _, beingProcessed := idx.processingItems[item]; beingProcessed {
+			continue
+		}
+		idx.processingItems[item] = true
+		idx.mutex.Unlock()
+
+		lgr := log.WithField("repository", item)
+		lgr.Info("Processing...")
+
+		rc := processor.NewChecker(item)
+		if rc.Repository.IsCached() {
+			// Possibly useful later: a --force flag to reprocess already cached repos
+			lgr.Warn("Already cached, marked as processed")
+			idx.processedItems <- processedItem{item, nil}
+			continue
+		}
+
+		go func() {
+			// If an error is caught, abort the processing
+			for err := range rc.Errors {
+				state.err = err
+				rc.Abort()
+				break
+			}
+		}()
+
+		// Process the repository
+		go rc.Run()
+
+		select {
+		case <-rc.Aborted:
+			lgr.WithField("error", state.err).Warn("Processing aborted")
+			idx.processedItems <- processedItem{item, state.err}
+		case <-rc.Done:
+			lgr.WithField("score", rc.Repository.Score.Rank).Info("Processing successful")
+			idx.processedItems <- processedItem{item, nil}
+		case <-idx.Aborted:
+			rc.Abort()
+		}
 	}
 }
 
-func ProcessRepository(repo repository.Repository) {
-	data.AddRecent(repo)
-	data.AddPopular(repo)
-	data.AddTopRanked(repo)
+type itemState struct {
+	err       error
+	processed bool
 }
 
-func init() {
-	data = IndexedData{
-		itemCount: 6,
-		tk:        topk.New(100),
-	}
-
-	go data.updatePopular()
-	go data.save()
+type processedItem struct {
+	name string
+	err  error
 }

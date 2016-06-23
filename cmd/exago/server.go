@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/codegangsta/cli"
 	"github.com/exago/svc/github"
 	"github.com/exago/svc/server"
+	"github.com/exago/svc/showcaser"
+	"github.com/urfave/cli"
 )
 
 // ServerCommand starts the HTTP server.
@@ -13,6 +14,7 @@ func ServerCommand() cli.Command {
 		Usage: "Start the HTTP server",
 		Action: func(ctx *cli.Context) {
 			github.Init()
+			showcaser.Init()
 			server.ListenAndServe()
 		},
 	}
