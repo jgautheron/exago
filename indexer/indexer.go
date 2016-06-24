@@ -14,8 +14,7 @@ import (
 )
 
 type Indexer struct {
-	Done    chan bool
-	Aborted chan bool
+	Done, Aborted chan bool
 
 	items           map[string]itemState
 	processingItems map[string]bool
@@ -23,10 +22,10 @@ type Indexer struct {
 	processedItems  chan processedItem
 	processedCount  int
 
-	mutex *sync.Mutex
+	sync.RWMutex
 }
 
-// New instantiates a new indexer.
+// New prepares a new indexer.
 func New(items []string) *Indexer {
 	c := runtime.NumCPU()
 
@@ -36,21 +35,19 @@ func New(items []string) *Indexer {
 	}
 
 	return &Indexer{
-		make(chan bool, 1),
-		make(chan bool, 1),
-		mp,
-		make(map[string]bool, c),
-		c,
-		make(chan processedItem, len(mp)),
-		0,
-		&sync.Mutex{},
+		Done:            make(chan bool, 1),
+		Aborted:         make(chan bool, 1),
+		items:           mp,
+		processingItems: make(map[string]bool, c),
+		concurrency:     c,
+		processedItems:  make(chan processedItem, len(mp)),
+		processedCount:  0,
 	}
 }
 
 // Start runs the indexer.
 func (idx *Indexer) Start() {
 	start := time.Now()
-	mutex := &sync.Mutex{}
 
 	go func() {
 		for item := range idx.processedItems {
@@ -59,16 +56,15 @@ func (idx *Indexer) Start() {
 				state = itemState{item.err, true}
 			}
 
-			mutex.Lock()
 			idx.items[item.name] = state
 			delete(idx.processingItems, item.name)
 			idx.processedCount++
-			mutex.Unlock()
 
 			if idx.processedCount == len(idx.items) {
 				idx.Done <- true
 				break
 			}
+			log.Info("Lock after")
 
 			// Process the next available item
 			go idx.ProcessItem()
@@ -101,12 +97,12 @@ func (idx *Indexer) ProcessItem() {
 		}
 
 		// Is the item currently being processed?
-		idx.mutex.Lock()
+		idx.RLock()
 		if _, beingProcessed := idx.processingItems[item]; beingProcessed {
 			continue
 		}
+		idx.RUnlock()
 		idx.processingItems[item] = true
-		idx.mutex.Unlock()
 
 		lgr := log.WithField("repository", item)
 		lgr.Info("Processing...")
@@ -114,7 +110,7 @@ func (idx *Indexer) ProcessItem() {
 		rc := processor.NewChecker(item)
 		if rc.Repository.IsCached() {
 			// Possibly useful later: a --force flag to reprocess already cached repos
-			lgr.Warn("Already cached, marked as processed")
+			lgr.Warn("Already processed")
 			idx.processedItems <- processedItem{item, nil}
 			continue
 		}
