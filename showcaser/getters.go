@@ -1,6 +1,9 @@
 package showcaser
 
-import "math/rand"
+import (
+	"math/rand"
+	"time"
+)
 
 type RepositoryInfo struct {
 	Name        string `json:"name"`
@@ -23,8 +26,12 @@ func GetRecentRepositories() (repos []RepositoryInfo) {
 }
 
 func GetTopRankedRepositories() (repos []RepositoryInfo) {
-	for i := 0; i <= data.itemCount; i++ {
-		repo := data.topRanked[rand.Intn(len(data.topRanked))]
+	rand.Seed(time.Now().UTC().UnixNano())
+	for i, item := range rand.Perm(len(data.topRanked)) {
+		if i == data.itemCount {
+			break
+		}
+		repo := data.topRanked[item]
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.Name,
 			Description: repo.Metadata.Description,
@@ -36,8 +43,7 @@ func GetTopRankedRepositories() (repos []RepositoryInfo) {
 }
 
 func GetPopularRepositories() (repos []RepositoryInfo) {
-	for i := len(data.popular) - 1; i >= 0; i-- {
-		repo := data.popular[i]
+	for _, repo := range data.popular {
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.Name,
 			Description: repo.Metadata.Description,
