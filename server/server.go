@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
+	"time"
+
+	"gopkg.in/tylerb/graceful.v1"
 
 	log "github.com/Sirupsen/logrus"
 	. "github.com/exago/svc/config"
@@ -44,7 +47,7 @@ func ListenAndServe() {
 	router.Get("/projects/popular", projectHandlers.ThenFunc(popularHandler))
 
 	log.Infof("Listening on port %d", Config.HttpPort)
-	log.Fatal(http.ListenAndServe(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), router))
+	graceful.Run(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router)
 }
 
 // checkRepo ensures that the repository exists on GitHub

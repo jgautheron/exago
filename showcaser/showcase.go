@@ -222,7 +222,6 @@ func periodicallyRebuildPopularList() {
 	for {
 		select {
 		case <-signals:
-			log.Info("periodicallyRebuildPopularList quit")
 			return
 		case <-time.After(10 * time.Minute):
 			err := data.updatePopular()
@@ -238,7 +237,6 @@ func periodicallySave() {
 	for {
 		select {
 		case <-signals:
-			log.Info("periodicallySave quit")
 			return
 		case <-time.After(30 * time.Minute):
 			if err := data.save(); err != nil {
