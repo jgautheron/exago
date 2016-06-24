@@ -51,6 +51,7 @@ func main() {
 func AddCommands() {
 	AddCommand(IndexCommand())
 	AddCommand(ServerCommand())
+	AddCommand(GodocCommand())
 }
 
 // AddCommand adds a child command.

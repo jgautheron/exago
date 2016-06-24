@@ -1,10 +1,9 @@
 package main
 
 import (
-	"regexp"
+	"fmt"
 
-	"github.com/PuerkitoBio/goquery"
-	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/godoc"
 	"github.com/exago/svc/indexer"
 	"github.com/urfave/cli"
 )
@@ -17,7 +16,7 @@ func IndexCommand() cli.Command {
 		Subcommands: []cli.Command{
 			{
 				Name:  "repos",
-				Usage: "index the passed repositories",
+				Usage: "Index the passed repositories",
 				Action: func(c *cli.Context) error {
 					items := []string{}
 					for _, item := range c.Args() {
@@ -31,42 +30,21 @@ func IndexCommand() cli.Command {
 			},
 			{
 				Name:  "godoc",
-				Usage: "parse and index the entire Godoc.org index",
+				Usage: "Parse and index the entire Godoc.org index",
 				Action: func(c *cli.Context) error {
-					parseAndIndexGodoc()
-					return nil
+					return indexGodoc()
 				},
 			},
 		},
 	}
 }
 
-func parseAndIndexGodoc() {
-	const GodocIndexURL = "https://godoc.org/-/index"
-
-	doc, err := goquery.NewDocument(GodocIndexURL)
+func indexGodoc() error {
+	repos, err := godoc.GetIndex()
 	if err != nil {
-		log.Fatal(err)
+		return fmt.Errorf("Got error while trying to load repos from GitHub: %v", err)
 	}
-
-	r, _ := regexp.Compile(`^github.com/([\w\d\-]+)/([\w\d\-]+)`)
-
-	out := map[string]bool{}
-	doc.Find("td a").Each(func(i int, s *goquery.Selection) {
-		matches := r.FindStringSubmatch(s.Contents().Text())
-		if len(matches) == 0 {
-			return
-		}
-		out[matches[0]] = true
-	})
-
-	log.Infof("Found %d unique GitHub repositories in the Godoc index", len(out))
-
-	sl := []string{}
-	for item, _ := range out {
-		sl = append(sl, item)
-	}
-
-	idx := indexer.New(sl)
+	idx := indexer.New(repos)
 	idx.Start()
+	return nil
 }

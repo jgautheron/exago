@@ -60,11 +60,11 @@ func (idx *Indexer) Start() {
 			delete(idx.processingItems, item.name)
 			idx.processedCount++
 
+			// If all items are processed, we're done
 			if idx.processedCount == len(idx.items) {
 				idx.Done <- true
 				break
 			}
-			log.Info("Lock after")
 
 			// Process the next available item
 			go idx.ProcessItem()

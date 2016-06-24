@@ -45,6 +45,7 @@ func ListenAndServe() {
 	router.Get("/projects/recent", projectHandlers.ThenFunc(recentHandler))
 	router.Get("/projects/top", projectHandlers.ThenFunc(topHandler))
 	router.Get("/projects/popular", projectHandlers.ThenFunc(popularHandler))
+	router.Get("/godocindex", projectHandlers.ThenFunc(godocIndexHandler))
 
 	log.Infof("Listening on port %d", Config.HttpPort)
 	graceful.Run(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router)
