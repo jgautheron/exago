@@ -3,8 +3,6 @@ package score
 import (
 	"fmt"
 	"sync"
-
-	"simonwaldherr.de/go/golibs/xmath"
 )
 
 var (
@@ -45,9 +43,10 @@ func Messages() []string {
 
 	for n, c := range criterias {
 		m = append(m, fmt.Sprintf(
-			"%s: %s [score = %.2f]",
+			"%s: %s [score = %.2f, weight = %.2f]",
 			n, c.Message(),
 			c.Score(),
+			c.Weight(),
 		))
 	}
 
@@ -63,11 +62,6 @@ func Weights() []float64 {
 
 	for _, c := range criterias {
 		w = append(w, c.Weight())
-	}
-
-	factor := xmath.Sum(w) / 100
-	for i := range w {
-		w[i] /= factor
 	}
 
 	return w
@@ -103,10 +97,12 @@ func Process(params map[string]interface{}) float64 {
 	sw, avg := 0.0, 0.0
 	for i, v := range s {
 		sw += w[i]
-		avg += float64(v) * w[i]
+		avg += v * w[i]
 	}
 
-	avg /= sw
+	if avg > 0 {
+		avg /= sw
+	}
 
 	return avg
 }

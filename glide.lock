@@ -1,5 +1,5 @@
 hash: eaec67c09342e58c48c91ae3a663b5dbf82c3cef467a994751d338da43a8dd16
-updated: 2016-06-21T13:41:01.084920992+02:00
+updated: 2016-06-27T08:56:50.788414025+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
@@ -27,7 +27,7 @@ imports:
   - private/protocol/rest
   - private/protocol/json/jsonutil
 - name: github.com/codegangsta/cli
-  version: 6011f165dc288c72abd8acd7722f837c5c64198d
+  version: 4205e9c4ee9672a8df5bb4fe486a8aa07e1e4037
 - name: github.com/dgryski/go-topk
   version: 1b30445672a470f5658d1877192cbe84e30d3454
 - name: github.com/didip/tollbooth
@@ -75,6 +75,10 @@ imports:
   - fonts
 - name: github.com/PuerkitoBio/goquery
   version: 77cbaef46a3af185a3afb87f88a366f3dee2a904
+- name: github.com/SimonWaldherr/golibs
+  version: 300f27777a93b5051fd889350b52c46245cbbf15
+  subpackages:
+  - xmath
 - name: github.com/Sirupsen/logrus
   version: 57cce1ed6103dce7791881d3e69e55f90d986aa5
 - name: github.com/syndtr/goleveldb
@@ -92,6 +96,8 @@ imports:
   - leveldb/memdb
   - leveldb/storage
   - leveldb/table
+- name: github.com/urfave/cli
+  version: 4205e9c4ee9672a8df5bb4fe486a8aa07e1e4037
 - name: golang.org/x/image
   version: 7c492694a6443a92fd349fda0c4c7b587040f161
   subpackages:
@@ -100,9 +106,10 @@ imports:
 - name: golang.org/x/net
   version: 0899459b4d84739aa2600ba248120318d78f8997
   subpackages:
-  - html
   - context
+  - html
   - html/atom
+  - netutil
 - name: golang.org/x/oauth2
   version: 2cd4472c321b6cba78e029d99f0e7fe51032fd21
   subpackages:
@@ -121,4 +128,10 @@ imports:
   - internal/datastore
   - internal/log
   - internal/remote_api
+- name: gopkg.in/tylerb/graceful.v1
+  version: ecde8c8f16df93a994dda8936c8f60f0c26c28ab
+- name: simonwaldherr.de/go/golibs
+  version: 300f27777a93b5051fd889350b52c46245cbbf15
+  subpackages:
+  - as
 devImports: []
