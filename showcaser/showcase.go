@@ -254,7 +254,7 @@ func ProcessRepository(repo repository.Repository) {
 	data.AddPopular(repo)
 }
 
-func Init() {
+func Init() (err error) {
 	data = New()
 	snapshot, exists, err := loadFromDB()
 	if err != nil {
@@ -269,4 +269,5 @@ func Init() {
 	go catchInterrupt()
 	go periodicallyRebuildPopularList()
 	// go periodicallySave()
+	return nil
 }

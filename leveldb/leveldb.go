@@ -1,7 +1,9 @@
+// Package leveldb is a thin simplicity layer over the LevelDB database.
 package leveldb
 
 import (
-	log "github.com/Sirupsen/logrus"
+	"fmt"
+
 	. "github.com/exago/svc/config"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -9,15 +11,19 @@ import (
 )
 
 var (
+	// db corresponds to the database connection.
+	// Internal functions directly use db instead of instance() so remember to
+	// always Init() the connection before.
 	db *ldb.DB
 )
 
-func Init() {
-	instance()
+func Init() (err error) {
+	_, err = instance()
+	return err
 }
 
 func FindForRepositoryCmd(key []byte) (b []byte, err error) {
-	b, err = instance().Get(key, nil)
+	b, err = db.Get(key, nil)
 	if err != nil {
 		if err == ldb.ErrNotFound {
 			return nil, nil
@@ -29,7 +35,7 @@ func FindForRepositoryCmd(key []byte) (b []byte, err error) {
 
 func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
 	m := map[string][]byte{}
-	iter := instance().NewIterator(util.BytesPrefix(prefix), nil)
+	iter := db.NewIterator(util.BytesPrefix(prefix), nil)
 	defer iter.Release()
 	for iter.Next() {
 		// Get the key
@@ -48,7 +54,7 @@ func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
 }
 
 func DeleteAllMatchingPrefix(prefix []byte) error {
-	iter := instance().NewIterator(util.BytesPrefix(prefix), nil)
+	iter := db.NewIterator(util.BytesPrefix(prefix), nil)
 	defer iter.Release()
 	for iter.Next() {
 		// Get the key
@@ -64,11 +70,11 @@ func DeleteAllMatchingPrefix(prefix []byte) error {
 }
 
 func Save(key []byte, data []byte) error {
-	return instance().Put(key, data, nil)
+	return db.Put(key, data, nil)
 }
 
 func Get(key []byte) ([]byte, error) {
-	b, err := instance().Get(key, nil)
+	b, err := db.Get(key, nil)
 	if err != nil {
 		if err == ldb.ErrNotFound {
 			return nil, nil
@@ -79,19 +85,19 @@ func Get(key []byte) ([]byte, error) {
 }
 
 // connect initiates a LevelDB connection.
-func connect() *ldb.DB {
+func connect() (*ldb.DB, error) {
 	var err error
 	db, err = ldb.OpenFile(Config.DatabasePath, &opt.Options{})
 	if err != nil {
-		log.Fatalf("An error occurred while trying to open the DB: %s", err)
+		return nil, fmt.Errorf("An error occurred while trying to open the DB: %s", err)
 	}
-	return db
+	return db, nil
 }
 
 // Instance returns the current LevelDB instance.
-func instance() *ldb.DB {
+func instance() (*ldb.DB, error) {
 	if db != nil {
-		return db
+		return db, nil
 	}
 	return connect()
 }
