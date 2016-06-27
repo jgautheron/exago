@@ -13,19 +13,43 @@ import (
 var (
 	// DefaultLinters run by default in Lambda
 	DefaultLinters = []string{
+		"deadcode",
+		"dupl",
 		"errcheck",
+		"goconst",
+		"gocyclo",
 		"gofmt",
 		"goimports",
 		"golint",
-		"deadcode",
-		"dupl",
-		"gocyclo",
+		"gosimple",
 		"ineffassign",
+		"staticcheck",
 		"varcheck",
 		"vet",
 		"vetshadow",
 	}
 )
+
+type RepositoryData interface {
+	GetName() string
+	GetMetadataDescription() string
+	GetMetadataImage() string
+	GetRank() string
+	GetMetadata() (d model.Metadata, err error)
+	GetLastUpdate() (string, error)
+	GetExecutionTime() (string, error)
+	GetScore() (sc model.Score, err error)
+	GetImports() (model.Imports, error)
+	GetCodeStats() (model.CodeStats, error)
+	GetTestResults() (tr model.TestResults, err error)
+	GetLintMessages(linters []string) (model.LintMessages, error)
+	SetStartTime(t time.Time)
+	IsCached() bool
+	IsLoaded() bool
+	Load() (err error)
+	ClearCache() (err error)
+	AsMap() map[string]interface{}
+}
 
 type Repository struct {
 	Name, Branch string
@@ -111,7 +135,7 @@ func (r *Repository) ClearCache() (err error) {
 	return leveldb.DeleteAllMatchingPrefix([]byte(prefix))
 }
 
-// AsMap generates a map out of repository fields
+// AsMap generates a map out of repository fields.
 func (r *Repository) AsMap() map[string]interface{} {
 	return map[string]interface{}{
 		model.ImportsName:       r.Imports,
@@ -123,6 +147,26 @@ func (r *Repository) AsMap() map[string]interface{} {
 		model.LastUpdateName:    r.LastUpdate,
 		model.ExecutionTimeName: r.ExecutionTime,
 	}
+}
+
+func (r *Repository) GetName() string {
+	return r.Name
+}
+
+func (r *Repository) GetMetadataDescription() string {
+	return r.Metadata.Description
+}
+
+func (r *Repository) GetMetadataImage() string {
+	return r.Metadata.Image
+}
+
+func (r *Repository) GetRank() string {
+	return r.Metadata.Image
+}
+
+func (r *Repository) SetStartTime(t time.Time) {
+	r.StartTime = t
 }
 
 func (r *Repository) calcScore() {

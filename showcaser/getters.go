@@ -16,10 +16,10 @@ func GetRecentRepositories() (repos []RepositoryInfo) {
 	for i := len(data.recent) - 1; i >= 0; i-- {
 		repo := data.recent[i]
 		repos = append(repos, RepositoryInfo{
-			Name:        repo.Name,
-			Description: repo.Metadata.Description,
-			Image:       repo.Metadata.Image,
-			Rank:        repo.Score.Rank,
+			Name:        repo.GetName(),
+			Description: repo.GetMetadataDescription(),
+			Image:       repo.GetMetadataImage(),
+			Rank:        repo.GetRank(),
 		})
 	}
 	return
@@ -33,10 +33,10 @@ func GetTopRankedRepositories() (repos []RepositoryInfo) {
 		}
 		repo := data.topRanked[item]
 		repos = append(repos, RepositoryInfo{
-			Name:        repo.Name,
-			Description: repo.Metadata.Description,
-			Image:       repo.Metadata.Image,
-			Rank:        repo.Score.Rank,
+			Name:        repo.GetName(),
+			Description: repo.GetMetadataDescription(),
+			Image:       repo.GetMetadataImage(),
+			Rank:        repo.GetRank(),
 		})
 	}
 	return
@@ -45,10 +45,10 @@ func GetTopRankedRepositories() (repos []RepositoryInfo) {
 func GetPopularRepositories() (repos []RepositoryInfo) {
 	for _, repo := range data.popular {
 		repos = append(repos, RepositoryInfo{
-			Name:        repo.Name,
-			Description: repo.Metadata.Description,
-			Image:       repo.Metadata.Image,
-			Rank:        repo.Score.Rank,
+			Name:        repo.GetName(),
+			Description: repo.GetMetadataDescription(),
+			Image:       repo.GetMetadataImage(),
+			Rank:        repo.GetRank(),
 		})
 	}
 	return

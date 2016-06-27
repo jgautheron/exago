@@ -49,7 +49,7 @@ type Checker struct {
 	logger         *log.Entry
 	types, linters []string
 	data           chan interface{}
-	Repository     *repository.Repository
+	Repository     repository.RepositoryData
 	HasError       bool
 	Errors         chan error
 	Aborted        chan bool
@@ -74,7 +74,7 @@ func NewChecker(repo string) *Checker {
 
 // Run launches concurrently every check and merges the output.
 func (rc *Checker) Run() {
-	rc.Repository.StartTime = time.Now()
+	rc.Repository.SetStartTime(time.Now())
 
 	i := 0
 	for _, tp := range rc.types {
@@ -138,7 +138,7 @@ func (rc *Checker) Run() {
 		// The entire dataset is ready
 		rc.Done <- true
 
-		go showcaser.ProcessRepository(*rc.Repository)
+		go showcaser.ProcessRepository(rc.Repository)
 	}
 }
 
