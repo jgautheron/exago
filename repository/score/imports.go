@@ -1,42 +1,42 @@
 package score
 
-import (
-	log "github.com/Sirupsen/logrus"
+import "github.com/exago/svc/repository/model"
 
-	"github.com/exago/svc/repository/model"
-)
-
-func init() {
-	Register(model.ImportsName, &ImportsEvaluator{Evaluator{100, 1.5, ""}})
-}
-
-// ImportsEvaluator measure a score based on various metrics of imports
+// importsEvaluator measure a score based on various metrics of imports
 // for now only the # of 3rd-party packages.
-type ImportsEvaluator struct {
+type importsEvaluator struct {
 	Evaluator
 }
 
+func ImportsEvaluator() CriteriaEvaluator {
+	return &importsEvaluator{Evaluator{
+		model.ImportsName,
+		"https://github.com/jgautheron/gogetimports",
+		"counts the number of third party libraries",
+	}}
+}
+
 // Calculate overloads Evaluator/Calculate
-func (ie *ImportsEvaluator) Calculate(p map[string]interface{}) {
+func (ie *importsEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
 	imp := p[model.ImportsName].(model.Imports)
 	tp := len(imp)
+	r := ie.NewResponse(100, 1.5, "", nil)
+
 	switch true {
 	case tp < 0:
 	case tp < 4:
-		ie.score = 75
-		ie.msg = "less than 4"
+		r.Score = 75
+		r.Message = "less than 4 third-party package(s)"
 	case tp < 6:
-		ie.score = 50
-		ie.msg = "less than 6"
+		r.Score = 50
+		r.Message = "less than 6 third-party package(s)"
 	case tp < 8:
-		ie.score = 25
-		ie.msg = "less than 8"
+		r.Score = 25
+		r.Message = "less than 8 third-party package(s)"
 	case tp > 8:
-		ie.score = 0
-		ie.msg = "more than 8"
+		r.Score = 0
+		r.Message = "more than 8 third-party package(s)"
 	}
 
-	log.WithFields(log.Fields{
-		"score": ie.score,
-	}).Debugf("[%s] score", model.ImportsName)
+	return r
 }

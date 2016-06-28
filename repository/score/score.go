@@ -1,108 +1,44 @@
 package score
 
 import (
-	"fmt"
-	"sync"
+	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/repository/model"
 )
-
-var (
-	criteriasMu sync.RWMutex
-	criterias   = make(map[string]CriteriaEvaluator)
-)
-
-// Register makes a criteria available by the provided name.
-// If Register is called twice with the same name or if criteria is nil, it panics.
-func Register(name string, criteria CriteriaEvaluator) {
-	criteriasMu.Lock()
-	defer criteriasMu.Unlock()
-
-	if criteria == nil {
-		panic("score: Register criteria is nil")
-	}
-	if _, dup := criterias[name]; dup {
-		panic("score: Register called twice for criteria " + name)
-	}
-
-	criterias[name] = criteria
-}
-
-// Criterias returns a list of criteria evaluators
-func Criterias() map[string]CriteriaEvaluator {
-	criteriasMu.RLock()
-	defer criteriasMu.RUnlock()
-
-	return criterias
-}
-
-// Messages returns a list of all criterias messages
-func Messages() []string {
-	criteriasMu.RLock()
-	defer criteriasMu.RUnlock()
-
-	m := []string{}
-
-	for n, c := range criterias {
-		m = append(m, fmt.Sprintf(
-			"%s: %s [score = %.2f, weight = %.2f]",
-			n, c.Message(),
-			c.Score(),
-			c.Weight(),
-		))
-	}
-
-	return m
-}
-
-// Weights returns a list of all criterias weights
-func Weights() []float64 {
-	criteriasMu.RLock()
-	defer criteriasMu.RUnlock()
-
-	w := []float64{}
-
-	for _, c := range criterias {
-		w = append(w, c.Weight())
-	}
-
-	return w
-}
-
-// Values returns a list of all criterias scores
-func Values() []float64 {
-	criteriasMu.RLock()
-	defer criteriasMu.RUnlock()
-
-	s := []float64{}
-
-	for _, c := range criterias {
-		s = append(s, c.Score())
-	}
-
-	return s
-}
 
 // Process triggers criterias evaluation
-func Process(params map[string]interface{}) float64 {
-	criteriasMu.RLock()
-	defer criteriasMu.RUnlock()
-
-	for _, c := range criterias {
-		c.Calculate(params)
+func Process(params map[string]interface{}) (score float64, details []*model.EvaluatorResponse) {
+	eval := []CriteriaEvaluator{
+		ImportsEvaluator(),
+		CodeStatsEvaluator(),
+		LintMessagesEvaluator(),
 	}
 
-	// Loop each criterias, calculating the overall score
-	s := Values()
-	w := Weights()
+	ch := make(chan *model.EvaluatorResponse)
+	for _, cr := range eval {
+		go func(c CriteriaEvaluator) {
+			c.Setup()
+			ch <- c.Calculate(params)
+		}(cr)
+	}
 
+	// Compute weighted average
 	sw, avg := 0.0, 0.0
-	for i, v := range s {
-		sw += w[i]
-		avg += v * w[i]
+	res := []*model.EvaluatorResponse{}
+	for i := 0; i < len(eval); i++ {
+		e := <-ch
+		sw += e.Weight
+		avg += e.Score * e.Weight
+
+		log.WithFields(log.Fields{
+			"score": e.Score,
+		}).Debugf("[%s] score", e.Name)
+
+		res = append(res, e)
 	}
 
 	if avg > 0 {
 		avg /= sw
 	}
 
-	return avg
+	return avg, res
 }

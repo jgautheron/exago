@@ -1,43 +1,42 @@
 package score
 
-import (
-	log "github.com/Sirupsen/logrus"
+import "github.com/exago/svc/repository/model"
 
-	"github.com/exago/svc/repository/model"
-)
-
-func init() {
-	Register(model.CodeStatsName, &CodeStatsEvaluator{Evaluator{100, 1, ""}})
-}
-
-// CodeStatsEvaluator measure a score based on various metrics of code stats
+// codeStatsEvaluator measure a score based on various metrics of code stats
 // such as ratio LOC/CLOC and so on...
-type CodeStatsEvaluator struct {
+type codeStatsEvaluator struct {
 	Evaluator
 }
 
+func CodeStatsEvaluator() CriteriaEvaluator {
+	return &codeStatsEvaluator{Evaluator{
+		model.CodeStatsName,
+		"https://github.com/jgautheron/golocc",
+		"counts lines of code, comments, functions, structs, imports etc in Go code",
+	}}
+}
+
 // Calculate overloads Evaluator/Calculate
-func (ce *CodeStatsEvaluator) Calculate(p map[string]interface{}) {
+func (ce *codeStatsEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
+	r := ce.NewResponse(100, 1, "", nil)
 	cs := p[model.CodeStatsName].(model.CodeStats)
 	ra := float64(cs["LOC"] / cs["NCLOC"])
 	switch true {
 	case ra > 1.4:
-		ce.msg = "more than 1.4"
+		r.Message = "more than 1.4 NCLOC"
 	case ra > 1.3:
-		ce.score = 75
-		ce.msg = "more than 1.3"
+		r.Score = 75
+		r.Message = "more than 1.3 NCLOC"
 	case ra > 1.2:
-		ce.score = 50
-		ce.msg = "more than 1.2"
+		r.Score = 50
+		r.Message = "more than 1.2 NCLOC"
 	case ra > 1.1:
-		ce.score = 25
-		ce.msg = "more than 1.1"
+		r.Score = 25
+		r.Message = "more than 1.1 NCLOC"
 	case ra <= 1:
-		ce.score = 0
-		ce.msg = "less or equal 1"
+		r.Score = 0
+		r.Message = "less or equal 1 NCLOC"
 	}
 
-	log.WithFields(log.Fields{
-		"score": ce.score,
-	}).Debugf("[%s] score", model.CodeStatsName)
+	return r
 }

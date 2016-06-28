@@ -7,47 +7,53 @@ import (
 	"github.com/exago/svc/repository/model"
 )
 
-func init() {
-	l := make(map[string]*linter)
-	l = map[string]*linter{
-		"gofmt":       {0, 3, 0},
-		"goimports":   {0, 2, 0},
-		"golint":      {7, 1, 0},
-		"dupl":        {5, 1.5, 0},
-		"deadcode":    {0, 3, 0},
-		"gocyclo":     {6, 2, 0},
-		"vet":         {0, 2.5, 0},
-		"vetshadow":   {0, 1, 0},
-		"ineffassign": {0, 1, 0},
-		"errcheck":    {6, 2, 0},
-		"goconst":     {1.5, 1, 0},
-		"gosimple":    {0, 1.5, 0},
-		"staticcheck": {0, 1.5, 0},
-	}
-
-	Register(
-		model.LintMessagesName,
-		&LintMessagesEvaluator{
-			Evaluator{100, 2, ""},
-			l,
-		},
-	)
-}
-
 type linter struct {
 	threshold float64
 	weight    float64
 	warnings  float64
+	url       string
+	desc      string
 }
 
-// LintMessagesEvaluator measure a score based on the output of gometalinter
-type LintMessagesEvaluator struct {
+// lintMessagesEvaluator measure a score based on the output of gometalinter
+type lintMessagesEvaluator struct {
 	Evaluator
 	linters map[string]*linter
 }
 
+func LintMessagesEvaluator() CriteriaEvaluator {
+	return &lintMessagesEvaluator{Evaluator{
+		model.ImportsName,
+		"https://github.com/alecthomas/gometalinter",
+		"runs a whole bunch of Go linters",
+	}, nil}
+}
+
+// Setup linters
+func (le *lintMessagesEvaluator) Setup() {
+	l := make(map[string]*linter)
+	l = map[string]*linter{
+		"gofmt":       {0, 3, 0, "https://golang.org/cmd/gofmt/", "detects if Go code is incorrectly formatted"},
+		"goimports":   {0, 2, 0, "https://golang.org/x/tools/cmd/goimports", "finds missing imports"},
+		"golint":      {7, 1, 0, "https://github.com/golang/lint", "official linter for Go code"},
+		"dupl":        {5, 1.5, 0, "https://github.com/mibk/dupl", "examines Go code and finds duplicated code"},
+		"deadcode":    {0, 3, 0, "https://golang.org/src/cmd/vet/deadcode.go", "checks for syntactically unreachable Go code"},
+		"gocyclo":     {6, 2, 0, "https://github.com/fzipp/gocyclo", "calculates cyclomatic complexities of functions in Go code"},
+		"vet":         {0, 2.5, 0, "https://golang.org/cmd/vet", "examines Go code and reports suspicious constructs"},
+		"vetshadow":   {0, 1, 0, "https://golang.org/src/cmd/vet/shadow.go", "examines Go code and reports shadowed variables"},
+		"ineffassign": {0, 1, 0, "https://github.com/gordonklaus/ineffassign", "detects ineffective assignments in Go code"},
+		"errcheck":    {6, 2, 0, "https://github.com/kisielk/errcheck", "finds unchecked errors in Go code"},
+		"goconst":     {1.5, 1, 0, "https://github.com/jgautheron/goconst", "finds repeated strings in Go code that could be replaced by a constant"},
+		"gosimple":    {0, 1.5, 0, "https://github.com/dominikh/go-simple", "examines Go code and reports constructs that can be simplified"},
+		"staticcheck": {0, 1.5, 0, "https://github.com/dominikh/go-staticcheck", "checks the inputs to certain functions, such as regexp"},
+	}
+
+	le.linters = l
+}
+
 // Calculate overloads Evaluator/Calculate
-func (le *LintMessagesEvaluator) Calculate(p map[string]interface{}) {
+func (le *lintMessagesEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
+	r := le.NewResponse(100, 2, "", nil)
 	lm := p[model.LintMessagesName].(model.LintMessages)
 	cs := p[model.CodeStatsName].(model.CodeStats)
 
@@ -55,6 +61,7 @@ func (le *LintMessagesEvaluator) Calculate(p map[string]interface{}) {
 	for _, m := range lm {
 		for ln, lr := range m {
 			if l, ok := le.linters[ln]; ok {
+				l.warnings = 0
 				for _, a := range lr {
 					// Count the number of warnings
 					if a["severity"].(string) == "warning" {
@@ -68,6 +75,7 @@ func (le *LintMessagesEvaluator) Calculate(p map[string]interface{}) {
 	// Compute score
 	scores := []float64{}
 	weights := 0.0
+	details := []*model.EvaluatorResponse{}
 
 	for n, d := range le.linters {
 		tmp := 100 * d.warnings / float64(cs["LOC"])
@@ -84,6 +92,16 @@ func (le *LintMessagesEvaluator) Calculate(p map[string]interface{}) {
 			score := 100 - tmp
 			weights += d.weight
 
+			details = append(details, &model.EvaluatorResponse{
+				n,
+				score,
+				d.weight,
+				d.desc,
+				"exceeds the warnings/LOC threshold",
+				d.url,
+				nil,
+			})
+
 			log.WithFields(log.Fields{
 				"score":  score,
 				"weight": d.weight,
@@ -93,11 +111,13 @@ func (le *LintMessagesEvaluator) Calculate(p map[string]interface{}) {
 		}
 	}
 
-	if len(scores) > 0 {
-		le.score = xmath.Sum(scores) / weights
+	if len(details) > 0 {
+		r.Details = details
 	}
 
-	log.WithFields(log.Fields{
-		"score": le.score,
-	}).Debugf("[%s] score", model.LintMessagesName)
+	if len(scores) > 0 {
+		r.Score = xmath.Sum(scores) / weights
+	}
+
+	return r
 }

@@ -126,7 +126,8 @@ func (r *Repository) AsMap() map[string]interface{} {
 }
 
 func (r *Repository) calcScore() {
-	r.Score.Value = score.Process(r.AsMap())
+	val, res := score.Process(r.AsMap())
+	r.Score.Value = val
+	r.Score.Details = res
 	r.Score.Rank = score.Rank(r.Score.Value)
-	r.Score.Details = score.Messages()
 }
