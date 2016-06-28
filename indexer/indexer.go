@@ -132,7 +132,7 @@ func (idx *Indexer) ProcessItem() {
 			lgr.WithField("error", state.err).Warn("Processing aborted")
 			idx.processedItems <- processedItem{item, state.err}
 		case <-rc.Done:
-			lgr.WithField("score", rc.Repository.Score.Rank).Info("Processing successful")
+			lgr.WithField("score", rc.Repository.GetRank()).Info("Processing successful")
 			idx.processedItems <- processedItem{item, nil}
 		case <-idx.Aborted:
 			rc.Abort()

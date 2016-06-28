@@ -7,7 +7,6 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
@@ -16,14 +15,14 @@ import (
 )
 
 const (
-	ItemCount = 6
-	TopkCount = 100
+	ItemCount   = 6
+	TopkCount   = 100
+	DatabaseKey = "showcase"
 )
 
 var (
-	data        Showcase
-	databaseKey = []byte("showcase")
-	signals     = make(chan os.Signal, 1)
+	data    Showcase
+	signals = make(chan os.Signal, 1)
 )
 
 type serialisedShowcase struct {
@@ -34,9 +33,9 @@ type serialisedShowcase struct {
 }
 
 type Showcase struct {
-	recent    []repository.Repository
-	topRanked []repository.Repository
-	popular   []repository.Repository
+	recent    []repository.RepositoryData
+	topRanked []repository.RepositoryData
+	popular   []repository.RepositoryData
 
 	// How many items per category
 	itemCount int
@@ -53,13 +52,13 @@ func New() Showcase {
 }
 
 // AddRecent pushes to the stack latest new items, pops the old ones.
-func (d *Showcase) AddRecent(repo repository.Repository) {
+func (d *Showcase) AddRecent(repo repository.RepositoryData) {
 	d.Lock()
 	defer d.Unlock()
 
 	// Prevent duplicates
 	for _, item := range d.recent {
-		if item.Name == repo.Name {
+		if item.GetName() == repo.GetName() {
 			return
 		}
 	}
@@ -71,17 +70,17 @@ func (d *Showcase) AddRecent(repo repository.Repository) {
 }
 
 // AddTopRanked pushes to the stack latest new A-ranked items, pops the old ones.
-func (d *Showcase) AddTopRanked(repo repository.Repository) {
+func (d *Showcase) AddTopRanked(repo repository.RepositoryData) {
 	d.Lock()
 	defer d.Unlock()
 
-	if repo.Score.Rank != "A" {
+	if repo.GetRank() != "A" {
 		return
 	}
 
 	// Prevent duplicates
 	for _, item := range d.topRanked {
-		if item.Name == repo.Name {
+		if item.GetName() == repo.GetName() {
 			return
 		}
 	}
@@ -94,14 +93,15 @@ func (d *Showcase) AddTopRanked(repo repository.Repository) {
 
 // AddPopular inserts the repository name into the topk data structure.
 // The collection will not be updated in real-time (see updatePopular).
-func (d *Showcase) AddPopular(repo repository.Repository) {
+func (d *Showcase) AddPopular(repo repository.RepositoryData) {
 	d.Lock()
 	defer d.Unlock()
 
-	d.tk.Insert(repo.Name, 1)
+	d.tk.Insert(repo.GetName(), 1)
 }
 
 // updatePopular rebuilds the popular list from the topk stream.
+// Doing it in real time would be unecessarily too expensive.
 func (d *Showcase) updatePopular() error {
 	d.Lock()
 	defer d.Unlock()
@@ -127,15 +127,15 @@ func (d *Showcase) serialize() ([]byte, error) {
 	sc := serialisedShowcase{}
 
 	for _, r := range d.recent {
-		sc.Recent = append(sc.Recent, r.Name)
+		sc.Recent = append(sc.Recent, r.GetName())
 	}
 
 	for _, r := range d.topRanked {
-		sc.TopRanked = append(sc.TopRanked, r.Name)
+		sc.TopRanked = append(sc.TopRanked, r.GetName())
 	}
 
 	for _, r := range d.popular {
-		sc.Popular = append(sc.Popular, r.Name)
+		sc.Popular = append(sc.Popular, r.GetName())
 	}
 
 	tk, err := d.tk.GobEncode()
@@ -153,25 +153,25 @@ func (d *Showcase) save() error {
 	if err != nil {
 		return err
 	}
-	return leveldb.Save(databaseKey, b)
+	return leveldb.Save([]byte(DatabaseKey), b)
 }
 
-func loadReposFromList(list []string) (repos []repository.Repository, err error) {
+func loadReposFromList(list []string) (repos []repository.RepositoryData, err error) {
 	for _, name := range list {
 		rp := repository.New(name, "")
 		if err = rp.Load(); err != nil {
 			return nil, err
 		}
-		repos = append(repos, *rp)
+		repos = append(repos, rp)
 	}
 	return
 }
 
 // loadFromDB attempts to load a previously saved snapshot.
 func loadFromDB() (s Showcase, exists bool, err error) {
-	var repos []repository.Repository
+	var repos []repository.RepositoryData
 
-	b, err := leveldb.Get(databaseKey)
+	b, err := leveldb.Get([]byte(DatabaseKey))
 	if b == nil || err != nil {
 		return s, false, err
 	}
@@ -205,56 +205,13 @@ func loadFromDB() (s Showcase, exists bool, err error) {
 	return s, true, nil
 }
 
-// catchInterrupt traps termination signals to save a snapshot.
-func catchInterrupt() {
-	select {
-	case <-signals:
-		log.Warn("Termination signal caught, saving the showcaser entries...")
-		err := data.save()
-		if err != nil {
-			log.Errorf("Got error while saving: %v", err)
-		}
-		close(signals)
-	}
-}
-
-func periodicallyRebuildPopularList() {
-	for {
-		select {
-		case <-signals:
-			return
-		case <-time.After(10 * time.Minute):
-			err := data.updatePopular()
-			if err != nil {
-				log.Errorf("Got error while updating the popular list: %v", err)
-			}
-			log.Debug("Rebuilt the popular list")
-		}
-	}
-}
-
-func periodicallySave() {
-	for {
-		select {
-		case <-signals:
-			return
-		case <-time.After(30 * time.Minute):
-			if err := data.save(); err != nil {
-				log.Errorf("Error while serializing index: %v", err)
-				continue
-			}
-			log.Debug("Index persisted in database")
-		}
-	}
-}
-
-func ProcessRepository(repo repository.Repository) {
+func ProcessRepository(repo repository.RepositoryData) {
 	data.AddRecent(repo)
 	data.AddTopRanked(repo)
 	data.AddPopular(repo)
 }
 
-func Init() {
+func Init() (err error) {
 	data = New()
 	snapshot, exists, err := loadFromDB()
 	if err != nil {
@@ -269,4 +226,5 @@ func Init() {
 	go catchInterrupt()
 	go periodicallyRebuildPopularList()
 	// go periodicallySave()
+	return nil
 }

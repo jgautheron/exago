@@ -31,13 +31,19 @@ func init() {
 	InitializeLogging(Config.LogLevel)
 
 	// Open the database
-	leveldb.Init()
+	if err := leveldb.Init(); err != nil {
+		log.Fatal(err)
+	}
 
 	// Authenticate on GitHub
-	github.Init()
+	if err := github.Init(); err != nil {
+		log.Fatal(err)
+	}
 
 	// Initialise the dataset
-	showcaser.Init()
+	if err := showcaser.Init(); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func main() {
