@@ -1,5 +1,4 @@
 GO ?= go
-TAG := $(shell git describe --tags `git rev-list --tags --max-count=1`)
 
 build:
 	cd cmd/exago && GOOS=linux CGO_ENABLED=0 $(GO) build -tags netgo -ldflags="-w -s" -v -i -o exago
