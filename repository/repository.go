@@ -161,7 +161,7 @@ func (r *Repository) GetMetadataImage() string {
 }
 
 func (r *Repository) GetRank() string {
-	return r.Metadata.Image
+	return r.Score.Rank
 }
 
 func (r *Repository) SetStartTime(t time.Time) {
