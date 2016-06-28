@@ -24,7 +24,6 @@ var (
 		"gosimple",
 		"ineffassign",
 		"staticcheck",
-		"varcheck",
 		"vet",
 		"vetshadow",
 	}
