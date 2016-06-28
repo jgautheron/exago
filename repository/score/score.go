@@ -11,6 +11,8 @@ func Process(params map[string]interface{}) (score float64, details []*model.Eva
 		ImportsEvaluator(),
 		CodeStatsEvaluator(),
 		LintMessagesEvaluator(),
+		TestResultsEvaluator(),
+		CheckListEvaluator(),
 	}
 
 	ch := make(chan *model.EvaluatorResponse)

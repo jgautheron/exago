@@ -2,12 +2,12 @@ package score
 
 import "github.com/exago/svc/repository/model"
 
-// importsEvaluator measure a score based on various metrics of imports
-// for now only the # of 3rd-party packages.
 type importsEvaluator struct {
 	Evaluator
 }
 
+// ImportsEvaluator measures a score based on various metrics of imports
+// for now only the # of 3rd-party packages.
 func ImportsEvaluator() CriteriaEvaluator {
 	return &importsEvaluator{Evaluator{
 		model.ImportsName,

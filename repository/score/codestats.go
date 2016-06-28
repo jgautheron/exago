@@ -2,12 +2,12 @@ package score
 
 import "github.com/exago/svc/repository/model"
 
-// codeStatsEvaluator measure a score based on various metrics of code stats
-// such as ratio LOC/CLOC and so on...
 type codeStatsEvaluator struct {
 	Evaluator
 }
 
+// CodeStatsEvaluator measures a score based on various metrics of code stats
+// such as ratio LOC/CLOC and so on...
 func CodeStatsEvaluator() CriteriaEvaluator {
 	return &codeStatsEvaluator{Evaluator{
 		model.CodeStatsName,

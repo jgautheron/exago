@@ -9,6 +9,7 @@ const (
 	CodeStatsName     = "codestats"
 	LintMessagesName  = "lintmessages"
 	TestResultsName   = "testresults"
+	CheckListName     = "checklist"
 	ScoreName         = "score"
 	ExecutionTimeName = "execution_time"
 	LastUpdateName    = "last_update"

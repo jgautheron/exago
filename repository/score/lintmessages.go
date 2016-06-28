@@ -15,15 +15,15 @@ type linter struct {
 	desc      string
 }
 
-// lintMessagesEvaluator measure a score based on the output of gometalinter
 type lintMessagesEvaluator struct {
 	Evaluator
 	linters map[string]*linter
 }
 
+// LintMessagesEvaluator measures a score based on the output of gometalinter
 func LintMessagesEvaluator() CriteriaEvaluator {
 	return &lintMessagesEvaluator{Evaluator{
-		model.ImportsName,
+		model.LintMessagesName,
 		"https://github.com/alecthomas/gometalinter",
 		"runs a whole bunch of Go linters",
 	}, nil}
