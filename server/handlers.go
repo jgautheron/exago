@@ -159,6 +159,6 @@ func popularHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func godocIndexHandler(w http.ResponseWriter, r *http.Request) {
-	repos, err := godoc.GetIndex()
+	repos, err := godoc.New().GetIndex()
 	send(w, r, repos, err)
 }

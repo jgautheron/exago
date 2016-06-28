@@ -15,10 +15,20 @@ const (
 	GodocDatabaseKey = "godoc:index"
 )
 
+type Godoc struct {
+	db leveldb.Database
+}
+
+func New() *Godoc {
+	return &Godoc{
+		db: leveldb.DB,
+	}
+}
+
 // GetIndex retrieves the Godoc Index from the database, meaning that SaveIndex
 // must have been called before.
-func GetIndex() (repos []string, err error) {
-	b, err := leveldb.Get([]byte(GodocDatabaseKey))
+func (g *Godoc) GetIndex() (repos []string, err error) {
+	b, err := g.db.Get([]byte(GodocDatabaseKey))
 	if err != nil {
 		return nil, err
 	}
@@ -29,7 +39,7 @@ func GetIndex() (repos []string, err error) {
 // SaveIndex scrapes the Godoc Index, takes only GitHub repositories and ignores
 // the notion of packages per repository.
 // Then the index is persisted in database for later use (HTTP/ indexing).
-func SaveIndex() error {
+func (g *Godoc) SaveIndex() error {
 	doc, err := goquery.NewDocument(GodocIndexURL)
 	if err != nil {
 		return err
@@ -56,5 +66,5 @@ func SaveIndex() error {
 	if err != nil {
 		return err
 	}
-	return leveldb.Save([]byte(GodocDatabaseKey), b)
+	return g.db.Save([]byte(GodocDatabaseKey), b)
 }

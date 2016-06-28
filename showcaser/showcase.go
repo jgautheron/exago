@@ -41,6 +41,7 @@ type Showcase struct {
 	itemCount int
 	tk        *topk.Stream
 
+	db leveldb.Database
 	sync.RWMutex
 }
 
@@ -48,6 +49,7 @@ func New() Showcase {
 	return Showcase{
 		itemCount: ItemCount,
 		tk:        topk.New(TopkCount),
+		db:        leveldb.DB,
 	}
 }
 
@@ -153,7 +155,7 @@ func (d *Showcase) save() error {
 	if err != nil {
 		return err
 	}
-	return leveldb.Save([]byte(DatabaseKey), b)
+	return d.db.Save([]byte(DatabaseKey), b)
 }
 
 func loadReposFromList(list []string) (repos []repository.RepositoryData, err error) {
@@ -168,10 +170,10 @@ func loadReposFromList(list []string) (repos []repository.RepositoryData, err er
 }
 
 // loadFromDB attempts to load a previously saved snapshot.
-func loadFromDB() (s Showcase, exists bool, err error) {
+func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 	var repos []repository.RepositoryData
 
-	b, err := leveldb.Get([]byte(DatabaseKey))
+	b, err := d.db.Get([]byte(DatabaseKey))
 	if b == nil || err != nil {
 		return s, false, err
 	}
@@ -213,7 +215,7 @@ func ProcessRepository(repo repository.RepositoryData) {
 
 func Init() (err error) {
 	data = New()
-	snapshot, exists, err := loadFromDB()
+	snapshot, exists, err := data.loadFromDB()
 	if err != nil {
 		log.Errorf("An error occurred while loading the snapshot: %v", err)
 	} else if exists {

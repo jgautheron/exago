@@ -16,7 +16,7 @@ func GodocCommand() cli.Command {
 				Name:  "save",
 				Usage: "Save the Godoc index in database",
 				Action: func(c *cli.Context) error {
-					if err := godoc.SaveIndex(); err != nil {
+					if err := godoc.New().SaveIndex(); err != nil {
 						return err
 					}
 					log.Info("Successfully persisted in DB the Godoc index")

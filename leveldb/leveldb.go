@@ -12,18 +12,35 @@ import (
 
 var (
 	// db corresponds to the database connection.
-	// Internal functions directly use db instead of instance() so remember to
-	// always Init() the connection before.
-	db *ldb.DB
+	DB LevelDB
+
+	// Make sure it satisfies the interface.
+	_ Database = (*LevelDB)(nil)
 )
 
-func Init() (err error) {
-	_, err = instance()
-	return err
+type Database interface {
+	FindForRepositoryCmd(key []byte) (b []byte, err error)
+	FindAllForRepository(prefix []byte) (map[string][]byte, error)
+	DeleteAllMatchingPrefix(prefix []byte) error
+	Save(key []byte, data []byte) error
+	Get(key []byte) ([]byte, error)
 }
 
-func FindForRepositoryCmd(key []byte) (b []byte, err error) {
-	b, err = db.Get(key, nil)
+type LevelDB struct {
+	conn *ldb.DB
+}
+
+func Init() error {
+	conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
+	if err != nil {
+		return fmt.Errorf("An error occurred while trying to open the DB: %s", err)
+	}
+	DB = LevelDB{conn}
+	return nil
+}
+
+func (l LevelDB) FindForRepositoryCmd(key []byte) (b []byte, err error) {
+	b, err = l.conn.Get(key, nil)
 	if err != nil {
 		if err == ldb.ErrNotFound {
 			return nil, nil
@@ -33,9 +50,9 @@ func FindForRepositoryCmd(key []byte) (b []byte, err error) {
 	return
 }
 
-func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
+func (l LevelDB) FindAllForRepository(prefix []byte) (map[string][]byte, error) {
 	m := map[string][]byte{}
-	iter := db.NewIterator(util.BytesPrefix(prefix), nil)
+	iter := l.conn.NewIterator(util.BytesPrefix(prefix), nil)
 	defer iter.Release()
 	for iter.Next() {
 		// Get the key
@@ -53,8 +70,8 @@ func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
 	return m, iter.Error()
 }
 
-func DeleteAllMatchingPrefix(prefix []byte) error {
-	iter := db.NewIterator(util.BytesPrefix(prefix), nil)
+func (l LevelDB) DeleteAllMatchingPrefix(prefix []byte) error {
+	iter := l.conn.NewIterator(util.BytesPrefix(prefix), nil)
 	defer iter.Release()
 	for iter.Next() {
 		// Get the key
@@ -62,19 +79,19 @@ func DeleteAllMatchingPrefix(prefix []byte) error {
 		ckey := make([]byte, len(key))
 		copy(ckey, key)
 
-		if err := db.Delete(ckey, nil); err != nil {
+		if err := l.conn.Delete(ckey, nil); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func Save(key []byte, data []byte) error {
-	return db.Put(key, data, nil)
+func (l LevelDB) Save(key []byte, data []byte) error {
+	return l.conn.Put(key, data, nil)
 }
 
-func Get(key []byte) ([]byte, error) {
-	b, err := db.Get(key, nil)
+func (l LevelDB) Get(key []byte) ([]byte, error) {
+	b, err := l.conn.Get(key, nil)
 	if err != nil {
 		if err == ldb.ErrNotFound {
 			return nil, nil
@@ -82,22 +99,4 @@ func Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 	return b, err
-}
-
-// connect initiates a LevelDB connection.
-func connect() (*ldb.DB, error) {
-	var err error
-	db, err = ldb.OpenFile(Config.DatabasePath, &opt.Options{})
-	if err != nil {
-		return nil, fmt.Errorf("An error occurred while trying to open the DB: %s", err)
-	}
-	return db, nil
-}
-
-// Instance returns the current LevelDB instance.
-func instance() (*ldb.DB, error) {
-	if db != nil {
-		return db, nil
-	}
-	return connect()
 }

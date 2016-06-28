@@ -1,6 +1,10 @@
 package model
 
-import "time"
+import (
+	"time"
+
+	"simonwaldherr.de/go/golibs/xmath"
+)
 
 // ImportsName, CodeStatsName etc.. are spread and reused many times in the code
 // have them as constants makes us compliant with the DRY principle
@@ -97,15 +101,7 @@ func (t TestResults) GetAvgTestDuration() float64 {
 		duration = append(duration, pkg.ExecutionTime)
 	}
 
-	var durationMean float64
-	if len(duration) > 0 {
-		for _, v := range duration {
-			durationMean += v
-		}
-		durationMean /= float64(len(duration))
-	}
-
-	return durationMean
+	return xmath.Arithmetic(duration)
 }
 
 // GetAvgCodeCov returns the code coverage average
@@ -115,13 +111,5 @@ func (t TestResults) GetAvgCodeCov() float64 {
 		cov = append(cov, pkg.Coverage)
 	}
 
-	var covMean float64
-	if len(cov) > 0 {
-		for _, v := range cov {
-			covMean += v
-		}
-		covMean /= float64(len(cov))
-	}
-
-	return covMean
+	return xmath.Geometric(cov)
 }

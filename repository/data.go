@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/exago/svc/github"
-	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/lambda"
 	"github.com/exago/svc/repository/model"
 )
@@ -61,7 +60,7 @@ func (r *Repository) GetLastUpdate() (string, error) {
 
 	r.LastUpdate = time.Now()
 	date := r.LastUpdate.Format(time.RFC3339)
-	if err := leveldb.Save(r.cacheKey(model.LastUpdateName), []byte(date)); err != nil {
+	if err := r.db.Save(r.cacheKey(model.LastUpdateName), []byte(date)); err != nil {
 		return "", err
 	}
 	return date, nil
@@ -81,7 +80,7 @@ func (r *Repository) GetExecutionTime() (string, error) {
 
 	duration := time.Since(r.StartTime)
 	r.ExecutionTime = (duration - (duration % time.Second)).String()
-	if err := leveldb.Save(r.cacheKey(model.ExecutionTimeName), []byte(r.ExecutionTime)); err != nil {
+	if err := r.db.Save(r.cacheKey(model.ExecutionTimeName), []byte(r.ExecutionTime)); err != nil {
 		return "", err
 	}
 	return r.ExecutionTime, nil
@@ -223,7 +222,7 @@ func (r *Repository) cacheKey(suffix string) []byte {
 
 // getCachedData attempts to load the data type from database.
 func (r *Repository) getCachedData(suffix string) ([]byte, error) {
-	return leveldb.FindForRepositoryCmd(r.cacheKey(suffix))
+	return r.db.FindForRepositoryCmd(r.cacheKey(suffix))
 }
 
 // cacheData persists the data type results in database.
@@ -232,5 +231,5 @@ func (r *Repository) cacheData(suffix string, data interface{}) error {
 	if err != nil {
 		return err
 	}
-	return leveldb.Save(r.cacheKey(suffix), b)
+	return r.db.Save(r.cacheKey(suffix), b)
 }

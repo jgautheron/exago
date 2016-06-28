@@ -16,7 +16,7 @@ func TestNew(t *testing.T) {
 
 func TestRepositoryRankedAAdded(t *testing.T) {
 	data = New()
-	ProcessRepository(mocks.NewRepositoryMock("github.com/foo/bar", "A"))
+	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
 	if len(data.topRanked) != 1 || len(data.recent) != 1 || len(data.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -24,8 +24,8 @@ func TestRepositoryRankedAAdded(t *testing.T) {
 
 func TestRepositoryRankedADuplicated(t *testing.T) {
 	data = New()
-	ProcessRepository(mocks.NewRepositoryMock("github.com/foo/bar", "A"))
-	ProcessRepository(mocks.NewRepositoryMock("github.com/foo/bar", "A"))
+	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
+	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
 	if len(data.topRanked) != 1 || len(data.recent) != 1 || len(data.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -33,7 +33,7 @@ func TestRepositoryRankedADuplicated(t *testing.T) {
 
 func TestRepositoryRankedBAdded(t *testing.T) {
 	data = New()
-	ProcessRepository(mocks.NewRepositoryMock("github.com/moo/bar", "B"))
+	ProcessRepository(mocks.NewRepositoryData("github.com/moo/bar", "B"))
 	if len(data.topRanked) != 0 || len(data.recent) != 1 || len(data.tk.Keys()) != 1 {
 		log.Println(len(data.topRanked), len(data.recent), len(data.tk.Keys()))
 		t.Error("There should be exactly one entry per slice")
@@ -42,7 +42,7 @@ func TestRepositoryRankedBAdded(t *testing.T) {
 
 func TestDataSerialized(t *testing.T) {
 	data = New()
-	ProcessRepository(mocks.NewRepositoryMock("github.com/moo/bar", "B"))
+	ProcessRepository(mocks.NewRepositoryData("github.com/moo/bar", "B"))
 	_, err := data.serialize()
 	if err != nil {
 		t.Errorf("The serialization went wrong: %v", err)

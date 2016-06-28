@@ -40,7 +40,7 @@ func IndexCommand() cli.Command {
 }
 
 func indexGodoc() error {
-	repos, err := godoc.GetIndex()
+	repos, err := godoc.New().GetIndex()
 	if err != nil {
 		return fmt.Errorf("Got error while trying to load repos from GitHub: %v", err)
 	}
