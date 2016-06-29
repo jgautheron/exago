@@ -1,7 +1,8 @@
 package repository
 
-import "github.com/exago/svc/repository/model"
-
 type Worker interface {
-	GetImports() (model.Imports, error)
+	GetCodeStats(repository string) (interface{}, error)
+	GetImports(repository string) (interface{}, error)
+	GetLintMessages(repository string, linters []string) (interface{}, error)
+	GetTestResults(repository string) (interface{}, error)
 }

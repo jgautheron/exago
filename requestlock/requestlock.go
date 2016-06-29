@@ -6,7 +6,7 @@ var (
 	lock = map[string]bool{}
 )
 
-func Has(args ...string) bool {
+func Contains(args ...string) bool {
 	p := strings.Join(args, "-")
 	_, found := lock[p]
 	return found

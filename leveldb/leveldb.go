@@ -18,14 +18,6 @@ var (
 	_ Database = (*LevelDB)(nil)
 )
 
-type Database interface {
-	FindForRepositoryCmd(key []byte) (b []byte, err error)
-	FindAllForRepository(prefix []byte) (map[string][]byte, error)
-	DeleteAllMatchingPrefix(prefix []byte) error
-	Save(key []byte, data []byte) error
-	Get(key []byte) ([]byte, error)
-}
-
 type LevelDB struct {
 	conn *ldb.DB
 }
@@ -86,7 +78,7 @@ func (l LevelDB) DeleteAllMatchingPrefix(prefix []byte) error {
 	return nil
 }
 
-func (l LevelDB) Save(key []byte, data []byte) error {
+func (l LevelDB) Put(key []byte, data []byte) error {
 	return l.conn.Put(key, data, nil)
 }
 
@@ -99,4 +91,12 @@ func (l LevelDB) Get(key []byte) ([]byte, error) {
 		return nil, err
 	}
 	return b, err
+}
+
+type Database interface {
+	FindForRepositoryCmd(key []byte) (b []byte, err error)
+	FindAllForRepository(prefix []byte) (map[string][]byte, error)
+	DeleteAllMatchingPrefix(prefix []byte) error
+	Put(key []byte, data []byte) error
+	Get(key []byte) ([]byte, error)
 }

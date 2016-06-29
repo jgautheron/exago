@@ -135,6 +135,10 @@ func (r *Repository) GetMetadataImage() string {
 	return r.Metadata.Image
 }
 
+func (r *Repository) GetMetadataStars() int {
+	return r.Metadata.Stars
+}
+
 func (r *Repository) GetRank() string {
 	return r.Score.Rank
 }

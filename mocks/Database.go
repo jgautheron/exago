@@ -66,8 +66,8 @@ func (_m Database) DeleteAllMatchingPrefix(prefix []byte) error {
 	return r0
 }
 
-// Save provides a mock function with given fields: key, data
-func (_m Database) Save(key []byte, data []byte) error {
+// Put provides a mock function with given fields: key, data
+func (_m Database) Put(key []byte, data []byte) error {
 	ret := _m.Called(key, data)
 
 	var r0 error

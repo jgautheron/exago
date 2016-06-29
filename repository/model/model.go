@@ -94,7 +94,7 @@ type Metadata struct {
 	LastPush    time.Time `json:"last_push"`
 }
 
-// GetAvgTestDuration returns the average test duration
+// GetAvgTestDuration returns the average test duration.
 func (t TestResults) GetAvgTestDuration() float64 {
 	var duration []float64
 	for _, pkg := range t.Packages {
@@ -104,7 +104,7 @@ func (t TestResults) GetAvgTestDuration() float64 {
 	return xmath.Arithmetic(duration)
 }
 
-// GetAvgCodeCov returns the code coverage average
+// GetAvgCodeCov returns the code coverage average.
 func (t TestResults) GetAvgCodeCov() float64 {
 	var cov []float64
 	for _, pkg := range t.Packages {

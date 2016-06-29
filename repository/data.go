@@ -60,7 +60,7 @@ func (r *Repository) GetLastUpdate() (string, error) {
 
 	r.LastUpdate = time.Now()
 	date := r.LastUpdate.Format(time.RFC3339)
-	if err := r.db.Save(r.cacheKey(model.LastUpdateName), []byte(date)); err != nil {
+	if err := r.db.Put(r.cacheKey(model.LastUpdateName), []byte(date)); err != nil {
 		return "", err
 	}
 	return date, nil
@@ -80,7 +80,7 @@ func (r *Repository) GetExecutionTime() (string, error) {
 
 	duration := time.Since(r.StartTime)
 	r.ExecutionTime = (duration - (duration % time.Second)).String()
-	if err := r.db.Save(r.cacheKey(model.ExecutionTimeName), []byte(r.ExecutionTime)); err != nil {
+	if err := r.db.Put(r.cacheKey(model.ExecutionTimeName), []byte(r.ExecutionTime)); err != nil {
 		return "", err
 	}
 	return r.ExecutionTime, nil
@@ -231,5 +231,5 @@ func (r *Repository) cacheData(suffix string, data interface{}) error {
 	if err != nil {
 		return err
 	}
-	return r.db.Save(r.cacheKey(suffix), b)
+	return r.db.Put(r.cacheKey(suffix), b)
 }

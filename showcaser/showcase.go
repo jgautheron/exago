@@ -155,7 +155,7 @@ func (d *Showcase) save() error {
 	if err != nil {
 		return err
 	}
-	return d.db.Save([]byte(DatabaseKey), b)
+	return d.db.Put([]byte(DatabaseKey), b)
 }
 
 func loadReposFromList(list []string) (repos []repository.RepositoryData, err error) {

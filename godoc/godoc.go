@@ -66,5 +66,5 @@ func (g *Godoc) SaveIndex() error {
 	if err != nil {
 		return err
 	}
-	return g.db.Save([]byte(GodocDatabaseKey), b)
+	return g.db.Put([]byte(GodocDatabaseKey), b)
 }
