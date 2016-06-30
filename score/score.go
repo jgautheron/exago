@@ -11,7 +11,8 @@ func Process(params map[string]interface{}) (score float64, details []*model.Eva
 		ImportsEvaluator(),
 		CodeStatsEvaluator(),
 		LintMessagesEvaluator(),
-		TestResultsEvaluator(),
+		TestCoverageEvaluator(),
+		TestDurationEvaluator(),
 		CheckListEvaluator(),
 	}
 

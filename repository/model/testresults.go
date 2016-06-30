@@ -2,7 +2,11 @@ package model
 
 import "simonwaldherr.de/go/golibs/xmath"
 
-const TestResultsName = "testresults"
+const (
+	TestResultsName  = "testresults"
+	TestCoverageName = "testcoverage"
+	TestDurationName = "testduration"
+)
 
 // TestResults received from the test runner.
 type TestResults struct {
