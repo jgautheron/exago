@@ -7,7 +7,7 @@ import (
 
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/model"
-	"github.com/exago/svc/repository/score"
+	"github.com/exago/svc/score"
 )
 
 var (

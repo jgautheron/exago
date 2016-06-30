@@ -1,10 +1,10 @@
 hash: 4979e19692365ab80643281955071d1783b4b8312ad2233c656397cfcd7b69ae
-updated: 2016-06-27T21:56:12.865314491+02:00
+updated: 2016-06-30T09:49:28.352039853+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
 - name: github.com/aws/aws-sdk-go
-  version: 68d840c69c0b75ca088ce73cef39962df02a950b
+  version: 101d2e228fea0ab462a7e0180c607290c4850f15
   subpackages:
   - aws
   - aws/credentials
@@ -26,6 +26,10 @@ imports:
   - private/protocol/rest
   - private/protocol/jsonrpc
   - private/protocol/json/jsonutil
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
 - name: github.com/dgryski/go-topk
   version: 1b30445672a470f5658d1877192cbe84e30d3454
 - name: github.com/didip/tollbooth
@@ -37,20 +41,20 @@ imports:
 - name: github.com/exago/envconfig
   version: 8b1c59eae986013d3be5deddbf1e89f18d25ffaa
 - name: github.com/go-ini/ini
-  version: 81d957713547172ed2e08bb075c6a0f2d1ecf6d9
+  version: a219cd2c4f8e533df61aa20befffb0b0f2aaed96
 - name: github.com/golang/freetype
   version: 9ce4eec92a4b5e260b4622c873355647ecf68304
   subpackages:
   - raster
   - truetype
 - name: github.com/golang/protobuf
-  version: 0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0
+  version: 3852dcfda249c2097355a6aabb199a28d97b30df
   subpackages:
   - proto
 - name: github.com/golang/snappy
   version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
 - name: github.com/google/go-github
-  version: 24a48bda0a4e0af7dcdc825059f2251accf6ccc1
+  version: 525696f56fd8ae0fd3eb235a45c5f2c0a37a1464
   subpackages:
   - github
 - name: github.com/google/go-querystring
@@ -75,16 +79,27 @@ imports:
   version: 3014a17b062a7131301593113f579a8da169b99d
   subpackages:
   - fonts
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
 - name: github.com/PuerkitoBio/goquery
-  version: 77cbaef46a3af185a3afb87f88a366f3dee2a904
+  version: f0d75731e0db647903c8611d00c7b85002751317
 - name: github.com/SimonWaldherr/golibs
   version: 300f27777a93b5051fd889350b52c46245cbbf15
   subpackages:
   - xmath
 - name: github.com/Sirupsen/logrus
   version: f3cfb454f4c209e6668c95216c4744b8fddb2356
+- name: github.com/stretchr/objx
+  version: 1a9d0bb9f541897e62256577b352fdbc1fb4fd94
+- name: github.com/stretchr/testify
+  version: d77da356e56a7428ad25149ca77381849a6a5232
+  subpackages:
+  - mock
+  - assert
 - name: github.com/syndtr/goleveldb
-  version: fa5b5c78794bc5c18f330361059f871ae8c2b9d6
+  version: ab8b5dcf1042e818ab68e770d465112a899b668e
   subpackages:
   - leveldb
   - leveldb/opt
@@ -99,14 +114,14 @@ imports:
   - leveldb/storage
   - leveldb/table
 - name: github.com/urfave/cli
-  version: 4205e9c4ee9672a8df5bb4fe486a8aa07e1e4037
+  version: 1efa31f08b9333f1bd4882d61f9d668a70cd902e
 - name: golang.org/x/image
   version: 7c492694a6443a92fd349fda0c4c7b587040f161
   subpackages:
   - font
   - math/fixed
 - name: golang.org/x/net
-  version: e445b19913b9d40fdbdfe19ac5e3d314aafd6f63
+  version: 8e573f4005aa312856df2ea97c32b9beac70dd89
   subpackages:
   - context
   - html
@@ -135,5 +150,6 @@ imports:
 - name: simonwaldherr.de/go/golibs
   version: 300f27777a93b5051fd889350b52c46245cbbf15
   subpackages:
+  - xmath
   - as
 devImports: []
