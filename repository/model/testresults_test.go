@@ -13,9 +13,23 @@ func TestGotMeanDuration(t *testing.T) {
 	}
 }
 
+func TestGotNullMeanDuration(t *testing.T) {
+	tr := TestResults{}
+	if tr.GetAvgTestDuration() != 0 {
+		t.Errorf("Got the wrong mean test duration")
+	}
+}
+
 func TestGotMeanCoverage(t *testing.T) {
 	tr := getMockTestResults()
 	if tr.GetAvgCodeCov() != xmath.Geometric([]float64{20.799, 80.0001}) {
+		t.Errorf("Got the wrong mean test coverage")
+	}
+}
+
+func TestGotNullMeanCoverage(t *testing.T) {
+	tr := TestResults{}
+	if tr.GetAvgCodeCov() != 0 {
 		t.Errorf("Got the wrong mean test coverage")
 	}
 }
