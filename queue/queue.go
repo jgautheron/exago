@@ -3,6 +3,7 @@ package queue
 
 import (
 	"container/heap"
+	"errors"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,9 +11,12 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/exago/svc/repository/processor"
 )
 
 var (
+	ErrQueueIsClosing = errors.New("The queue is closing")
+
 	queue *PriorityQueue
 	once  sync.Once
 )
@@ -31,8 +35,10 @@ type PriorityQueue struct {
 	workers     []*Worker
 	in          chan *Item
 	out         chan map[uint32]interface{}
-	signal      chan os.Signal
+	quit        chan bool
+	closing     bool
 	wg          *sync.WaitGroup
+	processor   processor.Checker
 
 	sync.RWMutex
 }
@@ -42,9 +48,9 @@ func GetInstance() *PriorityQueue {
 	once.Do(func() {
 		queue = &PriorityQueue{
 			concurrency: 4,
-			in:          make(chan *Item),
-			out:         make(chan map[uint32]interface{}),
-			signal:      make(chan os.Signal),
+			in:          make(chan *Item, 1000),
+			out:         make(chan map[uint32]interface{}, 100),
+			quit:        make(chan bool),
 			wg:          &sync.WaitGroup{},
 		}
 		queue.Init()
@@ -53,35 +59,45 @@ func GetInstance() *PriorityQueue {
 }
 
 func (pq *PriorityQueue) Init() {
-	signal.Notify(pq.signal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	heap.Init(&pq.items)
-	pq.CreateWorkers()
+	pq.InitWorkerPool()
 
 	pq.wg.Add(1)
 	go pq.Wait()
+
+	go func() {
+		sn := make(chan os.Signal, 1)
+		signal.Notify(sn, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+		<-sn
+		pq.Stop()
+	}()
 }
 
 func (pq *PriorityQueue) Wait() {
 	defer pq.wg.Done()
-	defer pq.Stop()
 
 	for {
 		select {
 		case in := <-pq.in:
+			if in == nil {
+				continue
+			}
 			log.Infoln("Received new item", in)
 			heap.Push(&pq.items, in)
 			pq.Process()
 		case out := <-pq.out:
 			log.Infoln("Item processed", out)
 			pq.Process()
-		case <-pq.signal:
-			pq.Stop()
+		case <-pq.quit:
 			return
 		}
 	}
 }
 
 func (pq *PriorityQueue) Process() {
+	pq.Lock()
+	defer pq.Unlock()
+
 	for pq.items.Len() > 0 {
 		aw := pq.AvailableWorkers()
 		if len(aw) == 0 {
@@ -93,44 +109,39 @@ func (pq *PriorityQueue) Process() {
 	}
 }
 
-func (pq *PriorityQueue) CreateWorkers() {
+func (pq *PriorityQueue) InitWorkerPool() {
+	pq.wg.Add(pq.concurrency)
 	for i := 0; i < pq.concurrency; i++ {
-		pq.wg.Add(1)
 		go pq.Worker(i)
 	}
 }
 
 func (pq *PriorityQueue) Worker(id int) {
-	w := Worker{id: id, in: make(chan *Item)}
-	pq.workers = append(pq.workers, &w)
 	defer pq.wg.Done()
-	log.Debugln("Worker created", id)
+	w := Worker{id: id, in: make(chan *Item)}
+
+	pq.Lock()
+	pq.workers = append(pq.workers, &w)
+	pq.Unlock()
 
 	for {
 		select {
 		case item := <-w.in:
-			log.Infof("Worker %d got item %s", w.id, item.value)
-
-			w.Lock()
-			w.busy = true
-			log.Debugf("Worker %d locked", w.id)
-			w.Unlock()
+			log.Debugf("Worker %d got item %s with priority: %d", w.id, item.value, item.priority)
 
 			// Fake processing
 			time.Sleep(5 * time.Second)
 			out := map[uint32]interface{}{}
 			out[item.hash] = "foo"
-
-			log.Debugf("Worker %d finished processing", id)
+			log.Debugf("Worker %d finished processing", w.id)
 
 			pq.out <- out
 
 			w.Lock()
 			w.busy = false
 			w.Unlock()
-
-			log.Debugf("Worker %d not busy anymore", id)
-		case <-pq.signal:
+		case <-pq.quit:
+			log.Infof("Worker %d got close", w.id)
 			return
 		}
 	}
@@ -149,18 +160,35 @@ func (pq *PriorityQueue) AvailableWorkers() (workers []*Worker) {
 }
 
 func (pq *PriorityQueue) PushToWorker(worker *Worker, item *Item) {
+	worker.Lock()
+	defer worker.Unlock()
 	log.Debugf("Pushed to worker %d: %.2d:%s", worker.id, item.priority, item.value)
+	worker.busy = true
 	worker.in <- item
 }
 
-func (pq *PriorityQueue) PushAsync(value string, priority int) (hash uint32) {
+func (pq *PriorityQueue) PushAsync(value string, priority int) (hash uint32, err error) {
+	if pq.closing {
+		return hash, ErrQueueIsClosing
+	}
 	item := Item{value: value, priority: priority}
 	pq.in <- &item
-	return item.Hash()
+	return item.Hash(), nil
+}
+
+func (pq *PriorityQueue) PushSync(value string, priority int) (hash uint32, err error) {
+	if pq.closing {
+		return hash, ErrQueueIsClosing
+	}
+	item := Item{value: value, priority: priority}
+	pq.in <- &item
+	return item.Hash(), nil
 }
 
 func (pq *PriorityQueue) Stop() {
+	pq.closing = true
 	close(pq.in)
-	close(pq.out)
+	close(pq.quit)
 	pq.wg.Wait()
+	log.Debug("Queue safely stopped")
 }

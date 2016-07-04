@@ -11,6 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/repository/processor"
+	"github.com/exago/svc/taskrunner/lambda"
 )
 
 type Indexer struct {
@@ -107,7 +108,7 @@ func (idx *Indexer) ProcessItem() {
 		lgr := log.WithField("repository", item)
 		lgr.Info("Processing...")
 
-		rc := processor.NewChecker(item)
+		rc := processor.NewChecker(item, lambda.Runner{})
 		if rc.Repository.IsCached() {
 			// Possibly useful later: a --force flag to reprocess already cached repos
 			lgr.Warn("Already processed")

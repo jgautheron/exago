@@ -153,7 +153,7 @@ func TestStartTimeSet(t *testing.T) {
 func TestScoreCalculated(t *testing.T) {
 	rp := getRepositoryMock("")
 	rp.Load()
-	rp.calcScore()
+	rp.SetScore()
 	if rp.GetRank() == "" {
 		t.Error("The rank has not been set")
 	}

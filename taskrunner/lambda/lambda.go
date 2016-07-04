@@ -9,6 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
 	. "github.com/exago/svc/config"
+	"github.com/exago/svc/taskrunner"
 )
 
 const (
@@ -16,14 +17,15 @@ const (
 )
 
 var (
-	errNoData = errors.New("Empty dataset")
+	ErrNoData = errors.New("Empty dataset")
+
+	// Make sure it satisfies the interface.
+	_ taskrunner.TaskRunner = (*Runner)(nil)
 )
 
-type context struct {
-	Repository string `json:"repository"`
-	Branch     string `json:"branch,omitempty"`
-	Linters    string `json:"linters,omitempty"`
-	Cleanup    bool   `json:"cleanup,omitempty"`
+type Runner struct {
+	repository    string
+	shouldCleanup bool
 }
 
 // Response contains the generic JSend response sent by Lambda functions.
@@ -31,6 +33,14 @@ type Response struct {
 	Status   string                 `json:"status"`
 	Data     *json.RawMessage       `json:"data"`
 	Metadata map[string]interface{} `json:"_metadata"`
+}
+
+// context sent to the Lambda functions.
+type context struct {
+	Repository string `json:"repository"`
+	Branch     string `json:"branch,omitempty"`
+	Linters    string `json:"linters,omitempty"`
+	Cleanup    bool   `json:"cleanup,omitempty"`
 }
 
 type cmd struct {
@@ -78,14 +88,18 @@ func (l *cmd) call() (lrsp Response, err error) {
 		return lrsp, err
 	}
 
-	var resp Response
+	var resp struct {
+		Status   string                 `json:"status"`
+		Data     *json.RawMessage       `json:"data"`
+		Metadata map[string]interface{} `json:"_metadata"`
+	}
 	if err = json.Unmarshal(out.Payload, &resp); err != nil {
 		return lrsp, err
 	}
 
 	// Data is always expected from Lambda
 	if resp.Data == nil {
-		return lrsp, errNoData
+		return lrsp, ErrNoData
 	}
 
 	// If the Lambda request failed, return the message as an error

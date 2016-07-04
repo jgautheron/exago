@@ -12,11 +12,11 @@ var lintCmd = &cmd{
 	unMarshal: unMarshalLint,
 }
 
-func GetLintMessages(repository string, linters []string) (interface{}, error) {
+func (l Runner) FetchLintMessages(linters []string) (interface{}, error) {
 	lintCmd.ctxt = context{
-		Repository: repository,
+		Repository: l.repository,
 		Linters:    strings.Join(linters, ","),
-		Cleanup:    true,
+		Cleanup:    l.shouldCleanup,
 	}
 	return lintCmd.Data()
 }

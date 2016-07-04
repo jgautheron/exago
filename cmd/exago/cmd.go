@@ -6,7 +6,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	. "github.com/exago/svc/config"
 	"github.com/exago/svc/github"
-	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/showcaser"
 	"github.com/urfave/cli"
 )
@@ -29,11 +28,6 @@ func init() {
 
 	InitializeConfig()
 	InitializeLogging(Config.LogLevel)
-
-	// Open the database
-	if err := leveldb.Init(); err != nil {
-		log.Fatal(err)
-	}
 
 	// Authenticate on GitHub
 	if err := github.Init(); err != nil {

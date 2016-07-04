@@ -7,7 +7,6 @@ import (
 
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/model"
-	"github.com/exago/svc/score"
 )
 
 var (
@@ -43,7 +42,7 @@ func New(repo, branch string) *Repository {
 	return &Repository{
 		Name:   repo,
 		Branch: branch,
-		db:     leveldb.DB,
+		db:     leveldb.GetInstance(),
 	}
 }
 
@@ -123,35 +122,8 @@ func (r *Repository) AsMap() map[string]interface{} {
 	}
 }
 
-func (r *Repository) GetName() string {
-	return r.Name
-}
-
-func (r *Repository) GetMetadataDescription() string {
-	return r.Metadata.Description
-}
-
-func (r *Repository) GetMetadataImage() string {
-	return r.Metadata.Image
-}
-
-func (r *Repository) GetMetadataStars() int {
-	return r.Metadata.Stars
-}
-
-func (r *Repository) GetRank() string {
-	return r.Score.Rank
-}
-
 func (r *Repository) SetStartTime(t time.Time) {
 	r.StartTime = t
-}
-
-func (r *Repository) calcScore() {
-	val, res := score.Process(r.AsMap())
-	r.Score.Value = val
-	r.Score.Details = res
-	r.Score.Rank = score.Rank(r.Score.Value)
 }
 
 type RepositoryData interface {
@@ -160,9 +132,13 @@ type RepositoryData interface {
 	GetMetadataImage() string
 	GetRank() string
 	GetMetadata() (d model.Metadata, err error)
+	SetMetadata() (err error)
 	GetLastUpdate() (string, error)
+	SetLastUpdate() (err error)
 	GetExecutionTime() (string, error)
+	SetExecutionTime() (err error)
 	GetScore() (sc model.Score, err error)
+	SetScore() (err error)
 	GetImports() (model.Imports, error)
 	GetCodeStats() (model.CodeStats, error)
 	GetTestResults() (tr model.TestResults, err error)

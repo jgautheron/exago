@@ -49,7 +49,7 @@ func New() Showcase {
 	return Showcase{
 		itemCount: ItemCount,
 		tk:        topk.New(TopkCount),
-		db:        leveldb.DB,
+		db:        leveldb.GetInstance(),
 	}
 }
 

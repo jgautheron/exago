@@ -11,10 +11,10 @@ var testRunnerCmd = &cmd{
 	unMarshal: unMarshalTestResults,
 }
 
-func GetTestResults(repository string) (interface{}, error) {
+func (l Runner) FetchTestResults() (interface{}, error) {
 	testRunnerCmd.ctxt = context{
-		Repository: repository,
-		Cleanup:    true,
+		Repository: l.repository,
+		Cleanup:    l.shouldCleanup,
 	}
 	return testRunnerCmd.Data()
 }

@@ -109,6 +109,20 @@ func (_m *RepositoryData) GetMetadata() (model.Metadata, error) {
 	return r0, r1
 }
 
+// SetMetadata provides a mock function with given fields:
+func (_m *RepositoryData) SetMetadata() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetLastUpdate provides a mock function with given fields:
 func (_m *RepositoryData) GetLastUpdate() (string, error) {
 	ret := _m.Called()
@@ -128,6 +142,20 @@ func (_m *RepositoryData) GetLastUpdate() (string, error) {
 	}
 
 	return r0, r1
+}
+
+// SetLastUpdate provides a mock function with given fields:
+func (_m *RepositoryData) SetLastUpdate() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // GetExecutionTime provides a mock function with given fields:
@@ -151,6 +179,20 @@ func (_m *RepositoryData) GetExecutionTime() (string, error) {
 	return r0, r1
 }
 
+// SetExecutionTime provides a mock function with given fields:
+func (_m *RepositoryData) SetExecutionTime() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // GetScore provides a mock function with given fields:
 func (_m *RepositoryData) GetScore() (model.Score, error) {
 	ret := _m.Called()
@@ -170,6 +212,20 @@ func (_m *RepositoryData) GetScore() (model.Score, error) {
 	}
 
 	return r0, r1
+}
+
+// SetScore provides a mock function with given fields:
+func (_m *RepositoryData) SetScore() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // GetImports provides a mock function with given fields:

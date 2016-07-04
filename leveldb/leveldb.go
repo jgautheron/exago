@@ -2,8 +2,9 @@
 package leveldb
 
 import (
-	"fmt"
+	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	. "github.com/exago/svc/config"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
@@ -11,8 +12,8 @@ import (
 )
 
 var (
-	// db corresponds to the database connection.
-	DB LevelDB
+	db   LevelDB
+	once sync.Once
 
 	// Make sure it satisfies the interface.
 	_ Database = (*LevelDB)(nil)
@@ -22,21 +23,23 @@ type LevelDB struct {
 	conn *ldb.DB
 }
 
-func Init() error {
-	conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
-	if err != nil {
-		return fmt.Errorf("An error occurred while trying to open the DB: %s", err)
-	}
-	DB = LevelDB{conn}
-	return nil
+func GetInstance() LevelDB {
+	once.Do(func() {
+		conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
+		if err != nil {
+			log.Fatal("An error occurred while trying to open the DB: %s", err)
+		}
+		db = LevelDB{conn}
+	})
+	return db
 }
 
 func (l LevelDB) FindForRepositoryCmd(key []byte) (b []byte, err error) {
 	b, err = l.conn.Get(key, nil)
 	if err != nil {
-		if err == ldb.ErrNotFound {
-			return nil, nil
-		}
+		// if err == ldb.ErrNotFound {
+		// 	return nil, nil
+		// }
 		return nil, err
 	}
 	return

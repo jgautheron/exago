@@ -2,44 +2,37 @@ package repository
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
-	"regexp"
 	"time"
 
-	"github.com/exago/svc/github"
-	"github.com/exago/svc/repository/lambda"
 	"github.com/exago/svc/repository/model"
 )
+
+func (r *Repository) GetName() string {
+	return r.Name
+}
+
+func (r *Repository) GetMetadataDescription() string {
+	return r.Metadata.Description
+}
+
+func (r *Repository) GetMetadataImage() string {
+	return r.Metadata.Image
+}
+
+func (r *Repository) GetMetadataStars() int {
+	return r.Metadata.Stars
+}
+
+func (r *Repository) GetRank() string {
+	return r.Score.Rank
+}
 
 // GetMetadata retrieves repository metadata such as description, stars...
 func (r *Repository) GetMetadata() (d model.Metadata, err error) {
 	data, err := r.getCachedData(model.MetadataName)
 	if err != nil {
 		return d, err
-	}
-	if data == nil {
-		reg, _ := regexp.Compile(`^github\.com/([\w\d\-]+)/([\w\d\-]+)`)
-		m := reg.FindStringSubmatch(r.Name)
-		if len(m) == 0 {
-			return d, errors.New("Can only get metadata for GitHub repositories")
-		}
-
-		res, err := github.Get(m[1], m[2])
-		if err != nil {
-			return d, err
-		}
-
-		r.Metadata = model.Metadata{
-			Image:       res["avatar_url"].(string),
-			Description: res["description"].(string),
-			Stars:       res["stargazers"].(int),
-			LastPush:    res["last_push"].(time.Time),
-		}
-		if err = r.cacheData(model.MetadataName, r.Metadata); err != nil {
-			return d, err
-		}
-		return r.Metadata, nil
 	}
 	if err := json.Unmarshal(data, &r.Metadata); err != nil {
 		return d, err
@@ -53,17 +46,8 @@ func (r *Repository) GetLastUpdate() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if data != nil {
-		r.LastUpdate, _ = time.Parse(time.RFC3339, string(data))
-		return string(data), nil
-	}
-
-	r.LastUpdate = time.Now()
-	date := r.LastUpdate.Format(time.RFC3339)
-	if err := r.db.Put(r.cacheKey(model.LastUpdateName), []byte(date)); err != nil {
-		return "", err
-	}
-	return date, nil
+	r.LastUpdate, _ = time.Parse(time.RFC3339, string(data))
+	return string(data), nil
 }
 
 // GetExecutionTime retrieves the last execution time.
@@ -73,16 +57,7 @@ func (r *Repository) GetExecutionTime() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if data != nil {
-		r.ExecutionTime = string(data)
-		return r.ExecutionTime, nil
-	}
-
-	duration := time.Since(r.StartTime)
-	r.ExecutionTime = (duration - (duration % time.Second)).String()
-	if err := r.db.Put(r.cacheKey(model.ExecutionTimeName), []byte(r.ExecutionTime)); err != nil {
-		return "", err
-	}
+	r.ExecutionTime = string(data)
 	return r.ExecutionTime, nil
 }
 
@@ -92,15 +67,8 @@ func (r *Repository) GetScore() (sc model.Score, err error) {
 	if err != nil {
 		return sc, err
 	}
-	if data != nil {
-		if err = json.Unmarshal(data, &r.Score); err != nil {
-			return sc, err
-		}
-		return r.Score, nil
-	}
-	r.calcScore()
-	if err = r.cacheData(model.ScoreName, r.Score); err != nil {
-		return r.Score, err
+	if err = json.Unmarshal(data, &r.Score); err != nil {
+		return sc, err
 	}
 	return r.Score, nil
 }
@@ -110,35 +78,6 @@ func (r *Repository) GetImports() (model.Imports, error) {
 	data, err := r.getCachedData(model.ImportsName)
 	if err != nil {
 		return nil, err
-	}
-	if data == nil {
-		res, err := lambda.GetImports(r.Name)
-		if err != nil {
-			return nil, err
-		}
-		r.Imports = res.(model.Imports)
-
-		// Dedupe third party packages
-		// One repository corresponds to one third party
-		imports, filtered := []string{}, map[string]int{}
-		reg, _ := regexp.Compile(`^github\.com/([\w\d\-]+)/([\w\d\-]+)`)
-		for _, im := range r.Imports {
-			m := reg.FindStringSubmatch(im)
-			if len(m) > 0 {
-				filtered[m[0]] = 1
-			} else {
-				filtered[im] = 1
-			}
-		}
-		for im := range filtered {
-			imports = append(imports, im)
-		}
-		r.Imports = imports
-
-		if err = r.cacheData(model.ImportsName, r.Imports); err != nil {
-			return nil, err
-		}
-		return r.Imports, nil
 	}
 	if err := json.Unmarshal(data, &r.Imports); err != nil {
 		return nil, err
@@ -152,17 +91,6 @@ func (r *Repository) GetCodeStats() (model.CodeStats, error) {
 	if err != nil {
 		return nil, err
 	}
-	if data == nil {
-		res, err := lambda.GetCodeStats(r.Name)
-		if err != nil {
-			return nil, err
-		}
-		r.CodeStats = res.(model.CodeStats)
-		if err = r.cacheData(model.CodeStatsName, r.CodeStats); err != nil {
-			return nil, err
-		}
-		return r.CodeStats, nil
-	}
 	if err := json.Unmarshal(data, &r.CodeStats); err != nil {
 		return nil, err
 	}
@@ -175,17 +103,6 @@ func (r *Repository) GetTestResults() (tr model.TestResults, err error) {
 	if err != nil {
 		return tr, err
 	}
-	if data == nil {
-		res, err := lambda.GetTestResults(r.Name)
-		if err != nil {
-			return tr, err
-		}
-		r.TestResults = res.(model.TestResults)
-		if err = r.cacheData(model.TestResultsName, r.TestResults); err != nil {
-			return tr, err
-		}
-		return r.TestResults, nil
-	}
 	if err := json.Unmarshal(data, &r.TestResults); err != nil {
 		return tr, err
 	}
@@ -197,17 +114,6 @@ func (r *Repository) GetLintMessages(linters []string) (model.LintMessages, erro
 	data, err := r.getCachedData(model.LintMessagesName)
 	if err != nil {
 		return nil, err
-	}
-	if data == nil {
-		res, err := lambda.GetLintMessages(r.Name, linters)
-		if err != nil {
-			return nil, err
-		}
-		r.LintMessages = res.(model.LintMessages)
-		if err = r.cacheData(model.LintMessagesName, r.LintMessages); err != nil {
-			return nil, err
-		}
-		return r.LintMessages, nil
 	}
 	if err := json.Unmarshal(data, &r.LintMessages); err != nil {
 		return nil, err

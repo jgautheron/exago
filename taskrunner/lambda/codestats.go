@@ -11,10 +11,10 @@ var codeStatsCmd = &cmd{
 	unMarshal: unMarshalCodeStats,
 }
 
-func GetCodeStats(repository string) (interface{}, error) {
+func (l Runner) FetchCodeStats() (interface{}, error) {
 	codeStatsCmd.ctxt = context{
-		Repository: repository,
-		Cleanup:    true,
+		Repository: l.repository,
+		Cleanup:    l.shouldCleanup,
 	}
 	return codeStatsCmd.Data()
 }

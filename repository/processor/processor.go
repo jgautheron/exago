@@ -9,6 +9,7 @@ import (
 	"github.com/exago/svc/repository"
 	"github.com/exago/svc/repository/model"
 	"github.com/exago/svc/showcaser"
+	"github.com/exago/svc/taskrunner"
 )
 
 const (
@@ -49,6 +50,7 @@ type Checker struct {
 	logger         *log.Entry
 	types, linters []string
 	data           chan interface{}
+	taskrunner     taskrunner.TaskRunner
 	Repository     repository.RepositoryData
 	HasError       bool
 	Errors         chan error
@@ -57,12 +59,13 @@ type Checker struct {
 	Output         map[string]interface{}
 }
 
-func NewChecker(repo string) *Checker {
+func NewChecker(repo string, tr taskrunner.TaskRunner) *Checker {
 	return &Checker{
 		logger:     log.WithField("repository", repo),
 		types:      DefaultTypes,
 		linters:    repository.DefaultLinters,
 		data:       make(chan interface{}),
+		taskrunner: tr,
 		Repository: repository.New(repo, ""),
 		HasError:   false,
 		Errors:     make(chan error),
@@ -86,11 +89,11 @@ func (rc *Checker) Run() {
 
 			switch tp {
 			case model.ImportsName:
-				out, err = rc.Repository.GetImports()
+				out, err = rc.taskrunner.FetchImports()
 			case model.CodeStatsName:
-				out, err = rc.Repository.GetCodeStats()
+				out, err = rc.taskrunner.FetchCodeStats()
 			case model.TestResultsName:
-				out, err = rc.Repository.GetTestResults()
+				out, err = rc.taskrunner.FetchTestResults()
 
 				// Expose isolated errors
 				switch ts := out.(model.TestResults); {
@@ -100,7 +103,7 @@ func (rc *Checker) Run() {
 					err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
 				}
 			case model.LintMessagesName:
-				out, err = rc.Repository.GetLintMessages(rc.linters)
+				out, err = rc.taskrunner.FetchLintMessages(rc.linters)
 			}
 
 			if err != nil {
@@ -145,11 +148,12 @@ func (rc *Checker) Run() {
 // StampEntry is called once the entire dataset is loaded.
 func (rc *Checker) StampEntry() {
 	// Add the metadata
-	md, err := rc.Repository.GetMetadata()
+	err := rc.Repository.SetMetadata()
 	if err != nil {
 		rc.Output[model.MetadataName] = wrapError(err)
 	} else {
-		rc.Output[model.MetadataName] = md
+		d, _ := rc.Repository.GetMetadata()
+		rc.Output[model.MetadataName] = d
 	}
 
 	// Add the score
@@ -158,28 +162,31 @@ func (rc *Checker) StampEntry() {
 		// then we cannot calculate the rank
 		rc.Output[model.ScoreName] = model.Score{Rank: ""}
 	} else {
-		sc, err := rc.Repository.GetScore()
+		err = rc.Repository.SetScore()
 		if err != nil {
 			rc.Output[model.ScoreName] = wrapError(err)
 		} else {
-			rc.Output[model.ScoreName] = sc
+			d, _ := rc.Repository.GetScore()
+			rc.Output[model.ScoreName] = d
 		}
 	}
 
 	// Add the timestamp
-	date, err := rc.Repository.GetLastUpdate()
+	err = rc.Repository.SetLastUpdate()
 	if err != nil {
 		rc.Output[model.LastUpdateName] = wrapError(err)
 	} else {
-		rc.Output[model.LastUpdateName] = date
+		d, _ := rc.Repository.GetLastUpdate()
+		rc.Output[model.LastUpdateName] = d
 	}
 
 	// Add the execution time
-	et, err := rc.Repository.GetExecutionTime()
+	err = rc.Repository.SetExecutionTime()
 	if err != nil {
 		rc.Output[model.ExecutionTimeName] = wrapError(err)
 	} else {
-		rc.Output[model.ExecutionTimeName] = et
+		d, _ := rc.Repository.GetExecutionTime()
+		rc.Output[model.ExecutionTimeName] = d
 	}
 }
 

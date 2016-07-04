@@ -21,7 +21,7 @@ type Godoc struct {
 
 func New() *Godoc {
 	return &Godoc{
-		db: leveldb.DB,
+		db: leveldb.GetInstance(),
 	}
 }
 
