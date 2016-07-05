@@ -24,8 +24,8 @@ var (
 )
 
 type Runner struct {
-	repository    string
-	shouldCleanup bool
+	Repository    string
+	ShouldCleanup bool
 }
 
 // Response contains the generic JSend response sent by Lambda functions.

@@ -108,7 +108,7 @@ func (idx *Indexer) ProcessItem() {
 		lgr := log.WithField("repository", item)
 		lgr.Info("Processing...")
 
-		rc := processor.NewChecker(item, lambda.Runner{})
+		rc := processor.NewChecker(item, lambda.Runner{Repository: item})
 		if rc.Repository.IsCached() {
 			// Possibly useful later: a --force flag to reprocess already cached repos
 			lgr.Warn("Already processed")

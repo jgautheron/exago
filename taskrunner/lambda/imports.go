@@ -14,8 +14,8 @@ var importsCmd = &cmd{
 
 func (l Runner) FetchImports() (interface{}, error) {
 	importsCmd.ctxt = context{
-		Repository: l.repository,
-		Cleanup:    l.shouldCleanup,
+		Repository: l.Repository,
+		Cleanup:    l.ShouldCleanup,
 	}
 	d, err := importsCmd.Data()
 	if err != nil {

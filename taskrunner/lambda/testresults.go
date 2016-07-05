@@ -13,8 +13,8 @@ var testRunnerCmd = &cmd{
 
 func (l Runner) FetchTestResults() (interface{}, error) {
 	testRunnerCmd.ctxt = context{
-		Repository: l.repository,
-		Cleanup:    l.shouldCleanup,
+		Repository: l.Repository,
+		Cleanup:    l.ShouldCleanup,
 	}
 	return testRunnerCmd.Data()
 }

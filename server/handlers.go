@@ -18,7 +18,7 @@ import (
 
 func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rc := processor.NewChecker(repo, lambda.Runner{})
+	rc := processor.NewChecker(repo, lambda.Runner{Repository: repo})
 
 	if rc.Repository.IsCached() {
 		err := rc.Repository.Load()

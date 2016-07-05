@@ -13,8 +13,8 @@ var codeStatsCmd = &cmd{
 
 func (l Runner) FetchCodeStats() (interface{}, error) {
 	codeStatsCmd.ctxt = context{
-		Repository: l.repository,
-		Cleanup:    l.shouldCleanup,
+		Repository: l.Repository,
+		Cleanup:    l.ShouldCleanup,
 	}
 	return codeStatsCmd.Data()
 }

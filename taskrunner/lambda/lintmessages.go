@@ -14,9 +14,9 @@ var lintCmd = &cmd{
 
 func (l Runner) FetchLintMessages(linters []string) (interface{}, error) {
 	lintCmd.ctxt = context{
-		Repository: l.repository,
+		Repository: l.Repository,
+		Cleanup:    l.ShouldCleanup,
 		Linters:    strings.Join(linters, ","),
-		Cleanup:    l.shouldCleanup,
 	}
 	return lintCmd.Data()
 }
