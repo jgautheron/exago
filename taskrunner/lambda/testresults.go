@@ -11,12 +11,16 @@ var testRunnerCmd = &cmd{
 	unMarshal: unMarshalTestResults,
 }
 
-func (l Runner) FetchTestResults() (interface{}, error) {
+func (l Runner) FetchTestResults() (tr model.TestResults, err error) {
 	testRunnerCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,
 	}
-	return testRunnerCmd.Data()
+	d, err := testRunnerCmd.Data()
+	if err != nil {
+		return tr, err
+	}
+	return d.(model.TestResults), nil
 }
 
 func unMarshalTestResults(l *cmd, b []byte) (interface{}, error) {

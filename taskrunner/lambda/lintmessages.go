@@ -12,13 +12,17 @@ var lintCmd = &cmd{
 	unMarshal: unMarshalLint,
 }
 
-func (l Runner) FetchLintMessages(linters []string) (interface{}, error) {
+func (l Runner) FetchLintMessages(linters []string) (model.LintMessages, error) {
 	lintCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,
 		Linters:    strings.Join(linters, ","),
 	}
-	return lintCmd.Data()
+	d, err := lintCmd.Data()
+	if err != nil {
+		return nil, err
+	}
+	return d.(model.LintMessages), nil
 }
 
 func unMarshalLint(l *cmd, b []byte) (interface{}, error) {

@@ -12,7 +12,7 @@ var importsCmd = &cmd{
 	unMarshal: unMarshalImports,
 }
 
-func (l Runner) FetchImports() (interface{}, error) {
+func (l Runner) FetchImports() (model.Imports, error) {
 	importsCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,

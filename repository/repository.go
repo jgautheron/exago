@@ -121,32 +121,3 @@ func (r *Repository) AsMap() map[string]interface{} {
 		model.ExecutionTimeName: r.ExecutionTime,
 	}
 }
-
-func (r *Repository) SetStartTime(t time.Time) {
-	r.StartTime = t
-}
-
-type RepositoryData interface {
-	GetName() string
-	GetMetadataDescription() string
-	GetMetadataImage() string
-	GetRank() string
-	GetMetadata() (d model.Metadata, err error)
-	SetMetadata() (err error)
-	GetLastUpdate() (string, error)
-	SetLastUpdate() (err error)
-	GetExecutionTime() (string, error)
-	SetExecutionTime() (err error)
-	GetScore() (sc model.Score, err error)
-	SetScore() (err error)
-	GetImports() (model.Imports, error)
-	GetCodeStats() (model.CodeStats, error)
-	GetTestResults() (tr model.TestResults, err error)
-	GetLintMessages(linters []string) (model.LintMessages, error)
-	SetStartTime(t time.Time)
-	IsCached() bool
-	IsLoaded() bool
-	Load() (err error)
-	ClearCache() (err error)
-	AsMap() map[string]interface{}
-}

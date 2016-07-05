@@ -11,12 +11,16 @@ var codeStatsCmd = &cmd{
 	unMarshal: unMarshalCodeStats,
 }
 
-func (l Runner) FetchCodeStats() (interface{}, error) {
+func (l Runner) FetchCodeStats() (model.CodeStats, error) {
 	codeStatsCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,
 	}
-	return codeStatsCmd.Data()
+	d, err := codeStatsCmd.Data()
+	if err != nil {
+		return nil, err
+	}
+	return d.(model.CodeStats), nil
 }
 
 func unMarshalCodeStats(l *cmd, b []byte) (interface{}, error) {

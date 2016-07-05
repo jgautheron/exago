@@ -1,8 +1,10 @@
 package taskrunner
 
+import "github.com/exago/svc/repository/model"
+
 type TaskRunner interface {
-	FetchCodeStats() (interface{}, error)
-	FetchImports() (interface{}, error)
-	FetchLintMessages(linters []string) (interface{}, error)
-	FetchTestResults() (interface{}, error)
+	FetchCodeStats() (model.CodeStats, error)
+	FetchImports() (model.Imports, error)
+	FetchLintMessages(linters []string) (model.LintMessages, error)
+	FetchTestResults() (model.TestResults, error)
 }

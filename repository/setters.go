@@ -10,6 +10,26 @@ import (
 	"github.com/exago/svc/score"
 )
 
+func (r *Repository) SetImports(i model.Imports) {
+	r.Imports = i
+}
+
+func (r *Repository) SetCodeStats(cs model.CodeStats) {
+	r.CodeStats = cs
+}
+
+func (r *Repository) SetLintMessages(lm model.LintMessages) {
+	r.LintMessages = lm
+}
+
+func (r *Repository) SetTestResults(tr model.TestResults) {
+	r.TestResults = tr
+}
+
+func (r *Repository) SetStartTime(t time.Time) {
+	r.StartTime = t
+}
+
 // SetExecutionTime sets the processing execution time.
 // The value is then used to determine an ETA for refreshing data.
 func (r *Repository) SetExecutionTime() (err error) {

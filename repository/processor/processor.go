@@ -90,10 +90,19 @@ func (rc *Checker) Run() {
 			switch tp {
 			case model.ImportsName:
 				out, err = rc.taskrunner.FetchImports()
+				if err == nil {
+					rc.Repository.SetImports(out.(model.Imports))
+				}
 			case model.CodeStatsName:
 				out, err = rc.taskrunner.FetchCodeStats()
+				if err == nil {
+					rc.Repository.SetCodeStats(out.(model.CodeStats))
+				}
 			case model.TestResultsName:
 				out, err = rc.taskrunner.FetchTestResults()
+				if err == nil {
+					rc.Repository.SetTestResults(out.(model.TestResults))
+				}
 
 				// Expose isolated errors
 				switch ts := out.(model.TestResults); {
@@ -104,6 +113,9 @@ func (rc *Checker) Run() {
 				}
 			case model.LintMessagesName:
 				out, err = rc.taskrunner.FetchLintMessages(rc.linters)
+				if err == nil {
+					rc.Repository.SetLintMessages(out.(model.LintMessages))
+				}
 			}
 
 			if err != nil {
