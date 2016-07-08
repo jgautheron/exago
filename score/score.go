@@ -2,10 +2,12 @@ package score
 
 import (
 	log "github.com/Sirupsen/logrus"
+
 	"github.com/exago/svc/repository/model"
 )
 
-// Process triggers criterias evaluation
+// Process triggers criterias evaluation, calling each evaluator in a goroutine
+// We compute the weighted average based on the overall evaluator weights and scores
 func Process(data model.Data) (score float64, details []*model.EvaluatorResponse) {
 	eval := []CriteriaEvaluator{
 		ImportsEvaluator(),

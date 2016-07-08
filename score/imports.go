@@ -1,6 +1,11 @@
 package score
 
-import "github.com/exago/svc/repository/model"
+import (
+	"fmt"
+	"math"
+
+	"github.com/exago/svc/repository/model"
+)
 
 type importsEvaluator struct {
 	Evaluator
@@ -18,25 +23,37 @@ func ImportsEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (ie *importsEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
-	imp := d.Imports
-	tp := len(imp)
+	// Declare rates here, since Go cannot accept maps as constants :/
+	rates := map[int]float64{
+		1: -1,
+		2: -0.8,
+		3: -0.6,
+		4: -0.35,
+		5: -0.25,
+		6: -0.18,
+	}
+
+	imp, cs := d.Imports, d.CodeStats
+
+	imps := float64(len(imp))
 	r := ie.NewResponse(100, 1.5, "", nil)
 
-	switch true {
-	case tp < 0:
-	case tp < 4:
-		r.Score = 75
-		r.Message = "less than 4 third-party package(s)"
-	case tp < 6:
-		r.Score = 50
-		r.Message = "less than 6 third-party package(s)"
-	case tp < 8:
-		r.Score = 25
-		r.Message = "less than 8 third-party package(s)"
-	case tp > 8:
-		r.Score = 0
-		r.Message = "more than 8 third-party package(s)"
+	loc := float64(cs["LOC"])
+
+	// We simply compute the power of 10 using log10 and floor
+	// and retrieve the rate by associating the power to an index position
+	l10 := math.Floor(math.Log10(loc))
+	rate := rates[5]
+
+	// If we can't find the rate, fallback to the lowest rate
+	// This will unlikely happen over 1,000,000 LOC
+	if val, ok := rates[int(l10)]; ok {
+		rate = val
 	}
+
+	// Compute the exponential decay
+	r.Score = 100 * math.Exp(rate*(imps/math.Log(loc)))
+	r.Message = fmt.Sprintf("%d third-party package(s)", int(imps))
 
 	return r
 }

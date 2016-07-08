@@ -10,7 +10,7 @@ import (
 	"github.com/exago/svc/repository/model"
 )
 
-const coverageFactor = 0.1
+const coverageFactor = -0.095
 
 type testCoverageEvaluator struct {
 	Evaluator
@@ -47,22 +47,24 @@ func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 		"coverage (geometric mean)": covMean,
 	}).Debugf("[%s] coverage mean", model.TestCoverageName)
 
-	// Apply exponential growth formula
-	r.Score = covMean * math.Exp(coverageFactor)
-	// Normalize to 100 if we go higher, this will probably never happen
-	// but who knows...
-	if r.Score > 100 {
-		r.Score = 100
-	}
+	// Apply logistic growth formula
+	//
+	// S = initial value = 1 (it starts from 1)
+	// M = max value = 100 (the maximum score)
+	// R = growth rate (negative)
+	// V = value
+	//
+	// The equation is X = M/(S + [(M - S) * exp(R*V)])
+	// this logistic model has two important parameters – a growth constant and a maximum size.
+	r.Score = 100 / (1 + (100-1)*math.Exp(coverageFactor*covMean))
 
 	// Lines of code will impact the weight
-	// We use a logarithm to calculate the factor on a base of 10
+	// We use a logarithm to calculate the factor with a base10 of LOCs
 	r.Weight = math.Log10(float64(cs["LOC"]))
 
-	switch true {
-	case covMean > 0:
+	if covMean > 0 {
 		r.Message = fmt.Sprintf("coverage is greater or equal to %.2f", covMean)
-	case covMean == 0:
+	} else {
 		// If there are tests but we couldn't run them
 		r.Score = 100
 		r.Weight = 1
