@@ -5,7 +5,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	. "github.com/exago/svc/config"
-	"github.com/exago/svc/github"
 	"github.com/exago/svc/showcaser"
 	"github.com/urfave/cli"
 )
@@ -28,11 +27,6 @@ func init() {
 
 	InitializeConfig()
 	InitializeLogging(Config.LogLevel)
-
-	// Authenticate on GitHub
-	if err := github.Init(); err != nil {
-		log.Fatal(err)
-	}
 
 	// Initialise the dataset
 	if err := showcaser.Init(); err != nil {

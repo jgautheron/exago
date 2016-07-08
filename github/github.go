@@ -2,7 +2,9 @@ package github
 
 import (
 	"encoding/base64"
+	"sync"
 
+	log "github.com/Sirupsen/logrus"
 	. "github.com/exago/svc/config"
 	gh "github.com/google/go-github/github"
 	"github.com/hashicorp/golang-lru"
@@ -14,33 +16,40 @@ const (
 )
 
 var (
-	client *gh.Client
-	cache  *lru.ARCCache
-
-	// Repositories is a short-hand for the GitHub repos API.
-	// https://developer.github.com/v3/repos/
-	Repositories *gh.RepositoriesService
+	gi   GitHub
+	once sync.Once
 )
 
-func Init() (err error) {
-	// Authenticate with the GitHub API
-	ts := oauth2.StaticTokenSource(
-		&oauth2.Token{AccessToken: Config.GithubAccessToken},
-	)
-	tc := oauth2.NewClient(oauth2.NoContext, ts)
-	client = gh.NewClient(tc)
-	Repositories = client.Repositories
-
-	// Initialise the ARC cache
-	cache, err = lru.NewARC(CacheSize)
-	return err
+type GitHub struct {
+	client *gh.Client
+	cache  *lru.ARCCache
 }
 
-func GetFileContent(owner, repository, path string) (string, error) {
-	if data, cached := getCached(owner, repository, path); cached {
+func GetInstance() GitHub {
+	once.Do(func() {
+		// Authenticate with the GitHub API
+		ts := oauth2.StaticTokenSource(
+			&oauth2.Token{AccessToken: Config.GithubAccessToken},
+		)
+		tc := oauth2.NewClient(oauth2.NoContext, ts)
+		client := gh.NewClient(tc)
+
+		// Initialise the ARC cache
+		cache, err := lru.NewARC(CacheSize)
+		if err != nil {
+			log.Fatal("Could not create the ARC cache")
+		}
+
+		gi = GitHub{client, cache}
+	})
+	return gi
+}
+
+func (g GitHub) GetFileContent(owner, repository, path string) (string, error) {
+	if data, cached := g.getCached(owner, repository, path); cached {
 		return data.(string), nil
 	}
-	file, _, _, err := Repositories.GetContents(owner, repository, path, nil)
+	file, _, _, err := g.repositories().GetContents(owner, repository, path, nil)
 	if err != nil {
 		return "", err
 	}
@@ -52,15 +61,15 @@ func GetFileContent(owner, repository, path string) (string, error) {
 		}
 		out = string(b)
 	}
-	saveCache(out, owner, repository, path)
+	g.saveCache(out, owner, repository, path)
 	return out, nil
 }
 
-func Get(owner, repository string) (map[string]interface{}, error) {
-	if data, cached := getCached(owner, repository); cached {
+func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
+	if data, cached := g.getCached(owner, repository); cached {
 		return data.(map[string]interface{}), nil
 	}
-	repo, _, err := Repositories.Get(owner, repository)
+	repo, _, err := g.repositories().Get(owner, repository)
 	if err != nil {
 		return nil, err
 	}
@@ -83,6 +92,12 @@ func Get(owner, repository string) (map[string]interface{}, error) {
 		"stargazers":  *repo.StargazersCount,
 		"last_push":   repo.PushedAt.Time,
 	}
-	saveCache(mp, owner, repository)
+	g.saveCache(mp, owner, repository)
 	return mp, nil
+}
+
+// repositories is a short-hand for the GitHub repos API.
+// https://developer.github.com/v3/repos/
+func (g GitHub) repositories() *gh.RepositoriesService {
+	return g.client.Repositories
 }

@@ -2,12 +2,12 @@ package github
 
 import "strings"
 
-func getCached(key ...string) (interface{}, bool) {
+func (g GitHub) getCached(key ...string) (interface{}, bool) {
 	k := strings.Join(key, "-")
-	return cache.Get(k)
+	return g.cache.Get(k)
 }
 
-func saveCache(value interface{}, key ...string) {
+func (g GitHub) saveCache(value interface{}, key ...string) {
 	k := strings.Join(key, "-")
-	cache.Add(k, value)
+	g.cache.Add(k, value)
 }
