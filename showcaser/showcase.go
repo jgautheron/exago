@@ -33,9 +33,9 @@ type serialisedShowcase struct {
 }
 
 type Showcase struct {
-	recent    []repository.RepositoryData
-	topRanked []repository.RepositoryData
-	popular   []repository.RepositoryData
+	recent    []repository.Record
+	topRanked []repository.Record
+	popular   []repository.Record
 
 	// How many items per category
 	itemCount int
@@ -54,7 +54,7 @@ func New() Showcase {
 }
 
 // AddRecent pushes to the stack latest new items, pops the old ones.
-func (d *Showcase) AddRecent(repo repository.RepositoryData) {
+func (d *Showcase) AddRecent(repo repository.Record) {
 	d.Lock()
 	defer d.Unlock()
 
@@ -72,7 +72,7 @@ func (d *Showcase) AddRecent(repo repository.RepositoryData) {
 }
 
 // AddTopRanked pushes to the stack latest new A-ranked items, pops the old ones.
-func (d *Showcase) AddTopRanked(repo repository.RepositoryData) {
+func (d *Showcase) AddTopRanked(repo repository.Record) {
 	d.Lock()
 	defer d.Unlock()
 
@@ -95,7 +95,7 @@ func (d *Showcase) AddTopRanked(repo repository.RepositoryData) {
 
 // AddPopular inserts the repository name into the topk data structure.
 // The collection will not be updated in real-time (see updatePopular).
-func (d *Showcase) AddPopular(repo repository.RepositoryData) {
+func (d *Showcase) AddPopular(repo repository.Record) {
 	d.Lock()
 	defer d.Unlock()
 
@@ -158,7 +158,7 @@ func (d *Showcase) save() error {
 	return d.db.Put([]byte(DatabaseKey), b)
 }
 
-func loadReposFromList(list []string) (repos []repository.RepositoryData, err error) {
+func loadReposFromList(list []string) (repos []repository.Record, err error) {
 	for _, name := range list {
 		rp := repository.New(name, "")
 		if err = rp.Load(); err != nil {
@@ -171,7 +171,7 @@ func loadReposFromList(list []string) (repos []repository.RepositoryData, err er
 
 // loadFromDB attempts to load a previously saved snapshot.
 func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
-	var repos []repository.RepositoryData
+	var repos []repository.Record
 
 	b, err := d.db.Get([]byte(DatabaseKey))
 	if b == nil || err != nil {
@@ -207,7 +207,7 @@ func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 	return s, true, nil
 }
 
-func ProcessRepository(repo repository.RepositoryData) {
+func ProcessRepository(repo repository.Record) {
 	data.AddRecent(repo)
 	data.AddTopRanked(repo)
 	data.AddPopular(repo)

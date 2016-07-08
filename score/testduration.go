@@ -29,9 +29,8 @@ func TestDurationEvaluator() CriteriaEvaluator {
 }
 
 // Calculate overloads Evaluator/Calculate
-func (te *testDurationEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
-	t := p[model.TestResultsName].(model.TestResults)
-	cs := p[model.CodeStatsName].(model.CodeStats)
+func (te *testDurationEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
+	t, cs := d.TestResults, d.CodeStats
 
 	r := te.NewResponse(100, 3, "", nil)
 

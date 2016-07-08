@@ -64,7 +64,7 @@ func checkValidRepository(next http.Handler) http.Handler {
 		context.Set(r, "project", sp[2])
 
 		// Check with the GitHub API if the repository contains Go code
-		data, err := github.Get(sp[1], sp[2])
+		data, err := github.GetInstance().Get(sp[1], sp[2])
 		if err != nil {
 			writeError(w, r, err)
 			return

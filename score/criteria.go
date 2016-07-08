@@ -7,7 +7,7 @@ import "github.com/exago/svc/repository/model"
 // CriteriaEvaluator is the interface that must be implemented by a criteria
 // evaluator.
 type CriteriaEvaluator interface {
-	Calculate(map[string]interface{}) *model.EvaluatorResponse
+	Calculate(model.Data) *model.EvaluatorResponse
 	Name() string
 	Setup()
 }
@@ -26,7 +26,7 @@ func (c *Evaluator) NewResponse(score float64, weight float64, msg string, detai
 }
 
 // Calculate computes the criteria evaluation score
-func (c *Evaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
+func (c *Evaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	return nil
 }
 

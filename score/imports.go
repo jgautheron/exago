@@ -17,8 +17,8 @@ func ImportsEvaluator() CriteriaEvaluator {
 }
 
 // Calculate overloads Evaluator/Calculate
-func (ie *importsEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
-	imp := p[model.ImportsName].(model.Imports)
+func (ie *importsEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
+	imp := d.Imports
 	tp := len(imp)
 	r := ie.NewResponse(100, 1.5, "", nil)
 

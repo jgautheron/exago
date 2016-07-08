@@ -6,7 +6,7 @@ import (
 )
 
 // Process triggers criterias evaluation
-func Process(params map[string]interface{}) (score float64, details []*model.EvaluatorResponse) {
+func Process(data model.Data) (score float64, details []*model.EvaluatorResponse) {
 	eval := []CriteriaEvaluator{
 		ImportsEvaluator(),
 		CodeStatsEvaluator(),
@@ -20,7 +20,7 @@ func Process(params map[string]interface{}) (score float64, details []*model.Eva
 	for _, cr := range eval {
 		go func(c CriteriaEvaluator) {
 			c.Setup()
-			ch <- c.Calculate(params)
+			ch <- c.Calculate(data)
 		}(cr)
 	}
 

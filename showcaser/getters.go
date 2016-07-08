@@ -15,10 +15,11 @@ type RepositoryInfo struct {
 func GetRecentRepositories() (repos []RepositoryInfo) {
 	for i := len(data.recent) - 1; i >= 0; i-- {
 		repo := data.recent[i]
+		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
-			Description: repo.GetMetadataDescription(),
-			Image:       repo.GetMetadataImage(),
+			Description: meta.Description,
+			Image:       meta.Image,
 			Rank:        repo.GetRank(),
 		})
 	}
@@ -32,10 +33,11 @@ func GetTopRankedRepositories() (repos []RepositoryInfo) {
 			break
 		}
 		repo := data.topRanked[item]
+		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
-			Description: repo.GetMetadataDescription(),
-			Image:       repo.GetMetadataImage(),
+			Description: meta.Description,
+			Image:       meta.Image,
 			Rank:        repo.GetRank(),
 		})
 	}
@@ -44,10 +46,11 @@ func GetTopRankedRepositories() (repos []RepositoryInfo) {
 
 func GetPopularRepositories() (repos []RepositoryInfo) {
 	for _, repo := range data.popular {
+		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
-			Description: repo.GetMetadataDescription(),
-			Image:       repo.GetMetadataImage(),
+			Description: meta.Description,
+			Image:       meta.Image,
 			Rank:        repo.GetRank(),
 		})
 	}

@@ -17,9 +17,9 @@ func CodeStatsEvaluator() CriteriaEvaluator {
 }
 
 // Calculate overloads Evaluator/Calculate
-func (ce *codeStatsEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
+func (ce *codeStatsEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	r := ce.NewResponse(100, 1, "", nil)
-	cs := p[model.CodeStatsName].(model.CodeStats)
+	cs := d.CodeStats
 	ra := float64(cs["LOC"] / cs["NCLOC"])
 	switch true {
 	case ra > 1.4:

@@ -22,7 +22,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	if rc.Repository.IsCached() {
 		err := rc.Repository.Load()
-		send(w, r, rc.Repository.AsMap(), err)
+		send(w, r, rc.Repository.GetData(), err)
 		return
 	}
 
@@ -31,9 +31,9 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	// Wait until the data is ready
 	select {
 	case <-rc.Done:
-		send(w, r, rc.Output, nil)
+		send(w, r, rc.Repository.GetData(), nil)
 	case <-rc.Aborted:
-		send(w, r, rc.Output, nil)
+		send(w, r, rc.Repository.GetData(), nil)
 	}
 }
 
@@ -56,7 +56,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch tp := ps.ByName("type"); tp {
 	case "rank":
-		err, rank := repo.Load(), repo.Score.Rank
+		err, rank := repo.Load(), repo.GetRank()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, "")
@@ -65,7 +65,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, "", string(rank), "blue")
 	case "cov":
 		title := "coverage"
-		err, cov := repo.Load(), repo.TestResults.GetAvgCodeCov()
+		err, cov := repo.Load(), repo.GetTestResults().GetAvgCodeCov()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -74,7 +74,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
 	case "duration":
 		title := "tests duration"
-		err, avg := repo.Load(), repo.TestResults.GetAvgTestDuration()
+		err, avg := repo.Load(), repo.GetTestResults().GetAvgTestDuration()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -83,7 +83,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), "blue")
 	case "tests":
 		title := "tests"
-		err, tests := repo.Load(), repo.CodeStats["Test"]
+		err, tests := repo.Load(), repo.GetCodeStats()["Test"]
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -92,7 +92,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%d", tests), "blue")
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties := repo.Load(), len(repo.Imports)
+		err, thirdParties := repo.Load(), len(repo.GetImports())
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -101,7 +101,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
 	case "loc":
 		title := "LOC"
-		err, thirdParties := repo.Load(), repo.CodeStats["LOC"]
+		err, thirdParties := repo.Load(), repo.GetCodeStats()["LOC"]
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -111,18 +111,11 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func repoValidHandler(w http.ResponseWriter, r *http.Request) {
-	owner := context.Get(r, "owner").(string)
-	project := context.Get(r, "project").(string)
-	code, err := checkRepo(r, owner, project)
-	writeData(w, r, code, err)
-}
-
 func fileHandler(w http.ResponseWriter, r *http.Request) {
 	owner := context.Get(r, "owner").(string)
 	project := context.Get(r, "project").(string)
 	path := context.Get(r, "path").(string)
-	content, err := github.GetFileContent(owner, project, path)
+	content, err := github.GetInstance().GetFileContent(owner, project, path)
 	send(w, r, content, err)
 }
 

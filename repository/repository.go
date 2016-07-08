@@ -1,8 +1,7 @@
 package repository
 
 import (
-	"fmt"
-	"reflect"
+	"encoding/json"
 	"time"
 
 	"github.com/exago/svc/leveldb"
@@ -17,40 +16,31 @@ var (
 	}
 
 	// Make sure it satisfies the interface.
-	_ RepositoryData = (*Repository)(nil)
+	_ Record = (*Repository)(nil)
 )
 
 type Repository struct {
-	Name, Branch string
-
-	// Data types
-	CodeStats     model.CodeStats
-	Imports       model.Imports
-	TestResults   model.TestResults
-	LintMessages  model.LintMessages
-	Metadata      model.Metadata
-	Score         model.Score
-	ExecutionTime string
-	LastUpdate    time.Time
-
-	StartTime time.Time
-
-	db leveldb.Database
+	name, branch string
+	startTime    time.Time
+	db           leveldb.Database
+	loaded       bool
+	Data         model.Data
 }
 
 func New(repo, branch string) *Repository {
 	return &Repository{
-		Name:   repo,
-		Branch: branch,
+		name:   repo,
+		branch: branch,
 		db:     leveldb.GetInstance(),
+		Data: model.Data{
+			Errors: make(map[string]error),
+		},
 	}
 }
 
 // IsCached checks if the repository's data is cached in database.
 func (r *Repository) IsCached() bool {
-	prefix := fmt.Sprintf("%s-%s", r.Name, r.Branch)
-	data, err := r.db.FindAllForRepository([]byte(prefix))
-	if err != nil || len(data) != 8 {
+	if _, err := r.db.Get(r.cacheKey()); err != nil {
 		return false
 	}
 	return true
@@ -58,66 +48,28 @@ func (r *Repository) IsCached() bool {
 
 // IsLoaded checks if the data is already loaded.
 func (r *Repository) IsLoaded() bool {
-	if r.CodeStats == nil {
-		return false
-	}
-	if r.Imports == nil {
-		return false
-	}
-	if reflect.DeepEqual(r.TestResults, model.TestResults{}) {
-		return false
-	}
-	if r.LintMessages == nil {
-		return false
-	}
-	return true
+	return r.loaded
 }
 
-// Load retrieves the entire matching dataset from database.
-func (r *Repository) Load() (err error) {
-	if _, err = r.GetImports(); err != nil {
+// Load retrieves the saved repository data from the database.
+func (r *Repository) Load() error {
+	b, err := r.db.Get(r.cacheKey())
+	if err != nil {
 		return err
 	}
-	if _, err = r.GetCodeStats(); err != nil {
+
+	var data model.Data
+	if err := json.Unmarshal(b, &data); err != nil {
 		return err
 	}
-	if _, err = r.GetLintMessages(DefaultLinters); err != nil {
-		return err
-	}
-	if _, err = r.GetTestResults(); err != nil {
-		return err
-	}
-	if _, err = r.GetScore(); err != nil {
-		return err
-	}
-	if _, err = r.GetMetadata(); err != nil {
-		return err
-	}
-	if _, err = r.GetLastUpdate(); err != nil {
-		return err
-	}
-	if _, err = r.GetExecutionTime(); err != nil {
-		return err
-	}
-	return err
+
+	r.Data = data
+	r.loaded = true
+
+	return nil
 }
 
 // ClearCache removes the repository from database.
-func (r *Repository) ClearCache() (err error) {
-	prefix := fmt.Sprintf("%s-%s", r.Name, r.Branch)
-	return r.db.DeleteAllMatchingPrefix([]byte(prefix))
-}
-
-// AsMap generates a map out of repository fields.
-func (r *Repository) AsMap() map[string]interface{} {
-	return map[string]interface{}{
-		model.ImportsName:       r.Imports,
-		model.CodeStatsName:     r.CodeStats,
-		model.LintMessagesName:  r.LintMessages,
-		model.TestResultsName:   r.TestResults,
-		model.ScoreName:         r.Score,
-		model.MetadataName:      r.Metadata,
-		model.LastUpdateName:    r.LastUpdate,
-		model.ExecutionTimeName: r.ExecutionTime,
-	}
+func (r *Repository) ClearCache() error {
+	return r.db.Delete(r.cacheKey())
 }

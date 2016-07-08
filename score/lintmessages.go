@@ -52,10 +52,9 @@ func (le *lintMessagesEvaluator) Setup() {
 }
 
 // Calculate overloads Evaluator/Calculate
-func (le *lintMessagesEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
+func (le *lintMessagesEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	r := le.NewResponse(100, 2, "", nil)
-	lm := p[model.LintMessagesName].(model.LintMessages)
-	cs := p[model.CodeStatsName].(model.CodeStats)
+	lm, cs := d.LintMessages, d.CodeStats
 
 	// Loop over messages
 	for _, m := range lm {

@@ -116,15 +116,6 @@ func (idx *Indexer) ProcessItem() {
 			continue
 		}
 
-		go func() {
-			// If an error is caught, abort the processing
-			for err := range rc.Errors {
-				state.err = err
-				rc.Abort()
-				break
-			}
-		}()
-
 		// Process the repository
 		go rc.Run()
 
