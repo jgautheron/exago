@@ -1,6 +1,13 @@
 package score
 
-import "github.com/exago/svc/repository/model"
+import (
+	"fmt"
+	"math"
+
+	"github.com/exago/svc/repository/model"
+)
+
+const codeStatsFactor = -0.13
 
 type codeStatsEvaluator struct {
 	Evaluator
@@ -20,23 +27,10 @@ func CodeStatsEvaluator() CriteriaEvaluator {
 func (ce *codeStatsEvaluator) Calculate(p map[string]interface{}) *model.EvaluatorResponse {
 	r := ce.NewResponse(100, 1, "", nil)
 	cs := p[model.CodeStatsName].(model.CodeStats)
-	ra := float64(cs["LOC"] / cs["NCLOC"])
-	switch true {
-	case ra > 1.4:
-		r.Message = "more than 1.4 NCLOC"
-	case ra > 1.3:
-		r.Score = 75
-		r.Message = "more than 1.3 NCLOC"
-	case ra > 1.2:
-		r.Score = 50
-		r.Message = "more than 1.2 NCLOC"
-	case ra > 1.1:
-		r.Score = 25
-		r.Message = "more than 1.1 NCLOC"
-	case ra <= 1:
-		r.Score = 0
-		r.Message = "less or equal 1 NCLOC"
-	}
+	ra := float64(cs["CLOC"]) / float64(cs["LOC"])
+	r.Message = fmt.Sprintf("%d comments for %d lines of code", cs["CLOC"], cs["LOC"])
+
+	r.Score = 100 / (1 + (100-1)*math.Exp(codeStatsFactor*(ra*100)))
 
 	return r
 }

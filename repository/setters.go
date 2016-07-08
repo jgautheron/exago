@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"time"
 
+	log "github.com/Sirupsen/logrus"
+
 	"github.com/exago/svc/github"
 	"github.com/exago/svc/repository/model"
 	"github.com/exago/svc/score"
@@ -74,5 +76,13 @@ func (r *Repository) SetScore() (err error) {
 	r.Score.Value = val
 	r.Score.Details = res
 	r.Score.Rank = score.Rank(r.Score.Value)
+
+	log.Infof(
+		"[%s] Rank: %s, overall score: %.2f",
+		r.GetName(),
+		r.Score.Rank,
+		r.Score.Value,
+	)
+
 	return nil
 }

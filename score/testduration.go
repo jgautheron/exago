@@ -11,8 +11,21 @@ import (
 )
 
 const (
-	drop      = 0.1
-	dropSpeed = -0.1
+	// fastRate and slowRate are the two rate constants
+	// expressed in reciprocal of the X (time) unit (inversed secs)
+	fastRate = -0.1
+	slowRate = -0.0008
+
+	// percentFast is the fraction of the span (from initVal to plateau)
+	// accounted for by the faster of the two components.
+	percentFast = 28
+
+	// initVal (Y0) is the Y value when X (time) is zero, represents the score
+	initVal = 100
+
+	// plateau is the Y value at infinite times, expressed in the same units as Y.
+	// if duration is infinite score will be 0
+	plateau = 0
 )
 
 type testDurationEvaluator struct {
@@ -33,7 +46,7 @@ func (te *testDurationEvaluator) Calculate(p map[string]interface{}) *model.Eval
 	t := p[model.TestResultsName].(model.TestResults)
 	cs := p[model.CodeStatsName].(model.CodeStats)
 
-	r := te.NewResponse(100, 3, "", nil)
+	r := te.NewResponse(100, 1.2, "", nil)
 
 	// If we have no tests, bypass the duration test
 	if cs["Test"] == 0 {
@@ -48,7 +61,7 @@ func (te *testDurationEvaluator) Calculate(p map[string]interface{}) *model.Eval
 	for _, pkg := range t.Packages {
 		durations = append(durations, pkg.ExecutionTime)
 	}
-	// Calculate mean values for execution time
+	// Calculate overall sum for execution time
 	var duration float64
 	if len(durations) > 0 {
 		duration = xmath.Sum(durations)
@@ -58,12 +71,15 @@ func (te *testDurationEvaluator) Calculate(p map[string]interface{}) *model.Eval
 		"duration (overall)": duration,
 	}).Debugf("[%s] duration", model.TestDurationName)
 
-	// Apply exponential growth formula
-	r.Score = (100 + math.Exp(dropSpeed)) / (1 + math.Exp(dropSpeed-dropSpeed/drop)*duration)
-	if r.Score > 100 {
-		r.Score = 100
-	}
+	// A biphasic exponential decay or (two-phase) is used when the outcome is the result of
+	// the sum of a fast and slow exponential decay.
+	//
+	// in this context test duration from 0 to 1s needs a different base rate
+	// than longer duration. this is what we compute below.
+	spanFast := initVal * percentFast * 0.01
+	spanSlow := initVal * (initVal - percentFast) * 0.01
 
+	r.Score = plateau + spanFast*math.Exp(fastRate*duration) + spanSlow*math.Exp(slowRate*duration)
 	r.Message = fmt.Sprintf("tests took %.2fs", duration)
 
 	return r
