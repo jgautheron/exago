@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	log "github.com/Sirupsen/logrus"
 	"simonwaldherr.de/go/golibs/xmath"
 
 	"github.com/exago/svc/repository/model"
@@ -66,9 +65,9 @@ func (te *testDurationEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 		duration = xmath.Sum(durations)
 	}
 
-	log.WithFields(log.Fields{
-		"duration (overall)": duration,
-	}).Debugf("[%s] duration", model.TestDurationName)
+	logger.WithField(
+		"duration (overall)", duration,
+	).Debugf("[%s] duration", model.TestDurationName)
 
 	// A biphasic exponential decay or (two-phase) is used when the outcome is the result of
 	// the sum of a fast and slow exponential decay.

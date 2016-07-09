@@ -115,8 +115,8 @@ func writeData(w http.ResponseWriter, r *http.Request, code int, data interface{
 }
 
 func writeError(w http.ResponseWriter, r *http.Request, err error) {
-	logger := context.Get(r, "logger").(*log.Entry)
-	logger.Error(err)
+	lgr := context.Get(r, "lgr").(*log.Entry)
+	lgr.Error(err)
 
 	switch err.(type) {
 	case badRequest:
@@ -135,6 +135,6 @@ func getIP(s string) string {
 	if ip := net.ParseIP(s); ip != nil {
 		return ip.To4().String()
 	}
-	log.Errorf("Couldn't parse IP %s", s)
+	logger.Errorf("Couldn't parse IP %s", s)
 	return ""
 }

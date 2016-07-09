@@ -106,11 +106,11 @@ func setLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
 
-		lgr := log.WithFields(log.Fields{
+		lgr := logger.WithFields(log.Fields{
 			"repository": ps.ByName("repository")[1:],
 			"ip":         getIP(r.RemoteAddr),
 		})
-		context.Set(r, "logger", lgr)
+		context.Set(r, "lgr", lgr)
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
@@ -121,7 +121,7 @@ func rateLimit(next http.Handler) http.Handler {
 	limiter.Methods = []string{"GET"}
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		lgr := context.Get(r, "logger").(*log.Entry)
+		lgr := context.Get(r, "lgr").(*log.Entry)
 
 		if r.Header.Get("Origin") == Config.AllowOrigin {
 			next.ServeHTTP(w, r)

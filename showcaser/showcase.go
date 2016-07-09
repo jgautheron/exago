@@ -4,9 +4,7 @@ package showcaser
 import (
 	"encoding/json"
 	"os"
-	"os/signal"
 	"sync"
-	"syscall"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
@@ -22,6 +20,7 @@ const (
 
 var (
 	data    Showcase
+	logger  = log.WithField("prefix", "showcaser")
 	signals = make(chan os.Signal, 1)
 )
 
@@ -217,13 +216,11 @@ func Init() (err error) {
 	data = New()
 	snapshot, exists, err := data.loadFromDB()
 	if err != nil {
-		log.Errorf("An error occurred while loading the snapshot: %v", err)
+		logger.Errorf("An error occurred while loading the snapshot: %v", err)
 	} else if exists {
 		data = snapshot
-		log.Info("Showcaser snapshot loaded")
+		logger.Info("Snapshot loaded")
 	}
-
-	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 
 	go catchInterrupt()
 	go periodicallyRebuildPopularList()

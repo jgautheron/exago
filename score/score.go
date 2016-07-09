@@ -6,6 +6,10 @@ import (
 	"github.com/exago/svc/repository/model"
 )
 
+var (
+	logger = log.WithField("prefix", "score")
+)
+
 // Process triggers criterias evaluation, calling each evaluator in a goroutine
 // We compute the weighted average based on the overall evaluator weights and scores
 func Process(data model.Data) (score float64, details []*model.EvaluatorResponse) {
@@ -34,9 +38,7 @@ func Process(data model.Data) (score float64, details []*model.EvaluatorResponse
 		sw += e.Weight
 		avg += e.Score * e.Weight
 
-		log.WithFields(log.Fields{
-			"score": e.Score,
-		}).Debugf("[%s] score", e.Name)
+		logger.WithField("score", e.Score).Debugf("[%s] score", e.Name)
 
 		res = append(res, e)
 	}

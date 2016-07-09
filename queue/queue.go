@@ -8,19 +8,22 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/exago/svc/repository/processor"
+	"github.com/exago/svc/taskrunner/lambda"
 )
 
 var (
 	ErrQueueIsClosing = errors.New("The queue is closing")
+	logger            = log.WithField("prefix", "queue")
 
 	queue *PriorityQueue
 	once  sync.Once
 )
 
+// Worker is a single processing unit, running forever.
+// It simply waits for messages and processes them.
 type Worker struct {
 	id   int
 	in   chan *Item
@@ -29,6 +32,8 @@ type Worker struct {
 	sync.RWMutex
 }
 
+// PriorityQueue is a queue based on a heap.
+// Its messages can be distributed to many workers (defined by concurrency).
 type PriorityQueue struct {
 	concurrency int
 	items       ItemList
@@ -38,13 +43,13 @@ type PriorityQueue struct {
 	quit        chan bool
 	closing     bool
 	wg          *sync.WaitGroup
-	processor   processor.Checker
 
 	sync.RWMutex
 }
 
+// GetInstance returns the queue instance.
+// The queue will be instantiated if it wasn't yet.
 func GetInstance() *PriorityQueue {
-	log.SetLevel(log.DebugLevel)
 	once.Do(func() {
 		queue = &PriorityQueue{
 			concurrency: 4,
@@ -58,6 +63,7 @@ func GetInstance() *PriorityQueue {
 	return queue
 }
 
+// Init lays the ground work necessary for the queue to function properly.
 func (pq *PriorityQueue) Init() {
 	heap.Init(&pq.items)
 	pq.InitWorkerPool()
@@ -65,6 +71,7 @@ func (pq *PriorityQueue) Init() {
 	pq.wg.Add(1)
 	go pq.Wait()
 
+	// Trap interruption signals
 	go func() {
 		sn := make(chan os.Signal, 1)
 		signal.Notify(sn, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
@@ -73,6 +80,9 @@ func (pq *PriorityQueue) Init() {
 	}()
 }
 
+// Wait listens for new and processed items.
+// - New items are pushed in the heap and will be eventually processed.
+// - Asynchronously processed items are received here, no further action needed.
 func (pq *PriorityQueue) Wait() {
 	defer pq.wg.Done()
 
@@ -82,11 +92,14 @@ func (pq *PriorityQueue) Wait() {
 			if in == nil {
 				continue
 			}
-			log.Infoln("Received new item", in)
+			logger.WithField("hash", in.hash).Debug("Received new item")
 			heap.Push(&pq.items, in)
 			pq.Process()
 		case out := <-pq.out:
-			log.Infoln("Item processed", out)
+			for hash, _ := range out {
+				logger.WithField("hash", hash).Debug("Item processed")
+			}
+			// A worker just got freed, give it the next available item
 			pq.Process()
 		case <-pq.quit:
 			return
@@ -94,14 +107,14 @@ func (pq *PriorityQueue) Wait() {
 	}
 }
 
+// Process attempts to push the next item to the first available worker.
 func (pq *PriorityQueue) Process() {
 	pq.Lock()
 	defer pq.Unlock()
-
 	for pq.items.Len() > 0 {
 		aw := pq.AvailableWorkers()
 		if len(aw) == 0 {
-			log.Debugln("Process", "No worker available")
+			logger.Debug("No worker available")
 			return
 		}
 		item := heap.Pop(&pq.items).(*Item)
@@ -109,6 +122,10 @@ func (pq *PriorityQueue) Process() {
 	}
 }
 
+// InitWorkerPool creates the initial worker pool, the amount of workers being
+// defined by the concurrency setting.
+// It cannot exceed 25 (4 per check) since AWS Lambda has a default safety
+// throttle set to 100 concurrent executions.
 func (pq *PriorityQueue) InitWorkerPool() {
 	pq.wg.Add(pq.concurrency)
 	for i := 0; i < pq.concurrency; i++ {
@@ -116,6 +133,9 @@ func (pq *PriorityQueue) InitWorkerPool() {
 	}
 }
 
+// Worker runs a queue worker in background.
+// Its sole purpose is to process messages, once a message is processed
+// the output it caught by Wait().
 func (pq *PriorityQueue) Worker(id int) {
 	defer pq.wg.Done()
 	w := Worker{id: id, in: make(chan *Item)}
@@ -127,26 +147,32 @@ func (pq *PriorityQueue) Worker(id int) {
 	for {
 		select {
 		case item := <-w.in:
-			log.Debugf("Worker %d got item %s with priority: %d", w.id, item.value, item.priority)
+			p := processor.NewChecker(item.value, lambda.Runner{Repository: item.value})
+			p.Run()
 
-			// Fake processing
-			time.Sleep(5 * time.Second)
 			out := map[uint32]interface{}{}
-			out[item.hash] = "foo"
-			log.Debugf("Worker %d finished processing", w.id)
+			select {
+			case <-p.Done:
+				out[item.hash] = p.Repository.GetData()
+				pq.out <- out
+			case <-p.Aborted:
+				out[item.hash] = p.Repository.GetData()
+				pq.out <- out
+			}
 
-			pq.out <- out
-
+			logger.WithField("hash", item.hash).Debugf("Worker %d finished processing", w.id)
 			w.Lock()
 			w.busy = false
 			w.Unlock()
 		case <-pq.quit:
-			log.Infof("Worker %d got close", w.id)
+			logger.Debugf("Stopping worker %d", w.id)
 			return
 		}
 	}
 }
 
+// AvailableWorkers returns the workers which are currently available
+// for processing.
 func (pq *PriorityQueue) AvailableWorkers() (workers []*Worker) {
 	for _, worker := range pq.workers {
 		worker.RLock()
@@ -155,40 +181,70 @@ func (pq *PriorityQueue) AvailableWorkers() (workers []*Worker) {
 		}
 		worker.RUnlock()
 	}
-	log.Debugf("%d workers available", len(workers))
+	logger.Debugf("%d workers available", len(workers))
 	return workers
 }
 
+// PushToWorker assigns an item to be processed to the given worker.
 func (pq *PriorityQueue) PushToWorker(worker *Worker, item *Item) {
 	worker.Lock()
 	defer worker.Unlock()
-	log.Debugf("Pushed to worker %d: %.2d:%s", worker.id, item.priority, item.value)
+	logger.WithField("hash", item.hash).Debugf(
+		"Pushed to worker %d",
+		worker.id,
+	)
 	worker.busy = true
 	worker.in <- item
 }
 
+// PushAsync adds an item to the queue asynchronously.
 func (pq *PriorityQueue) PushAsync(value string, priority int) (hash uint32, err error) {
 	if pq.closing {
 		return hash, ErrQueueIsClosing
 	}
-	item := Item{value: value, priority: priority}
-	pq.in <- &item
-	return item.Hash(), nil
+	item := NewItem(value, priority)
+	pq.in <- item
+	return item.hash, nil
 }
 
-func (pq *PriorityQueue) PushSync(value string, priority int) (hash uint32, err error) {
+// PushSync adds an item to the queue synchronously, blocking until
+// the processing is done.
+func (pq *PriorityQueue) PushSync(value string, priority int) (data interface{}, err error) {
 	if pq.closing {
-		return hash, ErrQueueIsClosing
+		return nil, ErrQueueIsClosing
 	}
-	item := Item{value: value, priority: priority}
-	pq.in <- &item
-	return item.Hash(), nil
+	item := NewItem(value, priority)
+	pq.in <- item
+
+	wg := &sync.WaitGroup{}
+	wg.Add(1)
+
+	go func() {
+		defer wg.Done()
+		for {
+			select {
+			case out := <-pq.out:
+				for hash, out := range out {
+					if hash == item.hash {
+						data = out
+						return
+					}
+				}
+			case <-pq.quit:
+				return
+			}
+		}
+	}()
+
+	wg.Wait()
+	return data, nil
 }
 
+// Stop gracefully closes the queue and all its workers.
 func (pq *PriorityQueue) Stop() {
 	pq.closing = true
 	close(pq.in)
 	close(pq.quit)
 	pq.wg.Wait()
-	log.Debug("Queue safely stopped")
+	logger.Debug("Queue safely stopped")
 }

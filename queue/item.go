@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+// Item is the definition of a message to be processed.
+// The index is maintained by the heap, do not set it manually!
 type Item struct {
 	hash     uint32
 	value    string
@@ -13,11 +15,19 @@ type Item struct {
 	index    int
 }
 
-func (i *Item) Hash() uint32 {
-	i.hash = crc32.ChecksumIEEE([]byte(fmt.Sprintf(
+// NewItem creates a new message with the given value and priority.
+// The hash is used as UUID.
+func NewItem(value string, priority int) *Item {
+	// CRC32 will do for now...
+	hash := crc32.ChecksumIEEE([]byte(fmt.Sprintf(
 		"%s-%s",
-		i.value,
+		value,
 		time.Now(),
 	)))
-	return i.hash
+
+	return &Item{
+		value:    value,
+		priority: priority,
+		hash:     hash,
+	}
 }

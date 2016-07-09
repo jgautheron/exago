@@ -7,6 +7,7 @@ import (
 	. "github.com/exago/svc/config"
 	"github.com/exago/svc/showcaser"
 	"github.com/urfave/cli"
+	"github.com/x-cray/logrus-prefixed-formatter"
 )
 
 var (
@@ -55,6 +56,8 @@ func AddCommand(cmd cli.Command) {
 
 // InitializeLogging sets logrus log level.
 func InitializeLogging(logLevel string) {
+	log.SetFormatter(new(prefixed.TextFormatter))
+
 	// If log level cannot be resolved, exit gracefully
 	if logLevel == "" {
 		log.Warning("Log level could not be resolved, fallback to fatal")

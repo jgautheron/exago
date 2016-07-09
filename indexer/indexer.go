@@ -10,8 +10,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/repository/processor"
-	"github.com/exago/svc/taskrunner/lambda"
+	"github.com/exago/svc/queue"
+	"github.com/exago/svc/repository"
 )
 
 type Indexer struct {
@@ -22,6 +22,7 @@ type Indexer struct {
 	concurrency     int
 	processedItems  chan processedItem
 	processedCount  int
+	queue           *queue.PriorityQueue
 
 	sync.RWMutex
 }
@@ -43,6 +44,7 @@ func New(items []string) *Indexer {
 		concurrency:     c,
 		processedItems:  make(chan processedItem, len(mp)),
 		processedCount:  0,
+		queue:           queue.GetInstance(),
 	}
 }
 
@@ -108,27 +110,15 @@ func (idx *Indexer) ProcessItem() {
 		lgr := log.WithField("repository", item)
 		lgr.Info("Processing...")
 
-		rc := processor.NewChecker(item, lambda.Runner{Repository: item})
-		if rc.Repository.IsCached() {
-			// Possibly useful later: a --force flag to reprocess already cached repos
+		rp := repository.New(item, "")
+		if rp.IsCached() {
 			lgr.Warn("Already processed")
 			idx.processedItems <- processedItem{item, nil}
 			continue
 		}
 
-		// Process the repository
-		go rc.Run()
-
-		select {
-		case <-rc.Aborted:
-			lgr.WithField("error", state.err).Warn("Processing aborted")
-			idx.processedItems <- processedItem{item, state.err}
-		case <-rc.Done:
-			lgr.WithField("score", rc.Repository.GetRank()).Info("Processing successful")
-			idx.processedItems <- processedItem{item, nil}
-		case <-idx.Aborted:
-			rc.Abort()
-		}
+		_, err := idx.queue.PushSync(item, 20)
+		idx.processedItems <- processedItem{item, err}
 	}
 }
 

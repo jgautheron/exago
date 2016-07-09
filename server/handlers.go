@@ -8,33 +8,25 @@ import (
 	"github.com/exago/svc/badge"
 	"github.com/exago/svc/github"
 	"github.com/exago/svc/godoc"
+	"github.com/exago/svc/queue"
 	"github.com/exago/svc/repository"
-	"github.com/exago/svc/repository/processor"
 	"github.com/exago/svc/showcaser"
-	"github.com/exago/svc/taskrunner/lambda"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
 
 func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rc := processor.NewChecker(repo, lambda.Runner{Repository: repo})
-
-	if rc.Repository.IsCached() {
-		err := rc.Repository.Load()
-		send(w, r, rc.Repository.GetData(), err)
+	rp := repository.New(repo, "")
+	if rp.IsCached() {
+		err := rp.Load()
+		send(w, r, rp.GetData(), err)
 		return
 	}
 
-	rc.Run()
-
-	// Wait until the data is ready
-	select {
-	case <-rc.Done:
-		send(w, r, rc.Repository.GetData(), nil)
-	case <-rc.Aborted:
-		send(w, r, rc.Repository.GetData(), nil)
-	}
+	q := queue.GetInstance()
+	data, err := q.PushSync("github.com/jgautheron/goconst", 20)
+	send(w, r, data, err)
 }
 
 func refreshHandler(w http.ResponseWriter, r *http.Request) {
@@ -45,7 +37,7 @@ func refreshHandler(w http.ResponseWriter, r *http.Request) {
 
 func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
-	lgr := context.Get(r, "logger").(*log.Entry)
+	lgr := context.Get(r, "lgr").(*log.Entry)
 
 	repo := repository.New(ps.ByName("repository")[1:], "")
 	isCached := repo.IsCached()

@@ -12,8 +12,9 @@ import (
 )
 
 var (
-	db   LevelDB
-	once sync.Once
+	db     LevelDB
+	once   sync.Once
+	logger = log.WithField("prefix", "leveldb")
 
 	// Make sure it satisfies the interface.
 	_ Database = (*LevelDB)(nil)
@@ -27,7 +28,7 @@ func GetInstance() LevelDB {
 	once.Do(func() {
 		conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
 		if err != nil {
-			log.Fatal("An error occurred while trying to open the DB: %s", err)
+			logger.Fatalf("An error occurred while trying to open the DB: %s", err)
 		}
 		db = LevelDB{conn}
 	})

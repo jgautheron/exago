@@ -15,8 +15,10 @@ import (
 
 var (
 	ErrInvalidRepository = errors.New("The repository doesn't contain Go code")
+	logger               = log.WithField("prefix", "server")
 )
 
+// ListenAndServe binds the HTTP port and listens for requests.
 func ListenAndServe() {
 	repoHandlers := alice.New(
 		context.ClearHandler,
@@ -43,6 +45,6 @@ func ListenAndServe() {
 	router.Get("/projects/popular", baseHandlers.ThenFunc(popularHandler))
 	router.Get("/godocindex", baseHandlers.ThenFunc(godocIndexHandler))
 
-	log.Infof("Listening on port %d", Config.HttpPort)
+	logger.Infof("Listening on port %d", Config.HttpPort)
 	graceful.Run(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router)
 }

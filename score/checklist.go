@@ -74,7 +74,7 @@ func (ce *checkListEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 			nil,
 		})
 
-		log.WithFields(log.Fields{
+		logger.WithFields(log.Fields{
 			"score":  c.score,
 			"weight": c.weight,
 		}).Debugf("[%s] score per checker", n)

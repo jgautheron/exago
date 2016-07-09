@@ -1,5 +1,7 @@
 package queue
 
+// ItemList is a representation of the queue.
+// It contains all items that remain to be processed.
 type ItemList []*Item
 
 func (pq ItemList) Len() int { return len(pq) }

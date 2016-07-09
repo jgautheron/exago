@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	log "github.com/Sirupsen/logrus"
 	"simonwaldherr.de/go/golibs/xmath"
 
 	"github.com/exago/svc/repository/model"
@@ -43,9 +42,9 @@ func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 		covMean = xmath.Geometric(cov)
 	}
 
-	log.WithFields(log.Fields{
-		"coverage (geometric mean)": covMean,
-	}).Debugf("[%s] coverage mean", model.TestCoverageName)
+	logger.WithField(
+		"coverage (geometric mean)", covMean,
+	).Debugf("[%s] coverage mean", model.TestCoverageName)
 
 	// Apply logistic growth formula
 	//
