@@ -30,3 +30,4 @@ import:
 - package: github.com/urfave/cli
 - package: golang.org/x/oauth2
 - package: gopkg.in/tylerb/graceful.v1
+- package: github.com/x-cray/logrus-prefixed-formatter

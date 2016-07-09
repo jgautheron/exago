@@ -1,10 +1,10 @@
-hash: 4979e19692365ab80643281955071d1783b4b8312ad2233c656397cfcd7b69ae
-updated: 2016-06-30T09:49:28.352039853+02:00
+hash: a5f280081ebf16f879ac773144196ffa4378f51f2f758693dd9231d03c69db79
+updated: 2016-07-09T23:17:35.012970348+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
 - name: github.com/aws/aws-sdk-go
-  version: 101d2e228fea0ab462a7e0180c607290c4850f15
+  version: 90dec2183a5f5458ee79cbaf4b8e9ab910bc81a6
   subpackages:
   - aws
   - aws/credentials
@@ -41,7 +41,7 @@ imports:
 - name: github.com/exago/envconfig
   version: 8b1c59eae986013d3be5deddbf1e89f18d25ffaa
 - name: github.com/go-ini/ini
-  version: a219cd2c4f8e533df61aa20befffb0b0f2aaed96
+  version: cf53f9204df4fbdd7ec4164b57fa6184ba168292
 - name: github.com/golang/freetype
   version: 9ce4eec92a4b5e260b4622c873355647ecf68304
   subpackages:
@@ -54,7 +54,7 @@ imports:
 - name: github.com/golang/snappy
   version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
 - name: github.com/google/go-github
-  version: 525696f56fd8ae0fd3eb235a45c5f2c0a37a1464
+  version: f6f75a742a52df1fd2f2ba9346dc59a864a9166d
   subpackages:
   - github
 - name: github.com/google/go-querystring
@@ -74,7 +74,9 @@ imports:
 - name: github.com/julienschmidt/httprouter
   version: 77366a47451a56bb3ba682481eed85b64fea14e8
 - name: github.com/justinas/alice
-  version: 8f06f3153579369bb91f084f39f86f5d5030d4dc
+  version: 43e429cd03e6faac34faf94153cfb7a5adb6b928
+- name: github.com/mgutz/ansi
+  version: c286dcecd19ff979eeb73ea444e479b903f2cfcb
 - name: github.com/narqo/go-badge
   version: 3014a17b062a7131301593113f579a8da169b99d
   subpackages:
@@ -115,24 +117,25 @@ imports:
   - leveldb/table
 - name: github.com/urfave/cli
   version: 1efa31f08b9333f1bd4882d61f9d668a70cd902e
+- name: github.com/x-cray/logrus-prefixed-formatter
+  version: 78e945f7d6bfe5a81ce6121d92d8118e44303e58
 - name: golang.org/x/image
   version: 7c492694a6443a92fd349fda0c4c7b587040f161
   subpackages:
   - font
   - math/fixed
 - name: golang.org/x/net
-  version: 8e573f4005aa312856df2ea97c32b9beac70dd89
+  version: f841c39de738b1d0df95b5a7187744f0e03d8112
   subpackages:
   - context
   - html
-  - netutil
   - html/atom
 - name: golang.org/x/oauth2
-  version: 65a8d08c6292395d47053be10b3c5e91960def76
+  version: 7357e96168422ba1e6e7f21075713b72d58764e7
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 62bee037599929a6e9146f29d10dd5208c43507d
+  version: a408501be4d17ee978c04a618e7a1b22af058c0e
   subpackages:
   - unix
 - name: google.golang.org/appengine
@@ -146,10 +149,10 @@ imports:
   - internal/log
   - internal/remote_api
 - name: gopkg.in/tylerb/graceful.v1
-  version: ecde8c8f16df93a994dda8936c8f60f0c26c28ab
+  version: b7036639dd221029fd52e5dc7b78f34545463678
 - name: simonwaldherr.de/go/golibs
   version: 300f27777a93b5051fd889350b52c46245cbbf15
   subpackages:
   - xmath
   - as
-devImports: []
+testImports: []
