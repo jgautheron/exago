@@ -25,7 +25,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := queue.GetInstance()
-	data, err := q.PushSync("github.com/jgautheron/goconst", 20)
+	data, err := q.PushSync(repo, 10)
 	send(w, r, data, err)
 }
 
