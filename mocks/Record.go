@@ -1,30 +1,16 @@
 package mocks
 
-import (
-	"time"
+import "github.com/stretchr/testify/mock"
 
-	"github.com/exago/svc/repository/model"
-	"github.com/stretchr/testify/mock"
-)
+import "time"
+import "github.com/exago/svc/repository/model"
 
-type RepositoryData struct {
-	Name, Branch string
-
-	// Data types
-	CodeStats    model.CodeStats
-	Imports      model.Imports
-	TestResults  model.TestResults
-	LintMessages model.LintMessages
-	Metadata     model.Metadata
-	Score        model.Score
-	StartTime    time.Time
-	LastUpdate   time.Time
-
+type Record struct {
 	mock.Mock
 }
 
-func NewRepositoryData(name, rank string) *RepositoryData {
-	repoMock := RepositoryData{}
+func NewRecord(name, rank string) *Record {
+	repoMock := Record{}
 	repoMock.On("GetName").Return(name)
 	repoMock.On("GetRank").Return(rank)
 	repoMock.On("GetMetadataDescription").Return("metadata description")
@@ -33,35 +19,7 @@ func NewRepositoryData(name, rank string) *RepositoryData {
 }
 
 // GetName provides a mock function with given fields:
-func (_m *RepositoryData) GetName() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
-}
-
-// GetMetadataDescription provides a mock function with given fields:
-func (_m *RepositoryData) GetMetadataDescription() string {
-	ret := _m.Called()
-
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(string)
-	}
-
-	return r0
-}
-
-// GetMetadataImage provides a mock function with given fields:
-func (_m *RepositoryData) GetMetadataImage() string {
+func (_m *Record) GetName() string {
 	ret := _m.Called()
 
 	var r0 string
@@ -75,7 +33,7 @@ func (_m *RepositoryData) GetMetadataImage() string {
 }
 
 // GetRank provides a mock function with given fields:
-func (_m *RepositoryData) GetRank() string {
+func (_m *Record) GetRank() string {
 	ret := _m.Called()
 
 	var r0 string
@@ -88,8 +46,22 @@ func (_m *RepositoryData) GetRank() string {
 	return r0
 }
 
+// GetData provides a mock function with given fields:
+func (_m *Record) GetData() model.Data {
+	ret := _m.Called()
+
+	var r0 model.Data
+	if rf, ok := ret.Get(0).(func() model.Data); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(model.Data)
+	}
+
+	return r0
+}
+
 // GetMetadata provides a mock function with given fields:
-func (_m *RepositoryData) GetMetadata() (model.Metadata, error) {
+func (_m *Record) GetMetadata() model.Metadata {
 	ret := _m.Called()
 
 	var r0 model.Metadata
@@ -99,18 +71,11 @@ func (_m *RepositoryData) GetMetadata() (model.Metadata, error) {
 		r0 = ret.Get(0).(model.Metadata)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // SetMetadata provides a mock function with given fields:
-func (_m *RepositoryData) SetMetadata() error {
+func (_m *Record) SetMetadata() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -124,42 +89,26 @@ func (_m *RepositoryData) SetMetadata() error {
 }
 
 // GetLastUpdate provides a mock function with given fields:
-func (_m *RepositoryData) GetLastUpdate() (string, error) {
+func (_m *Record) GetLastUpdate() time.Time {
 	ret := _m.Called()
 
-	var r0 string
-	if rf, ok := ret.Get(0).(func() string); ok {
+	var r0 time.Time
+	if rf, ok := ret.Get(0).(func() time.Time); ok {
 		r0 = rf()
 	} else {
-		r0 = ret.Get(0).(string)
+		r0 = ret.Get(0).(time.Time)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // SetLastUpdate provides a mock function with given fields:
-func (_m *RepositoryData) SetLastUpdate() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+func (_m *Record) SetLastUpdate() {
+	_m.Called()
 }
 
 // GetExecutionTime provides a mock function with given fields:
-func (_m *RepositoryData) GetExecutionTime() (string, error) {
+func (_m *Record) GetExecutionTime() string {
 	ret := _m.Called()
 
 	var r0 string
@@ -169,32 +118,16 @@ func (_m *RepositoryData) GetExecutionTime() (string, error) {
 		r0 = ret.Get(0).(string)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
-}
-
-// SetExecutionTime provides a mock function with given fields:
-func (_m *RepositoryData) SetExecutionTime() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
 	return r0
 }
 
+// SetExecutionTime provides a mock function with given fields:
+func (_m *Record) SetExecutionTime() {
+	_m.Called()
+}
+
 // GetScore provides a mock function with given fields:
-func (_m *RepositoryData) GetScore() (model.Score, error) {
+func (_m *Record) GetScore() model.Score {
 	ret := _m.Called()
 
 	var r0 model.Score
@@ -204,18 +137,11 @@ func (_m *RepositoryData) GetScore() (model.Score, error) {
 		r0 = ret.Get(0).(model.Score)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
-
-	return r0, r1
+	return r0
 }
 
 // SetScore provides a mock function with given fields:
-func (_m *RepositoryData) SetScore() error {
+func (_m *Record) SetScore() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -229,7 +155,7 @@ func (_m *RepositoryData) SetScore() error {
 }
 
 // GetImports provides a mock function with given fields:
-func (_m *RepositoryData) GetImports() (model.Imports, error) {
+func (_m *Record) GetImports() model.Imports {
 	ret := _m.Called()
 
 	var r0 model.Imports
@@ -239,18 +165,16 @@ func (_m *RepositoryData) GetImports() (model.Imports, error) {
 		r0 = ret.Get(0).(model.Imports)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
+	return r0
+}
 
-	return r0, r1
+// SetImports provides a mock function with given fields: _a0
+func (_m *Record) SetImports(_a0 model.Imports) {
+	_m.Called(_a0)
 }
 
 // GetCodeStats provides a mock function with given fields:
-func (_m *RepositoryData) GetCodeStats() (model.CodeStats, error) {
+func (_m *Record) GetCodeStats() model.CodeStats {
 	ret := _m.Called()
 
 	var r0 model.CodeStats
@@ -260,18 +184,16 @@ func (_m *RepositoryData) GetCodeStats() (model.CodeStats, error) {
 		r0 = ret.Get(0).(model.CodeStats)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
+	return r0
+}
 
-	return r0, r1
+// SetCodeStats provides a mock function with given fields: _a0
+func (_m *Record) SetCodeStats(_a0 model.CodeStats) {
+	_m.Called(_a0)
 }
 
 // GetTestResults provides a mock function with given fields:
-func (_m *RepositoryData) GetTestResults() (model.TestResults, error) {
+func (_m *Record) GetTestResults() model.TestResults {
 	ret := _m.Called()
 
 	var r0 model.TestResults
@@ -281,18 +203,16 @@ func (_m *RepositoryData) GetTestResults() (model.TestResults, error) {
 		r0 = ret.Get(0).(model.TestResults)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func() error); ok {
-		r1 = rf()
-	} else {
-		r1 = ret.Error(1)
-	}
+	return r0
+}
 
-	return r0, r1
+// SetTestResults provides a mock function with given fields: tr
+func (_m *Record) SetTestResults(tr model.TestResults) {
+	_m.Called(tr)
 }
 
 // GetLintMessages provides a mock function with given fields: linters
-func (_m *RepositoryData) GetLintMessages(linters []string) (model.LintMessages, error) {
+func (_m *Record) GetLintMessages(linters []string) model.LintMessages {
 	ret := _m.Called(linters)
 
 	var r0 model.LintMessages
@@ -302,23 +222,26 @@ func (_m *RepositoryData) GetLintMessages(linters []string) (model.LintMessages,
 		r0 = ret.Get(0).(model.LintMessages)
 	}
 
-	var r1 error
-	if rf, ok := ret.Get(1).(func([]string) error); ok {
-		r1 = rf(linters)
-	} else {
-		r1 = ret.Error(1)
-	}
+	return r0
+}
 
-	return r0, r1
+// SetLintMessages provides a mock function with given fields: _a0
+func (_m *Record) SetLintMessages(_a0 model.LintMessages) {
+	_m.Called(_a0)
 }
 
 // SetStartTime provides a mock function with given fields: t
-func (_m *RepositoryData) SetStartTime(t time.Time) {
+func (_m *Record) SetStartTime(t time.Time) {
 	_m.Called(t)
 }
 
+// SetError provides a mock function with given fields: tp, err
+func (_m *Record) SetError(tp string, err error) {
+	_m.Called(tp, err)
+}
+
 // IsCached provides a mock function with given fields:
-func (_m *RepositoryData) IsCached() bool {
+func (_m *Record) IsCached() bool {
 	ret := _m.Called()
 
 	var r0 bool
@@ -332,7 +255,7 @@ func (_m *RepositoryData) IsCached() bool {
 }
 
 // IsLoaded provides a mock function with given fields:
-func (_m *RepositoryData) IsLoaded() bool {
+func (_m *Record) IsLoaded() bool {
 	ret := _m.Called()
 
 	var r0 bool
@@ -346,7 +269,7 @@ func (_m *RepositoryData) IsLoaded() bool {
 }
 
 // Load provides a mock function with given fields:
-func (_m *RepositoryData) Load() error {
+func (_m *Record) Load() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -360,7 +283,7 @@ func (_m *RepositoryData) Load() error {
 }
 
 // ClearCache provides a mock function with given fields:
-func (_m *RepositoryData) ClearCache() error {
+func (_m *Record) ClearCache() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -373,17 +296,15 @@ func (_m *RepositoryData) ClearCache() error {
 	return r0
 }
 
-// AsMap provides a mock function with given fields:
-func (_m *RepositoryData) AsMap() map[string]interface{} {
+// Save provides a mock function with given fields:
+func (_m *Record) Save() error {
 	ret := _m.Called()
 
-	var r0 map[string]interface{}
-	if rf, ok := ret.Get(0).(func() map[string]interface{}); ok {
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
 		r0 = rf()
 	} else {
-		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(map[string]interface{})
-		}
+		r0 = ret.Error(0)
 	}
 
 	return r0

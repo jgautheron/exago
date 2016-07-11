@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/model"
 )
@@ -38,14 +39,6 @@ func New(repo, branch string) *Repository {
 	}
 }
 
-// IsCached checks if the repository's data is cached in database.
-func (r *Repository) IsCached() bool {
-	if _, err := r.db.Get(r.cacheKey()); err != nil {
-		return false
-	}
-	return true
-}
-
 // IsLoaded checks if the data is already loaded.
 func (r *Repository) IsLoaded() bool {
 	return r.loaded
@@ -63,13 +56,9 @@ func (r *Repository) Load() error {
 		return err
 	}
 
+	logrus.Infoln(r, data)
 	r.Data = data
 	r.loaded = true
 
 	return nil
-}
-
-// ClearCache removes the repository from database.
-func (r *Repository) ClearCache() error {
-	return r.db.Delete(r.cacheKey())
 }
