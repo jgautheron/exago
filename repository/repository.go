@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/model"
 )
@@ -56,7 +55,6 @@ func (r *Repository) Load() error {
 		return err
 	}
 
-	logrus.Infoln(r, data)
 	r.Data = data
 	r.loaded = true
 

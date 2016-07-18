@@ -4,14 +4,20 @@ import (
 	"testing"
 
 	"github.com/exago/svc/mocks"
+	"github.com/exago/svc/repository"
 )
 
-func TestGotRecentRepositories(t *testing.T) {
-	data = New()
+func getRecordMock(repo, rank string) repository.Record {
+	mock := mocks.NewRecord(repo, rank)
+	return mock
+}
 
-	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/bar/foo", "B"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/moo/foo", "D"))
+func TestGotRecentRepositories(t *testing.T) {
+	data = getShowcaseMock()
+
+	ProcessRepository(getRecordMock("github.com/foo/bar", "A"))
+	ProcessRepository(getRecordMock("github.com/bar/foo", "B"))
+	ProcessRepository(getRecordMock("github.com/moo/foo", "D"))
 
 	recent := GetRecentRepositories()
 	if len(recent) != 3 {
@@ -20,17 +26,17 @@ func TestGotRecentRepositories(t *testing.T) {
 }
 
 func TestGotTopRankedRepositories(t *testing.T) {
-	data = New()
+	data = getShowcaseMock()
 
-	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/bar/foo", "B"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/moo/foo", "D"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/foo/boo", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/moo/boo", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/boo/bar", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/bar/boo", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/bar/bar", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/boo/boo", "A"))
+	ProcessRepository(getRecordMock("github.com/foo/bar", "A"))
+	ProcessRepository(getRecordMock("github.com/bar/foo", "B"))
+	ProcessRepository(getRecordMock("github.com/moo/foo", "D"))
+	ProcessRepository(getRecordMock("github.com/foo/boo", "A"))
+	ProcessRepository(getRecordMock("github.com/moo/boo", "A"))
+	ProcessRepository(getRecordMock("github.com/boo/bar", "A"))
+	ProcessRepository(getRecordMock("github.com/bar/boo", "A"))
+	ProcessRepository(getRecordMock("github.com/bar/bar", "A"))
+	ProcessRepository(getRecordMock("github.com/boo/boo", "A"))
 
 	top := GetTopRankedRepositories()
 	if len(top) != ItemCount {

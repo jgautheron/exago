@@ -4,36 +4,45 @@ import (
 	"log"
 	"testing"
 
+	"github.com/dgryski/go-topk"
 	"github.com/exago/svc/mocks"
 )
 
+func getShowcaseMock() Showcase {
+	return Showcase{
+		itemCount: ItemCount,
+		tk:        topk.New(TopkCount),
+		db:        mocks.Database{},
+	}
+}
+
 func TestNew(t *testing.T) {
-	data = New()
+	data = getShowcaseMock()
 	if data.itemCount != ItemCount {
 		t.Error("The item count should match the default one")
 	}
 }
 
 func TestRepositoryRankedAAdded(t *testing.T) {
-	data = New()
-	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
+	data = getShowcaseMock()
+	ProcessRepository(mocks.NewRecord("github.com/foo/bar", "A"))
 	if len(data.topRanked) != 1 || len(data.recent) != 1 || len(data.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
 }
 
 func TestRepositoryRankedADuplicated(t *testing.T) {
-	data = New()
-	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
-	ProcessRepository(mocks.NewRepositoryData("github.com/foo/bar", "A"))
+	data = getShowcaseMock()
+	ProcessRepository(mocks.NewRecord("github.com/foo/bar", "A"))
+	ProcessRepository(mocks.NewRecord("github.com/foo/bar", "A"))
 	if len(data.topRanked) != 1 || len(data.recent) != 1 || len(data.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
 }
 
 func TestRepositoryRankedBAdded(t *testing.T) {
-	data = New()
-	ProcessRepository(mocks.NewRepositoryData("github.com/moo/bar", "B"))
+	data = getShowcaseMock()
+	ProcessRepository(mocks.NewRecord("github.com/moo/bar", "B"))
 	if len(data.topRanked) != 0 || len(data.recent) != 1 || len(data.tk.Keys()) != 1 {
 		log.Println(len(data.topRanked), len(data.recent), len(data.tk.Keys()))
 		t.Error("There should be exactly one entry per slice")
@@ -41,8 +50,8 @@ func TestRepositoryRankedBAdded(t *testing.T) {
 }
 
 func TestDataSerialized(t *testing.T) {
-	data = New()
-	ProcessRepository(mocks.NewRepositoryData("github.com/moo/bar", "B"))
+	data = getShowcaseMock()
+	ProcessRepository(mocks.NewRecord("github.com/moo/bar", "B"))
 	_, err := data.serialize()
 	if err != nil {
 		t.Errorf("The serialization went wrong: %v", err)

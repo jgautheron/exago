@@ -13,8 +13,12 @@ func NewRecord(name, rank string) *Record {
 	repoMock := Record{}
 	repoMock.On("GetName").Return(name)
 	repoMock.On("GetRank").Return(rank)
-	repoMock.On("GetMetadataDescription").Return("metadata description")
-	repoMock.On("GetMetadataImage").Return("metadata image")
+	repoMock.On("GetMetadata").Return(model.Metadata{
+		Image:       "http://foo.com/img.png",
+		Description: "This is a repository description",
+		Stars:       912,
+		LastPush:    time.Now(),
+	})
 	return &repoMock
 }
 
