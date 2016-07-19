@@ -26,8 +26,8 @@ func TestDidSave(t *testing.T) {
 	).Return(nil)
 
 	rp := &Repository{
-		name: repo,
-		db:   dbMock,
+		Name: repo,
+		DB:   dbMock,
 	}
 	rp.Load()
 	if err := rp.Save(); err != nil {
@@ -42,12 +42,12 @@ func TestIsNotCached(t *testing.T) {
 	).Return([]byte(""), ldb.ErrNotFound)
 
 	rp := &Repository{
-		name: repo,
-		db:   dbMock,
+		Name: repo,
+		DB:   dbMock,
 	}
 	cached := rp.IsCached()
 	if cached {
-		t.Errorf("The repository %s should not be cached", rp.name)
+		t.Errorf("The repository %s should not be cached", rp.Name)
 	}
 }
 
@@ -58,12 +58,12 @@ func TestIsCached(t *testing.T) {
 	).Return([]byte(""), nil)
 
 	rp := &Repository{
-		name: repo,
-		db:   dbMock,
+		Name: repo,
+		DB:   dbMock,
 	}
 	cached := rp.IsCached()
 	if !cached {
-		t.Errorf("The repository %s should be cached", rp.name)
+		t.Errorf("The repository %s should be cached", rp.Name)
 	}
 }
 
@@ -74,8 +74,8 @@ func TestCacheCleared(t *testing.T) {
 	)).Return(nil)
 
 	rp := &Repository{
-		db:   dbMock,
-		name: repo,
+		Name: repo,
+		DB:   dbMock,
 	}
 	if err := rp.ClearCache(); err != nil {
 		t.Error("Got error while attempting to clear cache")

@@ -20,21 +20,18 @@ var (
 )
 
 type Repository struct {
-	name, branch string
-	startTime    time.Time
-	db           leveldb.Database
-	loaded       bool
+	Name, Branch string
+	DB           leveldb.Database
 	Data         model.Data
+	startTime    time.Time
+	loaded       bool
 }
 
 func New(repo, branch string) *Repository {
 	return &Repository{
-		name:   repo,
-		branch: branch,
-		db:     leveldb.GetInstance(),
-		Data: model.Data{
-			Errors: make(map[string]error),
-		},
+		Name:   repo,
+		Branch: branch,
+		DB:     leveldb.GetInstance(),
 	}
 }
 
@@ -45,7 +42,7 @@ func (r *Repository) IsLoaded() bool {
 
 // Load retrieves the saved repository data from the database.
 func (r *Repository) Load() error {
-	b, err := r.db.Get(r.cacheKey())
+	b, err := r.DB.Get(r.cacheKey())
 	if err != nil {
 		return err
 	}

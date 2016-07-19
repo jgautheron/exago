@@ -6,13 +6,20 @@ import (
 
 	"github.com/dgryski/go-topk"
 	"github.com/exago/svc/mocks"
+	. "github.com/stretchr/testify/mock"
 )
 
 func getShowcaseMock() Showcase {
+	dbMock := mocks.Database{}
+
+	// AnythingOfType would be more appropriate but doesn't work as expected.
+	// See: https://github.com/stretchr/testify/issues/68
+	dbMock.On("Put", Anything, Anything).Return(nil)
+
 	return Showcase{
 		itemCount: ItemCount,
 		tk:        topk.New(TopkCount),
-		db:        mocks.Database{},
+		db:        dbMock,
 	}
 }
 
@@ -20,6 +27,13 @@ func TestNew(t *testing.T) {
 	data = getShowcaseMock()
 	if data.itemCount != ItemCount {
 		t.Error("The item count should match the default one")
+	}
+}
+
+func TestSave(t *testing.T) {
+	data = getShowcaseMock()
+	if err := data.save(); err != nil {
+		t.Errorf("Got error while saving the data: %v", err)
 	}
 }
 

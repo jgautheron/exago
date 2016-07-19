@@ -9,7 +9,7 @@ import (
 // GetName retrieves the full project name, including the provider domain name.
 // Ex. github.com/exago/svc
 func (r *Repository) GetName() string {
-	return r.name
+	return r.Name
 }
 
 // GetRank retrieves the project's rank, ex "B+".

@@ -11,17 +11,17 @@ func (r *Repository) Save() error {
 	if err != nil {
 		return err
 	}
-	return r.db.Put(r.cacheKey(), b)
+	return r.DB.Put(r.cacheKey(), b)
 }
 
 // ClearCache removes the repository from database.
 func (r *Repository) ClearCache() error {
-	return r.db.Delete(r.cacheKey())
+	return r.DB.Delete(r.cacheKey())
 }
 
 // IsCached checks if the repository's data is cached in database.
 func (r *Repository) IsCached() bool {
-	if _, err := r.db.Get(r.cacheKey()); err != nil {
+	if _, err := r.DB.Get(r.cacheKey()); err != nil {
 		return false
 	}
 	return true
@@ -29,5 +29,5 @@ func (r *Repository) IsCached() bool {
 
 // cacheKey returns the standardised key format.
 func (r *Repository) cacheKey() []byte {
-	return []byte(fmt.Sprintf("%s-%s", r.name, r.branch))
+	return []byte(fmt.Sprintf("%s-%s", r.Name, r.Branch))
 }

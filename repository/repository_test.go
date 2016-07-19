@@ -15,11 +15,11 @@ var (
 
 func TestIsNotLoaded(t *testing.T) {
 	rp := &Repository{
-		name: repo,
+		Name: repo,
 	}
 	loaded := rp.IsLoaded()
 	if loaded {
-		t.Errorf("The repository %s should not be loaded", rp.name)
+		t.Errorf("The repository %s should not be loaded", rp.Name)
 	}
 }
 
@@ -31,13 +31,13 @@ func TestIsLoaded(t *testing.T) {
 
 	loaded := rp.IsLoaded()
 	if !loaded {
-		t.Errorf("The repository %s should be loaded", rp.name)
+		t.Errorf("The repository %s should be loaded", rp.Name)
 	}
 }
 
 func TestStartTimeSet(t *testing.T) {
 	rp := &Repository{
-		name: repo,
+		Name: repo,
 	}
 	now := time.Now()
 	rp.SetStartTime(now)
@@ -53,8 +53,8 @@ func loadStubRepo() (*Repository, error) {
 	).Return([]byte(data), nil)
 
 	rp := &Repository{
-		name: repo,
-		db:   dbMock,
+		Name: repo,
+		DB:   dbMock,
 	}
 	if err := rp.Load(); err != nil {
 		return nil, fmt.Errorf("Got error while loading data: %v", err)

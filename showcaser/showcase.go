@@ -114,7 +114,7 @@ func (d *Showcase) updatePopular() error {
 		}
 	}
 
-	repos, err := loadReposFromList(list)
+	repos, err := d.loadReposFromList(list)
 	if err != nil {
 		return err
 	}
@@ -157,9 +157,9 @@ func (d *Showcase) save() error {
 	return d.db.Put([]byte(DatabaseKey), b)
 }
 
-func loadReposFromList(list []string) (repos []repository.Record, err error) {
+func (d *Showcase) loadReposFromList(list []string) (repos []repository.Record, err error) {
 	for _, name := range list {
-		rp := repository.New(name, "")
+		rp := &repository.Repository{Name: name, DB: d.db}
 		if err = rp.Load(); err != nil {
 			return nil, err
 		}
@@ -182,19 +182,19 @@ func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 		return s, false, err
 	}
 
-	repos, err = loadReposFromList(sc.Recent)
+	repos, err = d.loadReposFromList(sc.Recent)
 	if err != nil {
 		return s, false, err
 	}
 	s.recent = repos
 
-	repos, err = loadReposFromList(sc.Popular)
+	repos, err = d.loadReposFromList(sc.Popular)
 	if err != nil {
 		return s, false, err
 	}
 	s.popular = repos
 
-	repos, err = loadReposFromList(sc.TopRanked)
+	repos, err = d.loadReposFromList(sc.TopRanked)
 	if err != nil {
 		return s, false, err
 	}
