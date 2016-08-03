@@ -145,7 +145,7 @@ func (rc *Checker) Run() {
 
 	rc.StampEntry()
 	rc.Done <- true
-	go showcaser.ProcessRepository(rc.Repository)
+	go showcaser.GetInstance().Process(rc.Repository)
 }
 
 // StampEntry is called once the entire dataset is loaded.

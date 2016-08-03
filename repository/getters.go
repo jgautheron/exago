@@ -54,7 +54,7 @@ func (r *Repository) GetTestResults() model.TestResults {
 }
 
 // GetLintMessages retrieves the linter warnings.
-func (r *Repository) GetLintMessages(linters []string) model.LintMessages {
+func (r *Repository) GetLintMessages() model.LintMessages {
 	return r.Data.LintMessages
 }
 

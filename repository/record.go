@@ -24,7 +24,7 @@ type Record interface {
 	SetCodeStats(model.CodeStats)
 	GetTestResults() model.TestResults
 	SetTestResults(tr model.TestResults)
-	GetLintMessages(linters []string) model.LintMessages
+	GetLintMessages() model.LintMessages
 	SetLintMessages(model.LintMessages)
 	SetStartTime(t time.Time)
 	SetError(tp string, err error)

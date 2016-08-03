@@ -19,9 +19,10 @@ const (
 )
 
 var (
-	data    Showcase
-	logger  = log.WithField("prefix", "showcaser")
-	signals = make(chan os.Signal, 1)
+	showcase *Showcase
+	once     sync.Once
+	logger   = log.WithField("prefix", "showcaser")
+	signals  = make(chan os.Signal, 1)
 )
 
 type serialisedShowcase struct {
@@ -42,14 +43,6 @@ type Showcase struct {
 
 	db leveldb.Database
 	sync.RWMutex
-}
-
-func New() Showcase {
-	return Showcase{
-		itemCount: ItemCount,
-		tk:        topk.New(TopkCount),
-		db:        leveldb.GetInstance(),
-	}
 }
 
 // AddRecent pushes to the stack latest new items, pops the old ones.
@@ -109,7 +102,7 @@ func (d *Showcase) updatePopular() error {
 
 	list := []string{}
 	for i, v := range d.tk.Keys() {
-		if i <= d.itemCount {
+		if i < d.itemCount {
 			list = append(list, v.Key)
 		}
 	}
@@ -206,24 +199,40 @@ func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 	return s, true, nil
 }
 
-func ProcessRepository(repo repository.Record) {
-	data.AddRecent(repo)
-	data.AddTopRanked(repo)
-	data.AddPopular(repo)
+func (d *Showcase) Process(repo repository.Record) {
+	d.AddRecent(repo)
+	d.AddTopRanked(repo)
+	d.AddPopular(repo)
 }
 
-func Init() (err error) {
-	data = New()
-	snapshot, exists, err := data.loadFromDB()
+func GetInstance() *Showcase {
+	once.Do(func() {
+		var err error
+		showcase, err = Init()
+		if err != nil {
+			logger.Fatal(err)
+		}
+	})
+	return showcase
+}
+
+func Init() (showcase *Showcase, err error) {
+	showcase = &Showcase{
+		itemCount: ItemCount,
+		tk:        topk.New(TopkCount),
+		db:        leveldb.GetInstance(),
+	}
+
+	snapshot, exists, err := showcase.loadFromDB()
 	if err != nil {
 		logger.Errorf("An error occurred while loading the snapshot: %v", err)
 	} else if exists {
-		data = snapshot
+		showcase = &snapshot
 		logger.Info("Snapshot loaded")
 	}
 
-	go catchInterrupt()
-	go periodicallyRebuildPopularList()
-	// go periodicallySave()
-	return nil
+	go showcase.catchInterrupt()
+	go showcase.periodicallyRebuildPopularList()
+	// go data.periodicallySave()
+	return
 }

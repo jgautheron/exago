@@ -13,8 +13,8 @@ type RepositoryInfo struct {
 }
 
 func GetRecentRepositories() (repos []RepositoryInfo) {
-	for i := len(data.recent) - 1; i >= 0; i-- {
-		repo := data.recent[i]
+	for i := len(showcase.recent) - 1; i >= 0; i-- {
+		repo := showcase.recent[i]
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
@@ -28,11 +28,11 @@ func GetRecentRepositories() (repos []RepositoryInfo) {
 
 func GetTopRankedRepositories() (repos []RepositoryInfo) {
 	rand.Seed(time.Now().UTC().UnixNano())
-	for i, item := range rand.Perm(len(data.topRanked)) {
-		if i == data.itemCount {
+	for i, item := range rand.Perm(len(showcase.topRanked)) {
+		if i == showcase.itemCount {
 			break
 		}
-		repo := data.topRanked[item]
+		repo := showcase.topRanked[item]
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
@@ -45,7 +45,7 @@ func GetTopRankedRepositories() (repos []RepositoryInfo) {
 }
 
 func GetPopularRepositories() (repos []RepositoryInfo) {
-	for _, repo := range data.popular {
+	for _, repo := range showcase.popular {
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),

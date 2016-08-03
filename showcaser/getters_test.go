@@ -5,6 +5,7 @@ import (
 
 	"github.com/exago/svc/mocks"
 	"github.com/exago/svc/repository"
+	. "github.com/stretchr/testify/mock"
 )
 
 func getRecordMock(repo, rank string) repository.Record {
@@ -13,11 +14,11 @@ func getRecordMock(repo, rank string) repository.Record {
 }
 
 func TestGotRecentRepositories(t *testing.T) {
-	data = getShowcaseMock()
+	showcase = getShowcaseMock(mocks.Database{})
 
-	ProcessRepository(getRecordMock("github.com/foo/bar", "A"))
-	ProcessRepository(getRecordMock("github.com/bar/foo", "B"))
-	ProcessRepository(getRecordMock("github.com/moo/foo", "D"))
+	showcase.Process(getRecordMock("github.com/foo/bar", "A"))
+	showcase.Process(getRecordMock("github.com/bar/foo", "B"))
+	showcase.Process(getRecordMock("github.com/moo/foo", "D"))
 
 	recent := GetRecentRepositories()
 	if len(recent) != 3 {
@@ -26,20 +27,48 @@ func TestGotRecentRepositories(t *testing.T) {
 }
 
 func TestGotTopRankedRepositories(t *testing.T) {
-	data = getShowcaseMock()
+	showcase = getShowcaseMock(mocks.Database{})
 
-	ProcessRepository(getRecordMock("github.com/foo/bar", "A"))
-	ProcessRepository(getRecordMock("github.com/bar/foo", "B"))
-	ProcessRepository(getRecordMock("github.com/moo/foo", "D"))
-	ProcessRepository(getRecordMock("github.com/foo/boo", "A"))
-	ProcessRepository(getRecordMock("github.com/moo/boo", "A"))
-	ProcessRepository(getRecordMock("github.com/boo/bar", "A"))
-	ProcessRepository(getRecordMock("github.com/bar/boo", "A"))
-	ProcessRepository(getRecordMock("github.com/bar/bar", "A"))
-	ProcessRepository(getRecordMock("github.com/boo/boo", "A"))
+	showcase.Process(getRecordMock("github.com/foo/bar", "A"))
+	showcase.Process(getRecordMock("github.com/bar/foo", "B"))
+	showcase.Process(getRecordMock("github.com/moo/foo", "D"))
+	showcase.Process(getRecordMock("github.com/foo/boo", "A"))
+	showcase.Process(getRecordMock("github.com/moo/boo", "A"))
+	showcase.Process(getRecordMock("github.com/boo/bar", "A"))
+	showcase.Process(getRecordMock("github.com/bar/boo", "A"))
+	showcase.Process(getRecordMock("github.com/bar/bar", "A"))
+	showcase.Process(getRecordMock("github.com/boo/boo", "A"))
 
 	top := GetTopRankedRepositories()
 	if len(top) != ItemCount {
 		t.Errorf("Expected %d top repos, got %d", ItemCount, len(top))
+	}
+}
+
+func TestGotPopularRepositories(t *testing.T) {
+	dbMock := mocks.Database{}
+	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
+	showcase = getShowcaseMock(dbMock)
+
+	showcase.Process(getRecordMock("github.com/foo/bar", "A"))
+	showcase.Process(getRecordMock("github.com/foo/bar", "A"))
+	showcase.Process(getRecordMock("github.com/bar/foo", "B"))
+	showcase.Process(getRecordMock("github.com/moo/foo", "D"))
+	showcase.Process(getRecordMock("github.com/foo/boo", "A"))
+	showcase.Process(getRecordMock("github.com/moo/boo", "A"))
+	showcase.Process(getRecordMock("github.com/boo/bar", "A"))
+	showcase.Process(getRecordMock("github.com/bar/boo", "A"))
+	showcase.Process(getRecordMock("github.com/bar/boo", "A"))
+	showcase.Process(getRecordMock("github.com/bar/boo", "A"))
+	showcase.Process(getRecordMock("github.com/bar/bar", "A"))
+	showcase.Process(getRecordMock("github.com/boo/boo", "A"))
+
+	if err := showcase.updatePopular(); err != nil {
+		t.Errorf("Got error while updating the popular list: %v", err)
+	}
+
+	popular := GetPopularRepositories()
+	if len(popular) != ItemCount {
+		t.Errorf("Expected %d popular repos, got %d", ItemCount, len(popular))
 	}
 }

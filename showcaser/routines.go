@@ -4,15 +4,18 @@ import (
 	"os/signal"
 	"syscall"
 	"time"
+
+	"github.com/Sirupsen/logrus"
+	. "github.com/exago/svc/config"
 )
 
 // catchInterrupt traps termination signals.
-func catchInterrupt() {
+func (s *Showcase) catchInterrupt() {
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
 	select {
 	case <-signals:
 		logger.Warn("Termination signal caught, saving the showcaser entries...")
-		err := data.save()
+		err := s.save()
 		if err != nil {
 			logger.Errorf("Got error while saving: %v", err)
 		}
@@ -20,13 +23,14 @@ func catchInterrupt() {
 	}
 }
 
-func periodicallyRebuildPopularList() {
+func (s *Showcase) periodicallyRebuildPopularList() {
 	for {
 		select {
 		case <-signals:
+			logrus.Info("periodicallyRebuildPopularList closing")
 			return
-		case <-time.After(10 * time.Minute):
-			err := data.updatePopular()
+		case <-time.After(Config.ShowcaserPopularRebuildInterval):
+			err := s.updatePopular()
 			if err != nil {
 				logger.Errorf("Got error while updating the popular list: %v", err)
 			}
@@ -35,17 +39,17 @@ func periodicallyRebuildPopularList() {
 	}
 }
 
-func periodicallySave() {
-	for {
-		select {
-		case <-signals:
-			return
-		case <-time.After(30 * time.Minute):
-			if err := data.save(); err != nil {
-				logger.Errorf("Error while serializing index: %v", err)
-				continue
-			}
-			logger.Debug("Index persisted in database")
-		}
-	}
-}
+// func (s *Showcase) periodicallySave() {
+// 	for {
+// 		select {
+// 		case <-signals:
+// 			return
+// 		case <-time.After(30 * time.Minute):
+// 			if err := s.save(); err != nil {
+// 				logger.Errorf("Error while serializing index: %v", err)
+// 				continue
+// 			}
+// 			logger.Debug("Index persisted in database")
+// 		}
+// 	}
+// }
