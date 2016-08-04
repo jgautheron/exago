@@ -5,11 +5,14 @@ import (
 	"testing"
 	"time"
 
+	"github.com/exago/svc/mocks"
 	"github.com/exago/svc/repository/model"
 )
 
 func TestImportsChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
+	rp := &Repository{
+		Name: repo,
+	}
 	im := model.Imports([]string{"foo", "bar", "moo"})
 	rp.SetImports(im)
 	if len(rp.GetImports()) != len(im) {
@@ -38,7 +41,9 @@ func TestLintMessagesChanged(t *testing.T) {
 }
 
 func TestStartTimeChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
+	rp := &Repository{
+		Name: repo,
+	}
 	now := time.Now()
 	rp.SetStartTime(now)
 	if rp.startTime != now {
@@ -57,11 +62,35 @@ func TestExecutionTimeChanged(t *testing.T) {
 }
 
 func TestLastUpdateTimeChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
+	rp := &Repository{
+		Name: repo,
+	}
 	now := time.Now()
 	rp.SetLastUpdate()
 	if rp.GetLastUpdate().Day() != now.Day() {
 		t.Error("The last update time has not changed")
+	}
+}
+
+func TestMetadataChanged(t *testing.T) {
+	rhMock := mocks.RepositoryHost{}
+	rhMock.On("Get", "foo", "bar").Return(
+		map[string]interface{}{
+			"avatar_url":  "http://foo.com/img.png",
+			"description": "repository description",
+			"language":    "go",
+			"stargazers":  123,
+			"last_push":   time.Now(),
+		}, nil)
+	rp := &Repository{
+		Name:           repo,
+		RepositoryHost: rhMock,
+	}
+	if err := rp.SetMetadata(); err != nil {
+		t.Error("Could not set metadata")
+	}
+	if rp.GetMetadata().Stars != 123 {
+		t.Error("The metadata has not changed")
 	}
 }
 

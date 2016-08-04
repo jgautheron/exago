@@ -47,14 +47,16 @@ func TestStartTimeSet(t *testing.T) {
 }
 
 func loadStubRepo() (*Repository, error) {
+	rhMock := mocks.RepositoryHost{}
 	dbMock := mocks.Database{}
 	dbMock.On("Get",
 		[]byte(fmt.Sprintf("%s-%s", repo, "")),
 	).Return([]byte(data), nil)
 
 	rp := &Repository{
-		Name: repo,
-		DB:   dbMock,
+		Name:           repo,
+		DB:             dbMock,
+		RepositoryHost: rhMock,
 	}
 	if err := rp.Load(); err != nil {
 		return nil, fmt.Errorf("Got error while loading data: %v", err)

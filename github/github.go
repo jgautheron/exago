@@ -18,6 +18,9 @@ const (
 var (
 	gi   GitHub
 	once sync.Once
+
+	// Make sure it satisfies the interface.
+	_ RepositoryHost = (*GitHub)(nil)
 )
 
 type GitHub struct {
@@ -100,4 +103,9 @@ func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
 // https://developer.github.com/v3/repos/
 func (g GitHub) repositories() *gh.RepositoriesService {
 	return g.client.Repositories
+}
+
+type RepositoryHost interface {
+	GetFileContent(owner, repository, path string) (string, error)
+	Get(owner, repository string) (map[string]interface{}, error)
 }

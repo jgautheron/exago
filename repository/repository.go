@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/exago/svc/github"
 	"github.com/exago/svc/leveldb"
 	"github.com/exago/svc/repository/model"
 )
@@ -20,18 +21,20 @@ var (
 )
 
 type Repository struct {
-	Name, Branch string
-	DB           leveldb.Database
-	Data         model.Data
-	startTime    time.Time
-	loaded       bool
+	Name, Branch   string
+	DB             leveldb.Database
+	RepositoryHost github.RepositoryHost
+	Data           model.Data
+	startTime      time.Time
+	loaded         bool
 }
 
 func New(repo, branch string) *Repository {
 	return &Repository{
-		Name:   repo,
-		Branch: branch,
-		DB:     leveldb.GetInstance(),
+		Name:           repo,
+		Branch:         branch,
+		DB:             leveldb.GetInstance(),
+		RepositoryHost: github.GetInstance(),
 	}
 }
 

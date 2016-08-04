@@ -215,13 +215,13 @@ func (_m *Record) SetTestResults(tr model.TestResults) {
 	_m.Called(tr)
 }
 
-// GetLintMessages provides a mock function with given fields: linters
-func (_m *Record) GetLintMessages(linters []string) model.LintMessages {
-	ret := _m.Called(linters)
+// GetLintMessages provides a mock function with given fields:
+func (_m *Record) GetLintMessages() model.LintMessages {
+	ret := _m.Called()
 
 	var r0 model.LintMessages
-	if rf, ok := ret.Get(0).(func([]string) model.LintMessages); ok {
-		r0 = rf(linters)
+	if rf, ok := ret.Get(0).(func() model.LintMessages); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(model.LintMessages)
 	}

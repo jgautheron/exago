@@ -7,7 +7,6 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/exago/svc/github"
 	"github.com/exago/svc/repository/model"
 	"github.com/exago/svc/score"
 )
@@ -53,7 +52,7 @@ func (r *Repository) SetMetadata() (err error) {
 		return errors.New("Can only get metadata for GitHub repositories")
 	}
 
-	res, err := github.GetInstance().Get(m[1], m[2])
+	res, err := r.RepositoryHost.Get(m[1], m[2])
 	if err != nil {
 		return err
 	}
