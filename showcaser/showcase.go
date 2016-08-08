@@ -10,6 +10,7 @@ import (
 	"github.com/dgryski/go-topk"
 	"github.com/hotolab/exago-svc/leveldb"
 	"github.com/hotolab/exago-svc/repository"
+	ldb "github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
@@ -166,6 +167,9 @@ func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 	var repos []repository.Record
 
 	b, err := d.db.Get([]byte(DatabaseKey))
+	if err == ldb.ErrNotFound {
+		return s, false, nil
+	}
 	if b == nil || err != nil {
 		return s, false, err
 	}
