@@ -18,12 +18,10 @@ type Record interface {
 	SetExecutionTime()
 	GetScore() model.Score
 	SetScore() (err error)
-	GetImports() model.Imports
-	SetImports(model.Imports)
 	GetCodeStats() model.CodeStats
 	SetCodeStats(model.CodeStats)
-	GetTestResults() model.TestResults
-	SetTestResults(tr model.TestResults)
+	GetProjectRunner() model.ProjectRunner
+	SetProjectRunner(tr model.ProjectRunner)
 	GetLintMessages() model.LintMessages
 	SetLintMessages(model.LintMessages)
 	SetStartTime(t time.Time)

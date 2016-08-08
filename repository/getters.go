@@ -38,19 +38,14 @@ func (r *Repository) GetScore() model.Score {
 	return r.Data.Score
 }
 
-// GetImports retrieves the third party imports.
-func (r *Repository) GetImports() model.Imports {
-	return r.Data.Imports
-}
-
 // GetCodeStats retrieves the code statistics (LOC...).
 func (r *Repository) GetCodeStats() model.CodeStats {
 	return r.Data.CodeStats
 }
 
-// GetTestResults retrieves the test and checklist results.
-func (r *Repository) GetTestResults() model.TestResults {
-	return r.Data.TestResults
+// GetProjectRunner retrieves the test and checklist results.
+func (r *Repository) GetProjectRunner() model.ProjectRunner {
+	return r.Data.ProjectRunner
 }
 
 // GetLintMessages retrieves the linter warnings.

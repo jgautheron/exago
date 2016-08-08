@@ -22,9 +22,8 @@ var (
 
 	// DefaultTypes represents the default processors enabled.
 	DefaultTypes = []string{
-		"imports",
 		"codestats",
-		"testresults",
+		"projectrunner",
 		"lintmessages",
 	}
 )
@@ -84,13 +83,6 @@ func (rc *Checker) Run() {
 			)
 
 			switch tp {
-			case model.ImportsName:
-				out, err = rc.taskrunner.FetchImports()
-				if err == nil {
-					rc.Repository.SetImports(out.(model.Imports))
-				} else {
-					rc.Repository.SetError(tp, err)
-				}
 			case model.CodeStatsName:
 				out, err = rc.taskrunner.FetchCodeStats()
 				if err == nil {
@@ -98,13 +90,13 @@ func (rc *Checker) Run() {
 				} else {
 					rc.Repository.SetError(tp, err)
 				}
-			case model.TestResultsName:
-				out, err = rc.taskrunner.FetchTestResults()
+			case model.ProjectRunnerName:
+				out, err = rc.taskrunner.FetchProjectRunner()
 				if err == nil {
-					rc.Repository.SetTestResults(out.(model.TestResults))
+					rc.Repository.SetProjectRunner(out.(model.ProjectRunner))
 				} else {
 					// Expose isolated errors
-					switch ts := out.(model.TestResults); {
+					switch ts := out.(model.ProjectRunner); {
 					case ts.Errors.Goget != "":
 						err = processingError{"goget", ts.Errors.Goget, ts.RawOutput.Goget}
 					case ts.Errors.Gotest != "":
@@ -112,7 +104,6 @@ func (rc *Checker) Run() {
 					}
 					rc.Repository.SetError(tp, err)
 				}
-
 			case model.LintMessagesName:
 				out, err = rc.taskrunner.FetchLintMessages(rc.linters)
 				if err == nil {

@@ -4,8 +4,7 @@ import "time"
 
 type Data struct {
 	CodeStats     CodeStats        `json:"codestats"`
-	Imports       Imports          `json:"imports"`
-	TestResults   TestResults      `json:"testresults"`
+	ProjectRunner ProjectRunner    `json:"projectrunner"`
 	LintMessages  LintMessages     `json:"lintmessages"`
 	Metadata      Metadata         `json:"metadata"`
 	Score         Score            `json:"score"`
