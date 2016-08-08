@@ -8,8 +8,8 @@ import (
 	"gopkg.in/tylerb/graceful.v1"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/hotolab/exago-svc/config"
 	"github.com/gorilla/context"
+	. "github.com/hotolab/exago-svc/config"
 	"github.com/justinas/alice"
 )
 
@@ -46,5 +46,5 @@ func ListenAndServe() {
 	router.Get("/godocindex", baseHandlers.ThenFunc(godocIndexHandler))
 
 	logger.Infof("Listening on port %d", Config.HttpPort)
-	graceful.Run(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router)
+	logger.Fatal(graceful.RunWithErr(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router))
 }
