@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/exago/svc/mocks"
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/mocks"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 func TestImportsChanged(t *testing.T) {

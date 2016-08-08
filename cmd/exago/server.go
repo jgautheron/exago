@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/exago/svc/server"
+	"github.com/hotolab/exago-svc/server"
 	"github.com/urfave/cli"
 )
 

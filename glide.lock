@@ -38,7 +38,7 @@ imports:
   - config
   - errors
   - libstring
-- name: github.com/exago/envconfig
+- name: github.com/hotolab/envconfig
   version: 8b1c59eae986013d3be5deddbf1e89f18d25ffaa
 - name: github.com/go-ini/ini
   version: cf53f9204df4fbdd7ec4164b57fa6184ba168292

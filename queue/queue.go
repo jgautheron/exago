@@ -10,8 +10,8 @@ import (
 	"syscall"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/repository/processor"
-	"github.com/exago/svc/taskrunner/lambda"
+	"github.com/hotolab/exago-svc/repository/processor"
+	"github.com/hotolab/exago-svc/taskrunner/lambda"
 )
 
 var (

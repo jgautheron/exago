@@ -6,10 +6,10 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/repository"
-	"github.com/exago/svc/repository/model"
-	"github.com/exago/svc/showcaser"
-	"github.com/exago/svc/taskrunner"
+	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/hotolab/exago-svc/showcaser"
+	"github.com/hotolab/exago-svc/taskrunner"
 )
 
 const (

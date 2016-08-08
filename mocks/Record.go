@@ -3,7 +3,7 @@ package mocks
 import "github.com/stretchr/testify/mock"
 
 import "time"
-import "github.com/exago/svc/repository/model"
+import "github.com/hotolab/exago-svc/repository/model"
 
 type Record struct {
 	mock.Mock

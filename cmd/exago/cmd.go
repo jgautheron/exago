@@ -4,8 +4,8 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/exago/svc/config"
-	"github.com/exago/svc/showcaser"
+	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/urfave/cli"
 	"github.com/x-cray/logrus-prefixed-formatter"
 )

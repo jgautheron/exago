@@ -1,4 +1,4 @@
-package: github.com/exago/svc
+package: github.com/hotolab/exago-svc
 import:
 - package: github.com/PuerkitoBio/goquery
 - package: github.com/SimonWaldherr/golibs
@@ -13,7 +13,7 @@ import:
   - service/lambda
 - package: github.com/dgryski/go-topk
 - package: github.com/didip/tollbooth
-- package: github.com/exago/envconfig
+- package: github.com/hotolab/envconfig
 - package: github.com/google/go-github
   subpackages:
   - github

@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/dgryski/go-topk"
-	"github.com/exago/svc/mocks"
+	"github.com/hotolab/exago-svc/mocks"
 	. "github.com/stretchr/testify/mock"
 )
 

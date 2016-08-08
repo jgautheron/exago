@@ -7,7 +7,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/leveldb"
+	"github.com/hotolab/exago-svc/leveldb"
 )
 
 const (

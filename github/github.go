@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/exago/svc/config"
+	. "github.com/hotolab/exago-svc/config"
 	gh "github.com/google/go-github/github"
 	"github.com/hashicorp/golang-lru"
 	"golang.org/x/oauth2"

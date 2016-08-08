@@ -2,7 +2,7 @@ package main
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/godoc"
+	"github.com/hotolab/exago-svc/godoc"
 	"github.com/urfave/cli"
 )
 

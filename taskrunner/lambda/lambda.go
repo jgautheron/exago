@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	. "github.com/exago/svc/config"
-	"github.com/exago/svc/taskrunner"
+	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/taskrunner"
 )
 
 const (

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/exago/svc/mocks"
+	"github.com/hotolab/exago-svc/mocks"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )
 

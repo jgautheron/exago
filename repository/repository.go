@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/exago/svc/github"
-	"github.com/exago/svc/leveldb"
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/github"
+	"github.com/hotolab/exago-svc/leveldb"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 var (

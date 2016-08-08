@@ -6,7 +6,7 @@ import (
 
 	"simonwaldherr.de/go/golibs/xmath"
 
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 const (

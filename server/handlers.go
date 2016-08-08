@@ -5,12 +5,12 @@ import (
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/badge"
-	"github.com/exago/svc/github"
-	"github.com/exago/svc/godoc"
-	"github.com/exago/svc/queue"
-	"github.com/exago/svc/repository"
-	"github.com/exago/svc/showcaser"
+	"github.com/hotolab/exago-svc/badge"
+	"github.com/hotolab/exago-svc/github"
+	"github.com/hotolab/exago-svc/godoc"
+	"github.com/hotolab/exago-svc/queue"
+	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )

@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 type Record interface {

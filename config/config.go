@@ -4,7 +4,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/envconfig"
+	"github.com/hotolab/envconfig"
 )
 
 var Config cfg

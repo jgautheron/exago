@@ -3,7 +3,7 @@ package lambda
 import (
 	"encoding/json"
 
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 var codeStatsCmd = &cmd{

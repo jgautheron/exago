@@ -10,8 +10,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/queue"
-	"github.com/exago/svc/repository"
+	"github.com/hotolab/exago-svc/queue"
+	"github.com/hotolab/exago-svc/repository"
 )
 
 type Indexer struct {

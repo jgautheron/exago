@@ -3,8 +3,8 @@ package main
 import (
 	"fmt"
 
-	"github.com/exago/svc/godoc"
-	"github.com/exago/svc/indexer"
+	"github.com/hotolab/exago-svc/godoc"
+	"github.com/hotolab/exago-svc/indexer"
 	"github.com/urfave/cli"
 )
 

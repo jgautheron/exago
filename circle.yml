@@ -42,7 +42,7 @@ deployment:
     branch: master
     commands:
       - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
-      - docker build -t exago/svc:$TAG .
-      - docker push exago/svc:$TAG
-      - docker build -t exago/svc:latest .
-      - docker push exago/svc:latest
+      - docker build -t hotolab/exago-svc:$TAG .
+      - docker push hotolab/exago-svc:$TAG
+      - docker build -t hotolab/exago-svc:latest .
+      - docker push hotolab/exago-svc:latest

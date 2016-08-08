@@ -8,8 +8,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
-	"github.com/exago/svc/leveldb"
-	"github.com/exago/svc/repository"
+	"github.com/hotolab/exago-svc/leveldb"
+	"github.com/hotolab/exago-svc/repository"
 )
 
 const (

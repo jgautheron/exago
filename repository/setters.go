@@ -7,8 +7,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/exago/svc/repository/model"
-	"github.com/exago/svc/score"
+	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/hotolab/exago-svc/score"
 )
 
 func (r *Repository) SetImports(i model.Imports) {

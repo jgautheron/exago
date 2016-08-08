@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/exago/svc/mocks"
+	"github.com/hotolab/exago-svc/mocks"
 )
 
 var (

@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/exago/svc/config"
-	"github.com/exago/svc/mocks"
+	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/mocks"
 	. "github.com/stretchr/testify/mock"
 )
 

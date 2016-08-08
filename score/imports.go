@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 type importsEvaluator struct {

@@ -2,7 +2,7 @@ package score
 
 import (
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/repository/model"
 
 	"simonwaldherr.de/go/golibs/xmath"
 )

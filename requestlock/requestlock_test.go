@@ -3,7 +3,7 @@ package requestlock_test
 import (
 	"testing"
 
-	"github.com/exago/svc/requestlock"
+	"github.com/hotolab/exago-svc/requestlock"
 )
 
 func TestLockAdded(t *testing.T) {
