@@ -18,6 +18,16 @@ func TestCodeStatsChanged(t *testing.T) {
 	}
 }
 
+func TestProjectRunnerChanged(t *testing.T) {
+	rp, _ := loadStubRepo()
+	pr := rp.GetProjectRunner()
+	pr.ThirdParties = append(pr.ThirdParties, "github.com/bar/moo")
+	rp.SetProjectRunner(pr)
+	if len(pr.ThirdParties) != 2 {
+		t.Error("The third parties have not changed")
+	}
+}
+
 func TestLintMessagesChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
 	lm := rp.GetLintMessages()

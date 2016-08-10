@@ -26,6 +26,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	q := queue.GetInstance()
 	data, err := q.PushSync(repo, 10)
+	go showcaser.GetInstance().Process(rp)
 	send(w, r, data, err)
 }
 

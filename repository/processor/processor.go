@@ -8,7 +8,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/repository/model"
-	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/hotolab/exago-svc/taskrunner"
 )
 
@@ -49,6 +48,7 @@ type Checker struct {
 	logger         *log.Entry
 	types, linters []string
 	taskrunner     taskrunner.TaskRunner
+	aborted        bool
 	processed      chan bool
 	Repository     repository.Record
 	HasError       bool
@@ -134,9 +134,10 @@ func (rc *Checker) Run() {
 		}
 	}
 
-	rc.StampEntry()
-	rc.Done <- true
-	go showcaser.GetInstance().Process(rc.Repository)
+	if !rc.aborted {
+		rc.StampEntry()
+		rc.Done <- true
+	}
 }
 
 // StampEntry is called once the entire dataset is loaded.
@@ -167,5 +168,6 @@ func (rc *Checker) StampEntry() {
 
 // Abort declares the task as done and skips the processing.
 func (rc *Checker) Abort() {
-	rc.Aborted <- true
+	rc.aborted = true
+	close(rc.Aborted)
 }

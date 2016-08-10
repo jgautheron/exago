@@ -1,12 +1,16 @@
 package mocks
 
-import "github.com/stretchr/testify/mock"
+import (
+	"time"
 
-import "time"
+	"github.com/stretchr/testify/mock"
+)
+
 import "github.com/hotolab/exago-svc/repository/model"
 
 type Record struct {
 	mock.Mock
+	Name, Branch string
 }
 
 func NewRecord(name, rank string) *Record {
@@ -245,7 +249,7 @@ func (_m *Record) SetError(tp string, err error) {
 }
 
 // IsCached provides a mock function with given fields:
-func (_m *Record) IsCached() bool {
+func (_m Record) IsCached() bool {
 	ret := _m.Called()
 
 	var r0 bool
@@ -287,7 +291,7 @@ func (_m *Record) Load() error {
 }
 
 // ClearCache provides a mock function with given fields:
-func (_m *Record) ClearCache() error {
+func (_m Record) ClearCache() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -301,7 +305,7 @@ func (_m *Record) ClearCache() error {
 }
 
 // Save provides a mock function with given fields:
-func (_m *Record) Save() error {
+func (_m Record) Save() error {
 	ret := _m.Called()
 
 	var r0 error
