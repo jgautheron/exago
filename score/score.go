@@ -14,7 +14,7 @@ var (
 // We compute the weighted average based on the overall evaluator weights and scores
 func Process(data model.Data) (score float64, details []*model.EvaluatorResponse) {
 	eval := []CriteriaEvaluator{
-		ImportsEvaluator(),
+		ThirdPartiesEvaluator(),
 		CodeStatsEvaluator(),
 		LintMessagesEvaluator(),
 		TestCoverageEvaluator(),
