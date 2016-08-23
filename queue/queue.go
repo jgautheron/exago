@@ -8,6 +8,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/hotolab/exago-svc/repository/processor"
@@ -41,6 +42,7 @@ type PriorityQueue struct {
 	in          chan *Item
 	out         chan map[uint32]interface{}
 	quit        chan bool
+	ready       chan bool
 	closing     bool
 	wg          *sync.WaitGroup
 
@@ -67,6 +69,15 @@ func GetInstance() *PriorityQueue {
 func (pq *PriorityQueue) Init() {
 	heap.Init(&pq.items)
 	pq.InitWorkerPool()
+
+	go func() {
+		for {
+			if len(pq.workers) == pq.concurrency {
+				logger.Debug("Ready")
+				pq.ready <- true
+			}
+		}
+	}()
 
 	pq.wg.Add(1)
 	go pq.Wait()
@@ -166,6 +177,7 @@ func (pq *PriorityQueue) Worker(id int) {
 			w.Unlock()
 		case <-pq.quit:
 			logger.Debugf("Stopping worker %d", w.id)
+			pq.removeWorker(w)
 			return
 		}
 	}
@@ -195,6 +207,16 @@ func (pq *PriorityQueue) PushToWorker(worker *Worker, item *Item) {
 	)
 	worker.busy = true
 	worker.in <- item
+}
+
+// WaitUntilReady blocks until the queue is properly initialized.
+func (pq *PriorityQueue) WaitUntilReady() {
+	select {
+	case <-pq.ready:
+		return
+	case <-time.After(1 * time.Second):
+		logger.Error("The queue took too long to initiate (1s)")
+	}
 }
 
 // PushAsync adds an item to the queue asynchronously.
@@ -247,4 +269,18 @@ func (pq *PriorityQueue) Stop() {
 	close(pq.quit)
 	pq.wg.Wait()
 	logger.Debug("Queue safely stopped")
+}
+
+// removeWorker removes the given worker from the list of available workers.
+func (pq *PriorityQueue) removeWorker(worker Worker) {
+	pq.Lock()
+	defer pq.Unlock()
+
+	workers := []*Worker{}
+	for _, w := range pq.workers {
+		if w.id != worker.id {
+			workers = append(workers, w)
+		}
+	}
+	pq.workers = workers
 }
