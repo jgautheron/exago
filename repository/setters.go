@@ -11,10 +11,6 @@ import (
 	"github.com/hotolab/exago-svc/score"
 )
 
-func (r *Repository) SetImports(i model.Imports) {
-	r.Data.Imports = i
-}
-
 func (r *Repository) SetCodeStats(cs model.CodeStats) {
 	r.Data.CodeStats = cs
 }
@@ -23,8 +19,8 @@ func (r *Repository) SetLintMessages(lm model.LintMessages) {
 	r.Data.LintMessages = lm
 }
 
-func (r *Repository) SetTestResults(tr model.TestResults) {
-	r.Data.TestResults = tr
+func (r *Repository) SetProjectRunner(tr model.ProjectRunner) {
+	r.Data.ProjectRunner = tr
 }
 
 // SetStartTime stores the moment the processing started.
@@ -84,7 +80,7 @@ func (r *Repository) SetScore() (err error) {
 	return nil
 }
 
-// SetError assigns a processing error to the given type (ex. TestResults).
+// SetError assigns a processing error to the given type (ex. ProjectRunner).
 // This helps keep track of what went wrong.
 func (r *Repository) SetError(tp string, err error) {
 	if r.Data.Errors == nil {

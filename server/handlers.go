@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/gorilla/context"
 	"github.com/hotolab/exago-svc/badge"
 	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/godoc"
 	"github.com/hotolab/exago-svc/queue"
 	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/showcaser"
-	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -26,6 +26,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	q := queue.GetInstance()
 	data, err := q.PushSync(repo, 10)
+	go showcaser.GetInstance().Process(rp)
 	send(w, r, data, err)
 }
 
@@ -57,7 +58,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, "", string(rank), "blue")
 	case "cov":
 		title := "coverage"
-		err, cov := repo.Load(), repo.GetTestResults().GetAvgCodeCov()
+		err, cov := repo.Load(), repo.GetProjectRunner().GetAvgCodeCov()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -66,7 +67,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
 	case "duration":
 		title := "tests duration"
-		err, avg := repo.Load(), repo.GetTestResults().GetAvgTestDuration()
+		err, avg := repo.Load(), repo.GetProjectRunner().GetAvgTestDuration()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -84,7 +85,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%d", tests), "blue")
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties := repo.Load(), len(repo.GetImports())
+		err, thirdParties := repo.Load(), len(repo.GetProjectRunner().ThirdParties)
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)

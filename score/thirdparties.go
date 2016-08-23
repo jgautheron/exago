@@ -7,22 +7,22 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-type importsEvaluator struct {
+type thirdPartiesEvaluator struct {
 	Evaluator
 }
 
-// ImportsEvaluator measures a score based on various metrics of imports
+// ThirdPartiesEvaluator measures a score based on various metrics of imports
 // for now only the # of 3rd-party packages.
-func ImportsEvaluator() CriteriaEvaluator {
-	return &importsEvaluator{Evaluator{
-		model.ImportsName,
+func ThirdPartiesEvaluator() CriteriaEvaluator {
+	return &thirdPartiesEvaluator{Evaluator{
+		model.ThirdPartiesName,
 		"https://github.com/jgautheron/gogetimports",
 		"counts the number of third party libraries",
 	}}
 }
 
 // Calculate overloads Evaluator/Calculate
-func (ie *importsEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
+func (ie *thirdPartiesEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	// Declare rates here, since Go cannot accept maps as constants :/
 	rates := map[int]float64{
 		1: -1,
@@ -33,7 +33,7 @@ func (ie *importsEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 		6: -0.18,
 	}
 
-	imp, cs := d.Imports, d.CodeStats
+	imp, cs := d.ProjectRunner.ThirdParties, d.CodeStats
 
 	imps := float64(len(imp))
 	r := ie.NewResponse(100, 1.5, "", nil)

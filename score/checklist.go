@@ -45,7 +45,7 @@ func (ce *checkListEvaluator) Setup() {
 // Calculate overloads Evaluator/Calculate
 func (ce *checkListEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	r := ce.NewResponse(100, 1.8, "", nil)
-	cl := d.TestResults
+	cl := d.ProjectRunner
 
 	for _, failed := range cl.Checklist.Failed {
 		if ch, ok := ce.checkers[failed.Name]; ok {

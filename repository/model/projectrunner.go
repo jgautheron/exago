@@ -3,13 +3,14 @@ package model
 import "simonwaldherr.de/go/golibs/xmath"
 
 const (
-	TestResultsName  = "testresults"
-	TestCoverageName = "testcoverage"
-	TestDurationName = "testduration"
+	ProjectRunnerName = "projectrunner"
+	ThirdPartiesName  = "thirdparties"
+	TestCoverageName  = "testcoverage"
+	TestDurationName  = "testduration"
 )
 
-// TestResults received from the test runner.
-type TestResults struct {
+// ProjectRunner received from the test runner.
+type ProjectRunner struct {
 	Checklist struct {
 		Failed []struct {
 			Category string `json:"Category"`
@@ -33,6 +34,7 @@ type TestResults struct {
 			Passed        bool    `json:"passed"`
 		} `json:"tests"`
 	} `json:"packages"`
+	ThirdParties  []string `json:"third_parties"`
 	ExecutionTime struct {
 		Goget   string `json:"goget,omitempty"`
 		Goprove string `json:"goprove"`
@@ -49,7 +51,7 @@ type TestResults struct {
 }
 
 // GetAvgTestDuration returns the average test duration.
-func (t TestResults) GetAvgTestDuration() float64 {
+func (t ProjectRunner) GetAvgTestDuration() float64 {
 	var duration []float64
 	for _, pkg := range t.Packages {
 		duration = append(duration, pkg.ExecutionTime)
@@ -61,7 +63,7 @@ func (t TestResults) GetAvgTestDuration() float64 {
 }
 
 // GetAvgCodeCov returns the code coverage average.
-func (t TestResults) GetAvgCodeCov() float64 {
+func (t ProjectRunner) GetAvgCodeCov() float64 {
 	var cov []float64
 	for _, pkg := range t.Packages {
 		cov = append(cov, pkg.Coverage)

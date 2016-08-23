@@ -6,19 +6,7 @@ import (
 	"time"
 
 	"github.com/hotolab/exago-svc/mocks"
-	"github.com/hotolab/exago-svc/repository/model"
 )
-
-func TestImportsChanged(t *testing.T) {
-	rp := &Repository{
-		Name: repo,
-	}
-	im := model.Imports([]string{"foo", "bar", "moo"})
-	rp.SetImports(im)
-	if len(rp.GetImports()) != len(im) {
-		t.Error("The imports have not changed")
-	}
-}
 
 func TestCodeStatsChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
@@ -27,6 +15,16 @@ func TestCodeStatsChanged(t *testing.T) {
 	rp.SetCodeStats(cs)
 	if rp.GetCodeStats()["CLOC"] != cs["CLOC"] {
 		t.Error("The CLOC has not changed")
+	}
+}
+
+func TestProjectRunnerChanged(t *testing.T) {
+	rp, _ := loadStubRepo()
+	pr := rp.GetProjectRunner()
+	pr.ThirdParties = append(pr.ThirdParties, "github.com/bar/moo")
+	rp.SetProjectRunner(pr)
+	if len(pr.ThirdParties) != 2 {
+		t.Error("The third parties have not changed")
 	}
 }
 
