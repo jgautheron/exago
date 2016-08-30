@@ -30,7 +30,7 @@ func init() {
 	InitializeLogging(Config.LogLevel)
 
 	// Initialise the dataset
-	if _, err := showcaser.Init(); err != nil {
+	if err := showcaser.Init(); err != nil {
 		log.Fatal(err)
 	}
 }

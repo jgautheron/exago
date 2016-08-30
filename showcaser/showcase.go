@@ -59,7 +59,8 @@ func (d *Showcase) AddRecent(repo repository.Record) {
 	}
 
 	d.recent = append(d.recent, repo)
-	if len(d.recent) < d.itemCount {
+	// Trim the list if it's too big
+	if len(d.recent) > d.itemCount {
 		d.recent = d.recent[1:]
 	}
 }
@@ -211,16 +212,14 @@ func (d *Showcase) Process(repo repository.Record) {
 
 func GetInstance() *Showcase {
 	once.Do(func() {
-		var err error
-		showcase, err = Init()
-		if err != nil {
+		if err := Init(); err != nil {
 			logger.Fatal(err)
 		}
 	})
 	return showcase
 }
 
-func Init() (showcase *Showcase, err error) {
+func Init() (err error) {
 	showcase = &Showcase{
 		itemCount: ItemCount,
 		tk:        topk.New(TopkCount),
@@ -232,6 +231,7 @@ func Init() (showcase *Showcase, err error) {
 		logger.Errorf("An error occurred while loading the snapshot: %v", err)
 	} else if exists {
 		showcase = &snapshot
+		showcase.itemCount = ItemCount
 		logger.Info("Snapshot loaded")
 	}
 

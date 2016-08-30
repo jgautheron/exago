@@ -4,6 +4,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
 	"github.com/hotolab/exago-svc/mocks"
 	. "github.com/stretchr/testify/mock"
@@ -52,6 +53,7 @@ func TestRepositoryRankedADuplicated(t *testing.T) {
 	showcase = getShowcaseMock(mocks.Database{})
 	showcase.Process(mocks.NewRecord("github.com/foo/bar", "A"))
 	showcase.Process(mocks.NewRecord("github.com/foo/bar", "A"))
+	logrus.Infoln(len(showcase.topRanked), len(showcase.recent), len(showcase.tk.Keys()))
 	if len(showcase.topRanked) != 1 || len(showcase.recent) != 1 || len(showcase.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
