@@ -20,7 +20,7 @@ func TestGotRecentRepositories(t *testing.T) {
 	showcase.Process(getRecordMock("github.com/bar/foo", "B"))
 	showcase.Process(getRecordMock("github.com/moo/foo", "D"))
 
-	recent := GetRecentRepositories()
+	recent := showcase.GetRecentRepositories()
 	if len(recent) != 3 {
 		t.Errorf("Expected 3 recent repos, got %d", len(recent))
 	}
@@ -39,7 +39,7 @@ func TestGotTopRankedRepositories(t *testing.T) {
 	showcase.Process(getRecordMock("github.com/bar/bar", "A"))
 	showcase.Process(getRecordMock("github.com/boo/boo", "A"))
 
-	top := GetTopRankedRepositories()
+	top := showcase.GetTopRankedRepositories()
 	if len(top) != ItemCount {
 		t.Errorf("Expected %d top repos, got %d", ItemCount, len(top))
 	}
@@ -67,7 +67,7 @@ func TestGotPopularRepositories(t *testing.T) {
 		t.Errorf("Got error while updating the popular list: %v", err)
 	}
 
-	popular := GetPopularRepositories()
+	popular := showcase.GetPopularRepositories()
 	if len(popular) != ItemCount {
 		t.Errorf("Expected %d popular repos, got %d", ItemCount, len(popular))
 	}

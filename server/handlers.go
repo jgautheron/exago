@@ -20,6 +20,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	rp := repository.New(repo, "")
 	if rp.IsCached() {
 		err := rp.Load()
+		go showcaser.GetInstance().Process(rp)
 		send(w, r, rp.GetData(), err)
 		return
 	}
@@ -115,16 +116,11 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 func cachedHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
 	rp := repository.New(repo, "")
-	if rp.IsCached() {
-		err := rp.Load()
-		send(w, r, rp.GetData(), err)
-		return
-	}
-	send(w, r, false, nil)
+	send(w, r, rp.IsCached(), nil)
 }
 
 func recentHandler(w http.ResponseWriter, r *http.Request) {
-	repos := showcaser.GetRecentRepositories()
+	repos := showcaser.GetInstance().GetRecentRepositories()
 	out := map[string]interface{}{
 		"type":         "recent",
 		"repositories": repos,
@@ -133,7 +129,7 @@ func recentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func topHandler(w http.ResponseWriter, r *http.Request) {
-	repos := showcaser.GetTopRankedRepositories()
+	repos := showcaser.GetInstance().GetTopRankedRepositories()
 	out := map[string]interface{}{
 		"type":         "top",
 		"repositories": repos,
@@ -142,7 +138,7 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func popularHandler(w http.ResponseWriter, r *http.Request) {
-	repos := showcaser.GetPopularRepositories()
+	repos := showcaser.GetInstance().GetPopularRepositories()
 	out := map[string]interface{}{
 		"type":         "popular",
 		"repositories": repos,

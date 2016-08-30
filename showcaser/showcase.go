@@ -59,7 +59,7 @@ func (d *Showcase) AddRecent(repo repository.Record) {
 	}
 
 	d.recent = append(d.recent, repo)
-	if len(d.recent) > d.itemCount {
+	if len(d.recent) < d.itemCount {
 		d.recent = d.recent[1:]
 	}
 }
