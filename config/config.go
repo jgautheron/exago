@@ -1,8 +1,10 @@
 package config
 
 import (
+	"time"
+
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/envconfig"
+	"github.com/hotolab/envconfig"
 )
 
 var Config cfg
@@ -17,6 +19,8 @@ type cfg struct {
 	DatabasePath       string `envconfig:"DATABASE_PATH" default:"./exago.db"`
 	AllowOrigin        string `envconfig:"ALLOW_ORIGIN" default:"*"`
 	LogLevel           string `envconfig:"LOG_LEVEL" default:"info"`
+
+	ShowcaserPopularRebuildInterval time.Duration `envconfig:"SHOWCASER_POPULAR_REBUILD_INTERVAL" default:"5m"`
 }
 
 func InitializeConfig() {

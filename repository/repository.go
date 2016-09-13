@@ -1,129 +1,62 @@
 package repository
 
 import (
-	"fmt"
-	"reflect"
+	"encoding/json"
 	"time"
 
-	"github.com/exago/svc/leveldb"
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/github"
+	"github.com/hotolab/exago-svc/leveldb"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 var (
-	// DefaultLinters run by default in Lambda
+	// DefaultLinters ran by default in Lambda.
 	DefaultLinters = []string{
-		"errcheck",
-		"gofmt",
-		"goimports",
-		"golint",
-		"deadcode",
-		"dupl",
-		"gocyclo",
-		"ineffassign",
-		"varcheck",
-		"vet",
-		"vetshadow",
+		"deadcode", "dupl", "errcheck", "goconst", "gocyclo", "gofmt", "goimports",
+		"golint", "gosimple", "ineffassign", "staticcheck", "vet", "vetshadow",
 	}
 
-	// DefaultTypes represents the data types.
-	// The name matches automatically to a Lambda function.
-	DefaultTypes = []string{
-		"imports",
-		"codestats",
-		"testresults",
-		"lintmessages",
-	}
+	// Make sure it satisfies the interface.
+	_ Record = (*Repository)(nil)
 )
 
 type Repository struct {
-	Name, Branch string
-
-	// Data types
-	CodeStats    model.CodeStats
-	Imports      model.Imports
-	TestResults  model.TestResults
-	LintMessages model.LintMessages
-
-	Score                 Score
-	StartTime, LastUpdate time.Time
-	ExecutionTime         string
+	Name, Branch   string
+	DB             leveldb.Database
+	RepositoryHost github.RepositoryHost
+	Data           model.Data
+	startTime      time.Time
+	loaded         bool
 }
 
 func New(repo, branch string) *Repository {
 	return &Repository{
-		Name:   repo,
-		Branch: branch,
+		Name:           repo,
+		Branch:         branch,
+		DB:             leveldb.GetInstance(),
+		RepositoryHost: github.GetInstance(),
 	}
-}
-
-// IsCached checks if the repository's data is cached in database.
-func (r *Repository) IsCached() bool {
-	prefix := fmt.Sprintf("%s-%s", r.Name, r.Branch)
-	data, err := leveldb.FindAllForRepository([]byte(prefix))
-	if err != nil || len(data) != 7 {
-		return false
-	}
-	return true
 }
 
 // IsLoaded checks if the data is already loaded.
 func (r *Repository) IsLoaded() bool {
-	if r.CodeStats == nil {
-		return false
-	}
-	if r.Imports == nil {
-		return false
-	}
-	if reflect.DeepEqual(r.TestResults, model.TestResults{}) {
-		return false
-	}
-	if r.LintMessages == nil {
-		return false
-	}
-	return true
+	return r.loaded
 }
 
-// Load retrieves the entire matching dataset from database.
-func (r *Repository) Load() (err error) {
-	if _, err = r.GetImports(); err != nil {
+// Load retrieves the saved repository data from the database.
+func (r *Repository) Load() error {
+	b, err := r.DB.Get(r.cacheKey())
+	if err != nil {
 		return err
 	}
-	if _, err = r.GetCodeStats(); err != nil {
-		return err
-	}
-	if _, err = r.GetLintMessages(DefaultLinters); err != nil {
-		return err
-	}
-	if _, err = r.GetTestResults(); err != nil {
-		return err
-	}
-	if _, err = r.GetScore(); err != nil {
-		return err
-	}
-	if _, err = r.GetDate(); err != nil {
-		return err
-	}
-	if _, err = r.GetExecutionTime(); err != nil {
-		return err
-	}
-	return err
-}
 
-// ClearCache removes the repository from database.
-func (r *Repository) ClearCache() (err error) {
-	prefix := fmt.Sprintf("%s-%s", r.Name, r.Branch)
-	return leveldb.DeleteAllMatchingPrefix([]byte(prefix))
-}
-
-// FormatOutput prepares a map ready for output.
-func (r *Repository) FormatOutput() map[string]interface{} {
-	return map[string]interface{}{
-		"imports":        r.Imports,
-		"codestats":      r.CodeStats,
-		"lintmessages":   r.LintMessages,
-		"testresults":    r.TestResults,
-		"score":          r.Score,
-		"date":           r.LastUpdate,
-		"execution_time": r.ExecutionTime,
+	var data model.Data
+	if err := json.Unmarshal(b, &data); err != nil {
+		return err
 	}
+
+	r.Data = data
+	r.loaded = true
+
+	return nil
 }

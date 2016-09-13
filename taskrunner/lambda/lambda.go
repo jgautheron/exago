@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	. "github.com/exago/svc/config"
-	"github.com/exago/svc/repository/model"
+	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/taskrunner"
 )
 
 const (
@@ -17,13 +17,15 @@ const (
 )
 
 var (
-	errNoData = errors.New("Empty dataset")
+	ErrNoData = errors.New("Empty dataset")
+
+	// Make sure it satisfies the interface.
+	_ taskrunner.TaskRunner = (*Runner)(nil)
 )
 
-type context struct {
-	Repository string `json:"repository"`
-	Branch     string `json:"branch,omitempty"`
-	Linters    string `json:"linters,omitempty"`
+type Runner struct {
+	Repository    string
+	ShouldCleanup bool
 }
 
 // Response contains the generic JSend response sent by Lambda functions.
@@ -33,15 +35,23 @@ type Response struct {
 	Metadata map[string]interface{} `json:"_metadata"`
 }
 
+// context sent to the Lambda functions.
+type context struct {
+	Repository string `json:"repository"`
+	Branch     string `json:"branch,omitempty"`
+	Linters    string `json:"linters,omitempty"`
+	Cleanup    bool   `json:"cleanup,omitempty"`
+}
+
 type cmd struct {
 	name      string
 	ctxt      context
-	data      model.RepositoryData
-	unMarshal func(l *cmd, j []byte) (data model.RepositoryData, err error)
+	data      interface{}
+	unMarshal func(l *cmd, j []byte) (data interface{}, err error)
 }
 
 // Data returns the response from Lambda.
-func (l *cmd) Data() (model.RepositoryData, error) {
+func (l *cmd) Data() (interface{}, error) {
 	res, err := l.call()
 	if err != nil {
 		return nil, err
@@ -78,14 +88,18 @@ func (l *cmd) call() (lrsp Response, err error) {
 		return lrsp, err
 	}
 
-	var resp Response
+	var resp struct {
+		Status   string                 `json:"status"`
+		Data     *json.RawMessage       `json:"data"`
+		Metadata map[string]interface{} `json:"_metadata"`
+	}
 	if err = json.Unmarshal(out.Payload, &resp); err != nil {
 		return lrsp, err
 	}
 
 	// Data is always expected from Lambda
 	if resp.Data == nil {
-		return lrsp, errNoData
+		return lrsp, ErrNoData
 	}
 
 	// If the Lambda request failed, return the message as an error

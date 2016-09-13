@@ -10,9 +10,9 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/didip/tollbooth"
-	. "github.com/exago/svc/config"
-	"github.com/exago/svc/github"
-	"github.com/exago/svc/requestlock"
+	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/github"
+	"github.com/hotolab/exago-svc/requestlock"
 	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
@@ -64,13 +64,13 @@ func checkValidRepository(next http.Handler) http.Handler {
 		context.Set(r, "project", sp[2])
 
 		// Check with the GitHub API if the repository contains Go code
-		data, err := github.Get(sp[1], sp[2])
+		data, err := github.GetInstance().Get(sp[1], sp[2])
 		if err != nil {
 			writeError(w, r, err)
 			return
 		}
 
-		if !strings.Contains(data["language"], "Go") {
+		if !strings.Contains(data["language"].(string), "Go") {
 			writeError(w, r, ErrInvalidLanguage)
 			return
 		}
@@ -92,7 +92,7 @@ func requestLock(next http.Handler) http.Handler {
 		ps := context.Get(r, "params").(httprouter.Params)
 		rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
 
-		if requestlock.Has(rp, getIP(r.RemoteAddr)) {
+		if requestlock.Contains(rp, getIP(r.RemoteAddr)) {
 			writeError(w, r, ErrTooManyCalls)
 			return
 		}
@@ -106,11 +106,11 @@ func setLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
 
-		lgr := log.WithFields(log.Fields{
+		lgr := logger.WithFields(log.Fields{
 			"repository": ps.ByName("repository")[1:],
 			"ip":         getIP(r.RemoteAddr),
 		})
-		context.Set(r, "logger", lgr)
+		context.Set(r, "lgr", lgr)
 		next.ServeHTTP(w, r)
 	}
 	return http.HandlerFunc(fn)
@@ -121,7 +121,7 @@ func rateLimit(next http.Handler) http.Handler {
 	limiter.Methods = []string{"GET"}
 
 	fn := func(w http.ResponseWriter, r *http.Request) {
-		lgr := context.Get(r, "logger").(*log.Entry)
+		lgr := context.Get(r, "lgr").(*log.Entry)
 
 		if r.Header.Get("Origin") == Config.AllowOrigin {
 			next.ServeHTTP(w, r)

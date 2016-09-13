@@ -6,9 +6,9 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/exago/svc/indexer"
-	"github.com/exago/svc/repository"
-	"github.com/exago/svc/repository/model"
+	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/hotolab/exago-svc/taskrunner"
 )
 
 const (
@@ -18,6 +18,13 @@ const (
 
 var (
 	ErrRoutineTimeout = errors.New("The analysis timed out")
+
+	// DefaultTypes represents the default processors enabled.
+	DefaultTypes = []string{
+		"codestats",
+		"projectrunner",
+		"lintmessages",
+	}
 )
 
 type processingError struct {
@@ -40,33 +47,34 @@ type errorOutput struct {
 type Checker struct {
 	logger         *log.Entry
 	types, linters []string
-	data           chan interface{}
-	Repository     *repository.Repository
+	taskrunner     taskrunner.TaskRunner
+	aborted        bool
+	processed      chan bool
+	Repository     repository.Record
 	HasError       bool
-	Errors         chan error
+	Aborted        chan bool
 	Done           chan bool
 	Output         map[string]interface{}
 }
 
-func NewChecker(repo string) *Checker {
+func NewChecker(repo string, tr taskrunner.TaskRunner) *Checker {
 	return &Checker{
 		logger:     log.WithField("repository", repo),
-		types:      repository.DefaultTypes,
+		types:      DefaultTypes,
 		linters:    repository.DefaultLinters,
-		data:       make(chan interface{}),
+		taskrunner: tr,
+		processed:  make(chan bool),
 		Repository: repository.New(repo, ""),
 		HasError:   false,
-		Errors:     make(chan error),
+		Aborted:    make(chan bool, 1),
 		Done:       make(chan bool, 1),
-		Output:     map[string]interface{}{},
 	}
 }
 
 // Run launches concurrently every check and merges the output.
 func (rc *Checker) Run() {
-	rc.Repository.StartTime = time.Now()
+	rc.Repository.SetStartTime(time.Now())
 
-	i := 0
 	for _, tp := range rc.types {
 		go func(tp string) {
 			var (
@@ -75,101 +83,91 @@ func (rc *Checker) Run() {
 			)
 
 			switch tp {
-			case "imports":
-				out, err = rc.Repository.GetImports()
-			case "codestats":
-				out, err = rc.Repository.GetCodeStats()
-			case "testresults":
-				out, err = rc.Repository.GetTestResults()
-
-				// Expose isolated errors
-				switch ts := out.(model.TestResults); {
-				case ts.Errors.Goget != "":
-					err = processingError{"goget", ts.Errors.Goget, ts.RawOutput.Goget}
-				case ts.Errors.Gotest != "":
-					err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
+			case model.CodeStatsName:
+				out, err = rc.taskrunner.FetchCodeStats()
+				if err == nil {
+					rc.Repository.SetCodeStats(out.(model.CodeStats))
+				} else {
+					rc.Repository.SetError(tp, err)
 				}
-			case "lintmessages":
-				out, err = rc.Repository.GetLintMessages(rc.linters)
+			case model.ProjectRunnerName:
+				out, err = rc.taskrunner.FetchProjectRunner()
+				if err == nil {
+					rc.Repository.SetProjectRunner(out.(model.ProjectRunner))
+				} else {
+					// Expose isolated errors
+					switch ts := out.(model.ProjectRunner); {
+					case ts.Errors.Goget != "":
+						err = processingError{"goget", ts.Errors.Goget, ts.RawOutput.Goget}
+					case ts.Errors.Gotest != "":
+						err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
+					}
+					rc.Repository.SetError(tp, err)
+				}
+			case model.LintMessagesName:
+				out, err = rc.taskrunner.FetchLintMessages(rc.linters)
+				if err == nil {
+					rc.Repository.SetLintMessages(out.(model.LintMessages))
+				} else {
+					rc.Repository.SetError(tp, err)
+				}
 			}
 
 			if err != nil {
-				rc.Errors <- err
 				rc.HasError = true
-				return
+				log.Error(err)
 			}
 
-			rc.data <- out
+			rc.processed <- true
 		}(tp)
 
 		lgr := rc.logger.WithField("type", tp)
 
 		select {
-		case err := <-rc.Errors:
-			rc.Output[tp] = wrapError(err)
-			lgr.Error(err)
-			i++
-		case out := <-rc.data:
-			rc.Output[tp] = out
-			i++
+		case <-rc.processed:
+			// item processed
+		case <-rc.Aborted:
+			lgr.Warn("Shutting down (aborted)")
 		case <-time.After(RoutineTimeout):
-			rc.Output[tp] = wrapError(ErrRoutineTimeout)
+			rc.Repository.SetError("", ErrRoutineTimeout)
 			lgr.Error(ErrRoutineTimeout)
-			i++
 		}
 	}
 
-	// If every check has been ran
-	if i == len(rc.types) {
+	if !rc.aborted {
 		rc.StampEntry()
-
-		// The entire dataset is ready
 		rc.Done <- true
-
-		go indexer.ProcessRepository(*rc.Repository)
 	}
 }
 
 // StampEntry is called once the entire dataset is loaded.
 func (rc *Checker) StampEntry() {
-	if rc.HasError {
-		rc.Output["score"] = repository.Score{Rank: ""}
-	} else {
-		// Add the score
-		sc, err := rc.Repository.GetScore()
-		if err != nil {
-			rc.Output["score"] = wrapError(err)
-		} else {
-			rc.Output["score"] = sc
-		}
+	// Add the metadata
+	err := rc.Repository.SetMetadata()
+	if err != nil {
+		rc.Repository.SetError(model.MetadataName, err)
+	}
+
+	// Add the score
+	err = rc.Repository.SetScore()
+	if err != nil {
+		rc.Repository.SetError(model.ScoreName, err)
 	}
 
 	// Add the timestamp
-	date, err := rc.Repository.GetDate()
-	if err != nil {
-		rc.Output["date"] = wrapError(err)
-	} else {
-		rc.Output["date"] = date
-	}
+	rc.Repository.SetLastUpdate()
 
 	// Add the execution time
-	et, err := rc.Repository.GetExecutionTime()
-	if err != nil {
-		rc.Output["execution_time"] = wrapError(err)
-	} else {
-		rc.Output["execution_time"] = et
+	rc.Repository.SetExecutionTime()
+
+	// Persist the dataset
+	if err := rc.Repository.Save(); err != nil {
+		log.Errorf("Could not persist the dataset: %v", err)
 	}
 }
 
 // Abort declares the task as done and skips the processing.
 func (rc *Checker) Abort() {
-	rc.Done <- true
-}
-
-func wrapError(err error) interface{} {
-	switch err := err.(type) {
-	case processingError:
-		return errorOutput{err.tp, err.message, err.output}
-	}
-	return errorOutput{Error: err.Error()}
+	rc.aborted = true
+	close(rc.Aborted)
 }

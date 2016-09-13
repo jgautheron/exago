@@ -1,10 +1,10 @@
-hash: eaec67c09342e58c48c91ae3a663b5dbf82c3cef467a994751d338da43a8dd16
-updated: 2016-06-20T17:29:36.505851459+02:00
+hash: a5f280081ebf16f879ac773144196ffa4378f51f2f758693dd9231d03c69db79
+updated: 2016-07-09T23:17:35.012970348+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 3ad29d1ad1c4f2023e355603324348cf1f4b2d48
 - name: github.com/aws/aws-sdk-go
-  version: d3b6d25135b4e09ecd39ea3c2a5cad35279b0515
+  version: 90dec2183a5f5458ee79cbaf4b8e9ab910bc81a6
   subpackages:
   - aws
   - aws/credentials
@@ -18,16 +18,18 @@ imports:
   - private/endpoints
   - aws/awsutil
   - aws/client/metadata
+  - aws/signer/v4
   - private/protocol
   - private/protocol/restjson
-  - private/signer/v4
   - aws/credentials/ec2rolecreds
   - aws/ec2metadata
-  - private/protocol/jsonrpc
   - private/protocol/rest
+  - private/protocol/jsonrpc
   - private/protocol/json/jsonutil
-- name: github.com/codegangsta/cli
-  version: b438abf775124d32be72016935a9553dbffe8473
+- name: github.com/davecgh/go-spew
+  version: 5215b55f46b2b919f50a1df0eaa5886afe4e3b3d
+  subpackages:
+  - spew
 - name: github.com/dgryski/go-topk
   version: 1b30445672a470f5658d1877192cbe84e30d3454
 - name: github.com/didip/tollbooth
@@ -36,23 +38,23 @@ imports:
   - config
   - errors
   - libstring
-- name: github.com/exago/envconfig
+- name: github.com/hotolab/envconfig
   version: 8b1c59eae986013d3be5deddbf1e89f18d25ffaa
 - name: github.com/go-ini/ini
-  version: 72ba3e6b9e6b87e0c74c9a7a4dc86e8dd8ba4355
+  version: cf53f9204df4fbdd7ec4164b57fa6184ba168292
 - name: github.com/golang/freetype
   version: 9ce4eec92a4b5e260b4622c873355647ecf68304
   subpackages:
   - raster
   - truetype
 - name: github.com/golang/protobuf
-  version: 0c1f6d65b5a189c2250d10e71a5506f06f9fa0a0
+  version: 3852dcfda249c2097355a6aabb199a28d97b30df
   subpackages:
   - proto
 - name: github.com/golang/snappy
   version: d9eb7a3d35ec988b8585d4a0068e462c27d28380
 - name: github.com/google/go-github
-  version: 5c1b3a05b41ae630de925007cd8f3e52909d1dbb
+  version: f6f75a742a52df1fd2f2ba9346dc59a864a9166d
   subpackages:
   - github
 - name: github.com/google/go-querystring
@@ -61,6 +63,10 @@ imports:
   - query
 - name: github.com/gorilla/context
   version: aed02d124ae4a0e94fea4541c8effd05bf0c8296
+- name: github.com/hashicorp/golang-lru
+  version: a0d98a5f288019575c6d1f4bb1573fef2d1fcdc4
+  subpackages:
+  - simplelru
 - name: github.com/jmespath/go-jmespath
   version: 0b12d6b521d83fc7f755e7cfc1b1fbdd35a01a74
 - name: github.com/juju/ratelimit
@@ -68,17 +74,34 @@ imports:
 - name: github.com/julienschmidt/httprouter
   version: 77366a47451a56bb3ba682481eed85b64fea14e8
 - name: github.com/justinas/alice
-  version: 8f06f3153579369bb91f084f39f86f5d5030d4dc
+  version: 43e429cd03e6faac34faf94153cfb7a5adb6b928
+- name: github.com/mgutz/ansi
+  version: c286dcecd19ff979eeb73ea444e479b903f2cfcb
 - name: github.com/narqo/go-badge
   version: 3014a17b062a7131301593113f579a8da169b99d
   subpackages:
   - fonts
+- name: github.com/pmezard/go-difflib
+  version: 792786c7400a136282c1664665ae0a8db921c6c2
+  subpackages:
+  - difflib
 - name: github.com/PuerkitoBio/goquery
-  version: 77cbaef46a3af185a3afb87f88a366f3dee2a904
+  version: f0d75731e0db647903c8611d00c7b85002751317
+- name: github.com/SimonWaldherr/golibs
+  version: 300f27777a93b5051fd889350b52c46245cbbf15
+  subpackages:
+  - xmath
 - name: github.com/Sirupsen/logrus
   version: f3cfb454f4c209e6668c95216c4744b8fddb2356
+- name: github.com/stretchr/objx
+  version: 1a9d0bb9f541897e62256577b352fdbc1fb4fd94
+- name: github.com/stretchr/testify
+  version: d77da356e56a7428ad25149ca77381849a6a5232
+  subpackages:
+  - mock
+  - assert
 - name: github.com/syndtr/goleveldb
-  version: fa5b5c78794bc5c18f330361059f871ae8c2b9d6
+  version: ab8b5dcf1042e818ab68e770d465112a899b668e
   subpackages:
   - leveldb
   - leveldb/opt
@@ -92,32 +115,44 @@ imports:
   - leveldb/memdb
   - leveldb/storage
   - leveldb/table
+- name: github.com/urfave/cli
+  version: 1efa31f08b9333f1bd4882d61f9d668a70cd902e
+- name: github.com/x-cray/logrus-prefixed-formatter
+  version: 78e945f7d6bfe5a81ce6121d92d8118e44303e58
 - name: golang.org/x/image
   version: 7c492694a6443a92fd349fda0c4c7b587040f161
   subpackages:
   - font
   - math/fixed
 - name: golang.org/x/net
-  version: 8bf2b39827dbadfd566c4fae7a8790d12be8b23c
+  version: f841c39de738b1d0df95b5a7187744f0e03d8112
   subpackages:
-  - html
   - context
+  - html
   - html/atom
 - name: golang.org/x/oauth2
-  version: 65a8d08c6292395d47053be10b3c5e91960def76
+  version: 7357e96168422ba1e6e7f21075713b72d58764e7
   subpackages:
   - internal
 - name: golang.org/x/sys
-  version: 62bee037599929a6e9146f29d10dd5208c43507d
+  version: a408501be4d17ee978c04a618e7a1b22af058c0e
   subpackages:
   - unix
 - name: google.golang.org/appengine
-  version: 7f59a8c76b8594d06044bfe0bcbe475cb2020482
+  version: 267c27e7492265b84fc6719503b14a1e17975d79
   subpackages:
   - urlfetch
   - internal
   - internal/urlfetch
   - internal/base
   - internal/datastore
+  - internal/log
   - internal/remote_api
-devImports: []
+- name: gopkg.in/tylerb/graceful.v1
+  version: b7036639dd221029fd52e5dc7b78f34545463678
+- name: simonwaldherr.de/go/golibs
+  version: 300f27777a93b5051fd889350b52c46245cbbf15
+  subpackages:
+  - xmath
+  - as
+testImports: []

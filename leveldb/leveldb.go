@@ -1,35 +1,42 @@
+// Package leveldb is a thin simplicity layer over the LevelDB database.
 package leveldb
 
 import (
+	"sync"
+
 	log "github.com/Sirupsen/logrus"
-	. "github.com/exago/svc/config"
+	. "github.com/hotolab/exago-svc/config"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 var (
-	db *ldb.DB
+	db     LevelDB
+	once   sync.Once
+	logger = log.WithField("prefix", "leveldb")
+
+	// Make sure it satisfies the interface.
+	_ Database = (*LevelDB)(nil)
 )
 
-func Init() {
-	instance()
+type LevelDB struct {
+	conn *ldb.DB
 }
 
-func FindForRepositoryCmd(key []byte) (b []byte, err error) {
-	b, err = instance().Get(key, nil)
-	if err != nil {
-		if err == ldb.ErrNotFound {
-			return nil, nil
+func GetInstance() LevelDB {
+	once.Do(func() {
+		conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
+		if err != nil {
+			logger.Fatalf("An error occurred while trying to open the DB: %s", err)
 		}
-		return nil, err
-	}
-	return
+		db = LevelDB{conn}
+	})
+	return db
 }
 
-func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
-	m := map[string][]byte{}
-	iter := instance().NewIterator(util.BytesPrefix(prefix), nil)
+func (l LevelDB) DeleteAllMatchingPrefix(prefix []byte) error {
+	iter := l.conn.NewIterator(util.BytesPrefix(prefix), nil)
 	defer iter.Release()
 	for iter.Next() {
 		// Get the key
@@ -37,61 +44,28 @@ func FindAllForRepository(prefix []byte) (map[string][]byte, error) {
 		ckey := make([]byte, len(key))
 		copy(ckey, key)
 
-		// Get the value
-		val := iter.Value()
-		cval := make([]byte, len(val))
-		copy(cval, val)
-
-		m[string(ckey)] = cval
-	}
-	return m, iter.Error()
-}
-
-func DeleteAllMatchingPrefix(prefix []byte) error {
-	iter := instance().NewIterator(util.BytesPrefix(prefix), nil)
-	defer iter.Release()
-	for iter.Next() {
-		// Get the key
-		key := iter.Key()
-		ckey := make([]byte, len(key))
-		copy(ckey, key)
-
-		if err := db.Delete(ckey, nil); err != nil {
+		if err := l.conn.Delete(ckey, nil); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-func Save(key []byte, data []byte) error {
-	return instance().Put(key, data, nil)
+func (l LevelDB) Put(key []byte, data []byte) error {
+	return l.conn.Put(key, data, nil)
 }
 
-func Get(key []byte) ([]byte, error) {
-	b, err := instance().Get(key, nil)
-	if err != nil {
-		if err == ldb.ErrNotFound {
-			return nil, nil
-		}
-		return nil, err
-	}
-	return b, err
+func (l LevelDB) Get(key []byte) ([]byte, error) {
+	return l.conn.Get(key, nil)
 }
 
-// connect initiates a LevelDB connection.
-func connect() *ldb.DB {
-	var err error
-	db, err = ldb.OpenFile(Config.DatabasePath, &opt.Options{})
-	if err != nil {
-		log.Fatalf("An error occurred while trying to open the DB: %s", err)
-	}
-	return db
+func (l LevelDB) Delete(key []byte) error {
+	return l.conn.Delete(key, nil)
 }
 
-// Instance returns the current LevelDB instance.
-func instance() *ldb.DB {
-	if db != nil {
-		return db
-	}
-	return connect()
+type Database interface {
+	DeleteAllMatchingPrefix(prefix []byte) error
+	Delete(key []byte) error
+	Put(key []byte, data []byte) error
+	Get(key []byte) ([]byte, error)
 }

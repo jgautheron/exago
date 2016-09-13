@@ -1,6 +1,9 @@
-package: github.com/exago/svc
+package: github.com/hotolab/exago-svc
 import:
 - package: github.com/PuerkitoBio/goquery
+- package: github.com/SimonWaldherr/golibs
+  subpackages:
+  - xmath
 - package: github.com/Sirupsen/logrus
 - package: github.com/aws/aws-sdk-go
   subpackages:
@@ -8,14 +11,14 @@ import:
   - aws/credentials
   - aws/session
   - service/lambda
-- package: github.com/codegangsta/cli
 - package: github.com/dgryski/go-topk
 - package: github.com/didip/tollbooth
-- package: github.com/exago/envconfig
+- package: github.com/hotolab/envconfig
 - package: github.com/google/go-github
   subpackages:
   - github
 - package: github.com/gorilla/context
+- package: github.com/hashicorp/golang-lru
 - package: github.com/julienschmidt/httprouter
 - package: github.com/justinas/alice
 - package: github.com/narqo/go-badge
@@ -24,4 +27,7 @@ import:
   - leveldb
   - leveldb/opt
   - leveldb/util
+- package: github.com/urfave/cli
 - package: golang.org/x/oauth2
+- package: gopkg.in/tylerb/graceful.v1
+- package: github.com/x-cray/logrus-prefixed-formatter

@@ -1,65 +1,133 @@
-// Package indexer processes repositories to determine occurrences, top-k, popularity.
+// Package indexer enables mass processing of repositories.
 package indexer
 
 import (
+	"os"
+	"os/signal"
+	"runtime"
+	"sync"
+	"syscall"
 	"time"
 
-	"github.com/dgryski/go-topk"
-	"github.com/exago/svc/repository"
+	log "github.com/Sirupsen/logrus"
+	"github.com/hotolab/exago-svc/queue"
+	"github.com/hotolab/exago-svc/repository"
 )
 
-var data IndexedData
+type Indexer struct {
+	Done, Aborted chan bool
 
-type IndexedData struct {
-	Recent  []repository.Repository
-	Top     []repository.Repository
-	Popular []repository.Repository
+	items           map[string]itemState
+	processingItems map[string]bool
+	concurrency     int
+	processedItems  chan processedItem
+	processedCount  int
+	queue           *queue.PriorityQueue
 
-	// How many items per category
-	items int
-	tk    *topk.Stream
+	sync.RWMutex
 }
 
-// AddRecent pushes to the stack latest new items, pops the old ones.
-func (d *IndexedData) AddRecent(repo repository.Repository) {
-	d.Recent = append(d.Recent, repo)
-	if len(d.Recent) > d.items {
-		d.Recent = d.Recent[1:]
+// New prepares a new indexer.
+func New(items []string) *Indexer {
+	c := runtime.NumCPU()
+
+	mp := map[string]itemState{}
+	for _, item := range items {
+		mp[item] = itemState{nil, false}
+	}
+
+	return &Indexer{
+		Done:            make(chan bool, 1),
+		Aborted:         make(chan bool, 1),
+		items:           mp,
+		processingItems: make(map[string]bool, c),
+		concurrency:     c,
+		processedItems:  make(chan processedItem, len(mp)),
+		processedCount:  0,
+		queue:           queue.GetInstance(),
 	}
 }
 
-// AddTop inserts the repository name into the topk data structure.
-func (d *IndexedData) AddTop(repo repository.Repository) {
-	d.tk.Insert(repo.Name, 1)
-}
+// Start runs the indexer.
+func (idx *Indexer) Start() {
+	start := time.Now()
 
-// updateTopK rebuilds the topk from the stream periodically.
-func (d *IndexedData) updateTopK() {
-	for {
-		time.Sleep(5 * time.Minute)
-
-		top := []repository.Repository{}
-		for i, v := range d.tk.Keys() {
-			if i > d.items {
-				rp := repository.New(v.Key, "")
-				rp.Load()
-				top = append(top, *rp)
+	go func() {
+		for item := range idx.processedItems {
+			state := itemState{nil, true}
+			if item.err != nil {
+				state = itemState{item.err, true}
 			}
+
+			idx.items[item.name] = state
+			delete(idx.processingItems, item.name)
+			idx.processedCount++
+
+			// If all items are processed, we're done
+			if idx.processedCount == len(idx.items) {
+				idx.Done <- true
+				break
+			}
+
+			// Process the next available item
+			go idx.ProcessItem()
 		}
-		d.Top = top
+	}()
+
+	for i := 0; i < idx.concurrency; i++ {
+		go idx.ProcessItem()
+	}
+
+	signals := make(chan os.Signal, 1)
+	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+
+	select {
+	case <-idx.Done:
+		elapsed := time.Since(start)
+		log.Infof("Processed %d item(s) in %s", len(idx.items), elapsed)
+	case <-signals:
+		log.Warn("Termination signal caught, stopping the indexer")
+		idx.Aborted <- true
 	}
 }
 
-func ProcessRepository(repo repository.Repository) {
-	data.AddRecent(repo)
-	data.AddTop(repo)
+// ProcessItem evaluates the next available item.
+func (idx *Indexer) ProcessItem() {
+	for item, state := range idx.items {
+		// Has the item already been processed?
+		if state.processed {
+			continue
+		}
+
+		// Is the item currently being processed?
+		idx.RLock()
+		if _, beingProcessed := idx.processingItems[item]; beingProcessed {
+			continue
+		}
+		idx.RUnlock()
+		idx.processingItems[item] = true
+
+		lgr := log.WithField("repository", item)
+		lgr.Info("Processing...")
+
+		rp := repository.New(item, "")
+		if rp.IsCached() {
+			lgr.Warn("Already processed")
+			idx.processedItems <- processedItem{item, nil}
+			continue
+		}
+
+		_, err := idx.queue.PushSync(item, 20)
+		idx.processedItems <- processedItem{item, err}
+	}
 }
 
-func init() {
-	data = IndexedData{
-		items: 6,
-		tk:    topk.New(20),
-	}
+type itemState struct {
+	err       error
+	processed bool
+}
 
-	go data.updateTopK()
+type processedItem struct {
+	name string
+	err  error
 }
