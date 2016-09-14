@@ -44,6 +44,20 @@ type errorOutput struct {
 	Output string `json:"output,omitempty"`
 }
 
+func ProcessRepository(repo string, tr taskrunner.TaskRunner) (interface{}, error) {
+	checker := NewChecker(repo, tr)
+	checker.Run()
+
+	var out model.Data
+	select {
+	case <-checker.Done:
+		out = checker.Repository.GetData()
+	case <-checker.Aborted:
+		out = checker.Repository.GetData()
+	}
+	return out, nil
+}
+
 type Checker struct {
 	logger         *log.Entry
 	types, linters []string
