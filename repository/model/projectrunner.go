@@ -9,19 +9,17 @@ const (
 	TestDurationName  = "testduration"
 )
 
+type ChecklistItem struct {
+	Category string `json:"Category"`
+	Desc     string `json:"Desc"`
+	Name     string `json:"Name"`
+}
+
 // ProjectRunner received from the test runner.
 type ProjectRunner struct {
 	Checklist struct {
-		Failed []struct {
-			Category string `json:"Category"`
-			Desc     string `json:"Desc"`
-			Name     string `json:"Name"`
-		} `json:"Failed"`
-		Passed []struct {
-			Category string `json:"Category"`
-			Desc     string `json:"Desc"`
-			Name     string `json:"Name"`
-		} `json:"Passed"`
+		Failed []ChecklistItem `json:"Failed"`
+		Passed []ChecklistItem `json:"Passed"`
 	} `json:"checklist"`
 	Packages []struct {
 		Coverage      float64 `json:"coverage"`

@@ -12,6 +12,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/hotolab/exago-svc/repository/processor"
+	"github.com/hotolab/exago-svc/taskrunner"
 	"github.com/hotolab/exago-svc/taskrunner/lambda"
 )
 
@@ -39,6 +40,7 @@ type PriorityQueue struct {
 	concurrency int
 	items       ItemList
 	workers     []*Worker
+	processorFn func(value string, tr taskrunner.TaskRunner) (interface{}, error)
 	in          chan *Item
 	out         chan map[uint32]interface{}
 	quit        chan bool
@@ -55,6 +57,7 @@ func GetInstance() *PriorityQueue {
 	once.Do(func() {
 		queue = &PriorityQueue{
 			concurrency: 4,
+			processorFn: processor.ProcessRepository,
 			in:          make(chan *Item, 1000),
 			out:         make(chan map[uint32]interface{}, 100),
 			quit:        make(chan bool),
@@ -158,18 +161,11 @@ func (pq *PriorityQueue) Worker(id int) {
 	for {
 		select {
 		case item := <-w.in:
-			p := processor.NewChecker(item.value, lambda.Runner{Repository: item.value})
-			p.Run()
+			data, _ := pq.processorFn(item.value, lambda.Runner{Repository: item.value})
 
 			out := map[uint32]interface{}{}
-			select {
-			case <-p.Done:
-				out[item.hash] = p.Repository.GetData()
-				pq.out <- out
-			case <-p.Aborted:
-				out[item.hash] = p.Repository.GetData()
-				pq.out <- out
-			}
+			out[item.hash] = data
+			pq.out <- out
 
 			logger.WithField("hash", item.hash).Debugf("Worker %d finished processing", w.id)
 			w.Lock()
