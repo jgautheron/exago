@@ -15,24 +15,28 @@ type ChecklistItem struct {
 	Name     string `json:"Name"`
 }
 
+type Package struct {
+	Coverage      float64 `json:"coverage"`
+	ExecutionTime float64 `json:"execution_time"`
+	Name          string  `json:"name"`
+	Success       bool    `json:"success"`
+	Tests         []struct {
+		Name          string  `json:"name"`
+		ExecutionTime float64 `json:"execution_time"`
+		Passed        bool    `json:"passed"`
+	} `json:"tests"`
+}
+
+type Checklist struct {
+	Failed []ChecklistItem `json:"Failed"`
+	Passed []ChecklistItem `json:"Passed"`
+}
+
 // ProjectRunner received from the test runner.
 type ProjectRunner struct {
-	Checklist struct {
-		Failed []ChecklistItem `json:"Failed"`
-		Passed []ChecklistItem `json:"Passed"`
-	} `json:"checklist"`
-	Packages []struct {
-		Coverage      float64 `json:"coverage"`
-		ExecutionTime float64 `json:"execution_time"`
-		Name          string  `json:"name"`
-		Success       bool    `json:"success"`
-		Tests         []struct {
-			Name          string  `json:"name"`
-			ExecutionTime float64 `json:"execution_time"`
-			Passed        bool    `json:"passed"`
-		} `json:"tests"`
-	} `json:"packages"`
-	ThirdParties  []string `json:"third_parties"`
+	Checklist     Checklist `json:"checklist"`
+	Packages      []Package `json:"packages"`
+	ThirdParties  []string  `json:"third_parties"`
 	ExecutionTime struct {
 		Goget   string `json:"goget,omitempty"`
 		Goprove string `json:"goprove"`

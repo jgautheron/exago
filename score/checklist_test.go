@@ -9,48 +9,55 @@ import (
 
 var criterias = []string{"projectBuilds", "isFormatted", "hasReadme", "isDirMatch", "isLinted", "hasBenches"}
 
-func TestNotEvenOne(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = getStubChecklist([]string{})
-	d.CodeStats = map[string]int{"LOC": 200}
-	evaluator := score.CheckListEvaluator()
-	evaluator.Setup()
-	res := evaluator.Calculate(d)
-	if res.Score != 0 {
-		t.Error("The score should be 0")
+func TestChecklist(t *testing.T) {
+	var tests = []struct {
+		criterias []string
+		loc       int
+		operator  string
+		expected  float64
+		desc      string
+	}{
+		{[]string{}, 200, "=", 0, "The score should be 0"},
+		{
+			[]string{"projectBuilds", "hasReadme", "isDirMatch", "isLinted", "hasBenches"},
+			5000, "<", 70,
+			"If a project is not gofmt'd, it probably means we're dealing with a beginner or old project",
+		},
+		{
+			[]string{"projectBuilds", "isFormatted", "isDirMatch", "isLinted", "hasBenches"},
+			5000, "<", 70,
+			"The README file is a documentation entry point, generally a must-have",
+		},
+	}
+
+	for _, tt := range tests {
+		d := model.Data{}
+		d.ProjectRunner = model.ProjectRunner{
+			Checklist: getStubChecklist(tt.criterias),
+		}
+		d.CodeStats = map[string]int{"LOC": tt.loc}
+		evaluator := score.CheckListEvaluator()
+		evaluator.Setup()
+		res := evaluator.Calculate(d)
+
+		switch tt.operator {
+		case "<":
+			if res.Score > tt.expected {
+				t.Errorf("Wrong score %s", tt.desc)
+			}
+		case ">":
+			if res.Score < tt.expected {
+				t.Errorf("Wrong score %s", tt.desc)
+			}
+		case "=":
+			if res.Score != tt.expected {
+				t.Errorf("Wrong score %s", tt.desc)
+			}
+		}
 	}
 }
 
-func TestFmtFail(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = getStubChecklist([]string{"projectBuilds", "hasReadme", "isDirMatch", "isLinted", "hasBenches"})
-	d.CodeStats = map[string]int{"LOC": 200}
-	evaluator := score.CheckListEvaluator()
-	evaluator.Setup()
-	res := evaluator.Calculate(d)
-
-	// If a project is not gofmt'd, it probably means we're dealing with a beginner or old project
-	if res.Score > 70 {
-		t.Error("The score should not exceed 70")
-	}
-}
-
-func TestReadmeFail(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = getStubChecklist([]string{"projectBuilds", "isFormatted", "isDirMatch", "isLinted", "hasBenches"})
-	d.CodeStats = map[string]int{"LOC": 200}
-	evaluator := score.CheckListEvaluator()
-	evaluator.Setup()
-	res := evaluator.Calculate(d)
-
-	// If a project doesn't have a README, it usually means it hasn't been finished yet
-	// Creating a README is usually the first step toward open-sourcing a project
-	if res.Score > 70 {
-		t.Error("The score should not exceed 70")
-	}
-}
-
-func getStubChecklist(passed []string) model.ProjectRunner {
+func getStubChecklist(passed []string) model.Checklist {
 	failed := []string{}
 	for _, criteria := range criterias {
 		found := false
@@ -78,13 +85,8 @@ func getStubChecklist(passed []string) model.ProjectRunner {
 		})
 	}
 
-	return model.ProjectRunner{
-		Checklist: struct {
-			Failed []model.ChecklistItem `json:"Failed"`
-			Passed []model.ChecklistItem `json:"Passed"`
-		}{
-			Failed: failedItemList,
-			Passed: passedItemList,
-		},
+	return model.Checklist{
+		Failed: failedItemList,
+		Passed: passedItemList,
 	}
 }

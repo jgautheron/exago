@@ -7,72 +7,49 @@ import (
 	"github.com/hotolab/exago-svc/score"
 )
 
-func TestLowThirdParties(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = model.ProjectRunner{
-		ThirdParties: []string{"1", "2"},
+func TestThirdParties(t *testing.T) {
+	var tests = []struct {
+		thirdParties []string
+		loc          int
+		operator     string
+		expected     float64
+		desc         string
+	}{
+		{getThirdParties(2), 200, ">", 70, "Two third parties for a small project is pretty common"},
+		{getThirdParties(8), 5000, ">", 50, "8 third parties for 5000 LOC is not that bad"},
+		{getThirdParties(9), 2000, "<", 50, "For 2k LOC this is proportionally too much"},
+		{getThirdParties(10), 400, "<", 30, "Way too much third parties for 400 LOC"},
+		{[]string{}, 100, "=", 100, "No third party, then obviously we get the maximum score"},
 	}
-	d.CodeStats = map[string]int{"LOC": 200}
-	res := score.ThirdPartiesEvaluator().Calculate(d)
 
-	// Two third parties for a small project is pretty common
-	if res.Score < 70 || res.Score > 80 {
-		t.Error("Wrong score")
+	for _, tt := range tests {
+		d := model.Data{}
+		d.ProjectRunner = model.ProjectRunner{
+			ThirdParties: tt.thirdParties,
+		}
+		d.CodeStats = map[string]int{"LOC": tt.loc}
+		res := score.ThirdPartiesEvaluator().Calculate(d)
+
+		switch tt.operator {
+		case "<":
+			if res.Score > tt.expected {
+				t.Error("Wrong score")
+			}
+		case ">":
+			if res.Score < tt.expected {
+				t.Error("Wrong score")
+			}
+		case "=":
+			if res.Score != tt.expected {
+				t.Error("Wrong score")
+			}
+		}
 	}
 }
 
-func TestLotsOfThirdParties(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = model.ProjectRunner{
-		ThirdParties: []string{"1", "2", "3", "4", "5", "6", "7", "8"},
+func getThirdParties(count int) (tp []string) {
+	for i := 0; i < count; i++ {
+		tp = append(tp, string(i))
 	}
-	d.CodeStats = map[string]int{"LOC": 5000}
-	res := score.ThirdPartiesEvaluator().Calculate(d)
-
-	// 8 third parties for 5000 LOC is not that bad
-	if res.Score < 50 {
-		t.Error("Wrong score")
-	}
-}
-
-func TestTooMuchThirdParties(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = model.ProjectRunner{
-		ThirdParties: []string{"1", "2", "3", "4", "5", "6", "7", "8", "9"},
-	}
-	d.CodeStats = map[string]int{"LOC": 2000}
-	res := score.ThirdPartiesEvaluator().Calculate(d)
-
-	// For 2k LOC this is proportionally too much
-	if res.Score > 50 {
-		t.Error("Wrong score")
-	}
-}
-
-func TestWayTooMuchThirdParties(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = model.ProjectRunner{
-		ThirdParties: []string{"1", "2", "3", "4", "5", "6", "7", "8", "9", "10"},
-	}
-	d.CodeStats = map[string]int{"LOC": 400}
-	res := score.ThirdPartiesEvaluator().Calculate(d)
-
-	// For 2k LOC this is proportionally too much
-	if res.Score > 30 {
-		t.Error("Wrong score")
-	}
-}
-
-func TestNoThirdParty(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = model.ProjectRunner{
-		ThirdParties: []string{},
-	}
-	d.CodeStats = map[string]int{"LOC": 100}
-	res := score.ThirdPartiesEvaluator().Calculate(d)
-
-	// No third party, then obviously we get the maximum score
-	if res.Score != 100 {
-		t.Error("The score should be 100")
-	}
+	return tp
 }
