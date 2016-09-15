@@ -1,11 +1,14 @@
 package: github.com/hotolab/exago-svc
 import:
 - package: github.com/PuerkitoBio/goquery
+  version: ^1.0.1
 - package: github.com/SimonWaldherr/golibs
   subpackages:
   - xmath
 - package: github.com/Sirupsen/logrus
+  version: ^0.10.0
 - package: github.com/aws/aws-sdk-go
+  version: ^1.4.9
   subpackages:
   - aws
   - aws/credentials
@@ -13,21 +16,35 @@ import:
   - service/lambda
 - package: github.com/dgryski/go-topk
 - package: github.com/didip/tollbooth
-- package: github.com/hotolab/envconfig
 - package: github.com/google/go-github
   subpackages:
   - github
 - package: github.com/gorilla/context
+  version: ^1.1.0
 - package: github.com/hashicorp/golang-lru
+- package: github.com/hotolab/envconfig
+  version: ^1.0.0
 - package: github.com/julienschmidt/httprouter
+  version: ^1.1.0
 - package: github.com/justinas/alice
+  version: ^1.0.0
 - package: github.com/narqo/go-badge
+  version: ^0.3.0
+- package: github.com/stretchr/testify
+  version: ^1.1.3
+  subpackages:
+  - mock
 - package: github.com/syndtr/goleveldb
   subpackages:
   - leveldb
   - leveldb/opt
   - leveldb/util
 - package: github.com/urfave/cli
+  version: ^1.18.1
+- package: github.com/x-cray/logrus-prefixed-formatter
 - package: golang.org/x/oauth2
 - package: gopkg.in/tylerb/graceful.v1
-- package: github.com/x-cray/logrus-prefixed-formatter
+  version: ^1.2.13
+- package: simonwaldherr.de/go/golibs
+  subpackages:
+  - xmath
