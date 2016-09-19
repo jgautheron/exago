@@ -8,8 +8,8 @@ import (
 	"net/http"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/hotolab/exago-svc/config"
 	"github.com/gorilla/context"
+	. "github.com/hotolab/exago-svc/config"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -26,8 +26,6 @@ func (r *Router) Get(path string, handler http.Handler) {
 // NewRouter returns a wrapped httprouter.
 func NewRouter() *Router {
 	r := &Router{httprouter.New()}
-	r.NotFound = cstNotFound{}
-	r.MethodNotAllowed = cstMethodNotAllowed{}
 	return r
 }
 
@@ -36,19 +34,6 @@ func wrapHandler(h http.Handler) httprouter.Handle {
 		context.Set(r, "params", ps)
 		h.ServeHTTP(w, r)
 	}
-}
-
-type cstMethodNotAllowed struct{}
-type cstNotFound struct{}
-
-// ServeHTTP is a custom handler for the "method not allowed" error
-func (wrt cstMethodNotAllowed) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	writeData(w, r, http.StatusMethodNotAllowed, "Method not allowed")
-}
-
-// ServeHTTP is a custom handler for the 404 error
-func (wrt cstNotFound) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	writeData(w, r, http.StatusNotFound, "Not found")
 }
 
 // badRequest is handled by setting the status code in the reply to StatusBadRequest.

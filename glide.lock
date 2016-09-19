@@ -1,10 +1,10 @@
-hash: edf58a33eb1c450ed8e1043df74d1e32a299a249697f4f740103971f83565e3b
-updated: 2016-09-15T10:30:06.044481438+02:00
+hash: 60e2daeebb20a44ea3235f3fd17a02c13ca1cb3ca75aa279128ed09976e663b5
+updated: 2016-09-19T22:56:49.558843749+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 1c31af6f6c1a7b101ed05aacc7d8a738b43ae86e
 - name: github.com/aws/aws-sdk-go
-  version: 3d4bac4e7e2ebd6f6b49de28d3232317af79c6fe
+  version: ddfd17ec06eee10c24c5c474633273fd034afdda
   subpackages:
   - aws
   - aws/credentials
@@ -72,7 +72,7 @@ imports:
   subpackages:
   - simplelru
 - name: github.com/hotolab/envconfig
-  version: 0280e33525f5d88edb71638a80b31724153225ba
+  version: 52f095323172d544fb3b6c2144478d1bfb1b97e9
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
 - name: github.com/juju/ratelimit
