@@ -7,7 +7,7 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-const codeStatsFactor = -0.13
+const codeStatsFactor = -0.1
 
 type codeStatsEvaluator struct {
 	Evaluator
@@ -25,11 +25,15 @@ func CodeStatsEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (ce *codeStatsEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
-	r := ce.NewResponse(100, 1, "", nil)
+	r := ce.NewResponse(0, 1, "", nil)
 	cs := d.CodeStats
-	ra := float64(cs["CLOC"]) / float64(cs["LOC"])
+	ra := float64(cs["CLOC"]) / float64(cs["LOC"]) * 100
+
 	r.Message = fmt.Sprintf("%d comments for %d lines of code", cs["CLOC"], cs["LOC"])
 
-	r.Score = 100 / (1 + (100-1)*math.Exp(codeStatsFactor*(ra*100)))
+	if ra > 1 {
+		r.Score = 100 / (1 + (30-1)*math.Exp(codeStatsFactor*ra))
+	}
+
 	return r
 }
