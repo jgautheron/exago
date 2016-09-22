@@ -7,7 +7,7 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-const codeStatsFactor = -0.1
+const codeStatsFactor = -0.25
 
 type codeStatsEvaluator struct {
 	Evaluator

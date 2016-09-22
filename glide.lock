@@ -1,10 +1,10 @@
-hash: 60e2daeebb20a44ea3235f3fd17a02c13ca1cb3ca75aa279128ed09976e663b5
-updated: 2016-09-21T09:10:33.926197789+02:00
+hash: 3c98f19008637c6abb21ac9f5ed70f3305172581d10f27fbfefbe17d97b98179
+updated: 2016-09-22T14:17:01.076950233+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 1c31af6f6c1a7b101ed05aacc7d8a738b43ae86e
 - name: github.com/aws/aws-sdk-go
-  version: 7a81396c57134038e554b2ac86be4653018b20f9
+  version: 54888dfe736c54ceb65ccd5443d17928d90034c4
   subpackages:
   - aws
   - aws/awserr
@@ -33,7 +33,7 @@ imports:
   - service/lambda
   - service/sts
 - name: github.com/davecgh/go-spew
-  version: 6cf5744a041a0022271cefed95ba843f6d87fd51
+  version: 6d212800a42e8ab5c146b8ace3490ee17e5225f9
   subpackages:
   - spew
 - name: github.com/dgryski/go-topk
@@ -66,7 +66,7 @@ imports:
   subpackages:
   - query
 - name: github.com/gorilla/context
-  version: 1ea25387ff6f684839d82767c1733ff4d4d15d0a
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/hashicorp/golang-lru
   version: 0a025b7e63adc15a622f29b0b2c4c3848243bbf6
   subpackages:
@@ -80,7 +80,7 @@ imports:
 - name: github.com/julienschmidt/httprouter
   version: d8ff598a019f2c7bad0980917a588193cf26666e
 - name: github.com/justinas/alice
-  version: 052b8b6c18edb9db317af86806d8e00ebaa94160
+  version: 1051eaf52fcafdd87ead59d28b065f1fcb8274ec
 - name: github.com/mgutz/ansi
   version: c286dcecd19ff979eeb73ea444e479b903f2cfcb
 - name: github.com/narqo/go-badge
@@ -92,17 +92,17 @@ imports:
   subpackages:
   - difflib
 - name: github.com/PuerkitoBio/goquery
-  version: 56a198aba89cdf7a612e6c762eff9d788b9f2dae
+  version: 152b1a2c8f5d0340f658bb656032a39b94e52958
 - name: github.com/SimonWaldherr/golibs
   version: beb7ee4ab176f8676000447dd54c6d6bac41bc83
   subpackages:
   - xmath
 - name: github.com/Sirupsen/logrus
-  version: 4b6ea7319e214d98c938f12692336f7ca9348d6b
+  version: 3ec0642a7fb6488f65b06f9040adc67e3990296a
 - name: github.com/stretchr/objx
   version: 1a9d0bb9f541897e62256577b352fdbc1fb4fd94
 - name: github.com/stretchr/testify
-  version: f390dcf405f7b83c997eac1b06768bb9f44dec18
+  version: d77da356e56a7428ad25149ca77381849a6a5232
   subpackages:
   - assert
   - mock
@@ -122,7 +122,7 @@ imports:
   - leveldb/table
   - leveldb/util
 - name: github.com/urfave/cli
-  version: a14d7d367bc02b1f57d88de97926727f2d936387
+  version: d53eb991652b1d438abdd34ce4bfa3ef1539108e
 - name: github.com/x-cray/logrus-prefixed-formatter
   version: 78e945f7d6bfe5a81ce6121d92d8118e44303e58
 - name: golang.org/x/image
@@ -131,7 +131,7 @@ imports:
   - font
   - math/fixed
 - name: golang.org/x/net
-  version: f4fe4abe3c785295ddf81c7f1823bcd3bad391b6
+  version: 6d3beaea10370160dea67f5c9327ed791afd5389
   subpackages:
   - context
   - html
@@ -145,7 +145,7 @@ imports:
   subpackages:
   - unix
 - name: google.golang.org/appengine
-  version: 78199dcb0669fc381c22e919e1e97eba879e8f60
+  version: 45688856612892bdabe348fff413e5075ac72f46
   subpackages:
   - internal
   - internal/base
