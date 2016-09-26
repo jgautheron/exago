@@ -12,7 +12,7 @@ import (
 var (
 	// DefaultLinters ran by default in Lambda.
 	DefaultLinters = []string{
-		"deadcode", "dupl", "errcheck", "goconst", "gocyclo", "gofmt", "goimports",
+		"deadcode", "dupl", "gas", "goconst", "gocyclo", "gofmt",
 		"golint", "gosimple", "ineffassign", "staticcheck", "vet", "vetshadow",
 	}
 
