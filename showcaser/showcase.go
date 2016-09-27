@@ -4,6 +4,7 @@ package showcaser
 import (
 	"encoding/json"
 	"os"
+	"strings"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
@@ -70,7 +71,7 @@ func (d *Showcase) AddTopRanked(repo repository.Record) {
 	d.Lock()
 	defer d.Unlock()
 
-	if repo.GetRank() != "A" {
+	if !strings.Contains(repo.GetRank(), "A") {
 		return
 	}
 
