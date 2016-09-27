@@ -11,6 +11,10 @@ import (
 	"github.com/hotolab/exago-svc/score"
 )
 
+func (r *Repository) SetData(d model.Data) {
+	r.Data = d
+}
+
 func (r *Repository) SetCodeStats(cs model.CodeStats) {
 	r.Data.CodeStats = cs
 }

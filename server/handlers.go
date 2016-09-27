@@ -11,6 +11,7 @@ import (
 	"github.com/hotolab/exago-svc/godoc"
 	"github.com/hotolab/exago-svc/queue"
 	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/julienschmidt/httprouter"
 )
@@ -27,7 +28,10 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 
 	q := queue.GetInstance()
 	data, err := q.PushSync(repo, 10)
-	go showcaser.GetInstance().Process(rp)
+	if err == nil {
+		rp.SetData(data.(model.Data))
+		go showcaser.GetInstance().Process(rp)
+	}
 	send(w, r, data, err)
 }
 
