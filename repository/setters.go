@@ -46,7 +46,7 @@ func (r *Repository) SetLastUpdate() {
 
 // SetMetadata sets repository metadata such as description, stars...
 func (r *Repository) SetMetadata() (err error) {
-	reg, _ := regexp.Compile(`^github\.com/([\w\d\-]+)/([\w\d\-]+)`)
+	reg, _ := regexp.Compile(`^github\.com/([\w\d\-\.]+)/([\w\d\-\.]+)`)
 	m := reg.FindStringSubmatch(r.Name)
 	if len(m) == 0 {
 		return errors.New("Can only get metadata for GitHub repositories")
@@ -88,7 +88,7 @@ func (r *Repository) SetScore() (err error) {
 // This helps keep track of what went wrong.
 func (r *Repository) SetError(tp string, err error) {
 	if r.Data.Errors == nil {
-		r.Data.Errors = make(map[string]error)
+		r.Data.Errors = make(map[string]string)
 	}
-	r.Data.Errors[tp] = err
+	r.Data.Errors[tp] = err.Error()
 }

@@ -13,11 +13,11 @@ import (
 
 const (
 	// Lambda function time limit
-	RoutineTimeout = time.Minute * 5
+	RoutineTimeout = time.Second * 1
 )
 
 var (
-	ErrRoutineTimeout = errors.New("The analysis timed out")
+	logger = log.WithField("prefix", "processor")
 
 	// DefaultTypes represents the default processors enabled.
 	DefaultTypes = []string{
@@ -25,6 +25,7 @@ var (
 		"projectrunner",
 		"lintmessages",
 	}
+	ErrRoutineTimeout = errors.New("The analysis timed out")
 )
 
 type processingError struct {
@@ -73,7 +74,7 @@ type Checker struct {
 
 func NewChecker(repo string, tr taskrunner.TaskRunner) *Checker {
 	return &Checker{
-		logger:     log.WithField("repository", repo),
+		logger:     logger.WithField("repository", repo),
 		types:      DefaultTypes,
 		linters:    repository.DefaultLinters,
 		taskrunner: tr,
@@ -129,7 +130,7 @@ func (rc *Checker) Run() {
 
 			if err != nil {
 				rc.HasError = true
-				log.Error(err)
+				rc.logger.Error(err)
 			}
 
 			rc.processed <- true
@@ -143,7 +144,7 @@ func (rc *Checker) Run() {
 		case <-rc.Aborted:
 			lgr.Warn("Shutting down (aborted)")
 		case <-time.After(RoutineTimeout):
-			rc.Repository.SetError("", ErrRoutineTimeout)
+			rc.Repository.SetError(tp, ErrRoutineTimeout)
 			lgr.Error(ErrRoutineTimeout)
 		}
 	}
@@ -176,7 +177,7 @@ func (rc *Checker) StampEntry() {
 
 	// Persist the dataset
 	if err := rc.Repository.Save(); err != nil {
-		log.Errorf("Could not persist the dataset: %v", err)
+		rc.logger.Errorf("Could not persist the dataset: %v", err)
 	}
 }
 

@@ -5,9 +5,9 @@ import (
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/hotolab/exago-svc/config"
 	gh "github.com/google/go-github/github"
 	"github.com/hashicorp/golang-lru"
+	. "github.com/hotolab/exago-svc/config"
 	"golang.org/x/oauth2"
 )
 
@@ -77,21 +77,22 @@ func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	language := ""
-	if repo.Language != nil {
-		language = *repo.Language
-	}
-
 	desc := ""
 	if repo.Description != nil {
 		desc = *repo.Description
 	}
 
+	languages, _, err := g.repositories().ListLanguages(owner, repository)
+	if err != nil {
+		return nil, err
+	}
+
 	// Export only what we need
 	mp := map[string]interface{}{
+		"html_url":    *repo.HTMLURL,
 		"avatar_url":  *repo.Owner.AvatarURL,
 		"description": desc,
-		"language":    language,
+		"languages":   languages,
 		"stargazers":  *repo.StargazersCount,
 		"last_push":   repo.PushedAt.Time,
 	}

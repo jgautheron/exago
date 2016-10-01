@@ -10,15 +10,16 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/didip/tollbooth"
+	"github.com/gorilla/context"
 	. "github.com/hotolab/exago-svc/config"
 	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/requestlock"
-	"github.com/gorilla/context"
 	"github.com/julienschmidt/httprouter"
 )
 
 const (
 	rateLimitCount = 20
+	sizeLimit      = 1000000 // bytes
 )
 
 var (
@@ -26,6 +27,7 @@ var (
 	ErrTooManyCalls      = errors.New("Too many calls in a short period of time")
 	ErrRateLimitExceeded = errors.New("Rate limit exceeded")
 	ErrInvalidLanguage   = errors.New("The repository does not contain Go code")
+	ErrTooLarge          = errors.New("The repository is too large")
 )
 
 func recoverHandler(next http.Handler) http.Handler {
@@ -51,32 +53,39 @@ func checkValidRepository(next http.Handler) http.Handler {
 			writeData(w, r, http.StatusNotImplemented, "Only GitHub is implemented right now")
 			return
 		}
-		re := regexp.MustCompile(`^github\.com/[\w\d\-_]+/[\w\d\-_]+`)
+		re := regexp.MustCompile(`^github\.com/[\w\d\-\._]+/[\w\d\-\._]+`)
 		if !re.MatchString(repository) {
 			writeError(w, r, ErrInvalidParameter)
 			return
 		}
 
-		// Split the project path
-		sp := strings.Split(repository, "/")
-		context.Set(r, "provider", sp[0])
-		context.Set(r, "owner", sp[1])
-		context.Set(r, "project", sp[2])
-
 		// Check with the GitHub API if the repository contains Go code
+		sp := strings.Split(repository, "/")
 		data, err := github.GetInstance().Get(sp[1], sp[2])
 		if err != nil {
 			writeError(w, r, err)
 			return
 		}
 
-		if !strings.Contains(data["language"].(string), "Go") {
+		languages := data["languages"].(map[string]int)
+		size, exists := languages["Go"]
+		if !exists {
 			writeError(w, r, ErrInvalidLanguage)
 			return
 		}
 
-		// Entire path
-		context.Set(r, "repository", repository)
+		if size > sizeLimit {
+			writeError(w, r, ErrTooLarge)
+			return
+		}
+
+		HTMLURL := strings.Replace(data["html_url"].(string), "https://", "", 1)
+		repo := strings.Split(HTMLURL, "/")
+
+		context.Set(r, "provider", repo[0])
+		context.Set(r, "owner", repo[1])
+		context.Set(r, "project", repo[2])
+		context.Set(r, "repository", HTMLURL)
 
 		if len(sp) > 3 {
 			context.Set(r, "path", strings.Join(sp[3:], "/"))
