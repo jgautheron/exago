@@ -29,10 +29,8 @@ func init() {
 	InitializeConfig()
 	InitializeLogging(Config.LogLevel)
 
-	// Initialise the dataset
-	if err := showcaser.Init(); err != nil {
-		log.Fatal(err)
-	}
+	// Initialise the showcaser data
+	showcaser.GetInstance()
 }
 
 func main() {
