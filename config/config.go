@@ -20,7 +20,7 @@ type cfg struct {
 	AllowOrigin        string `envconfig:"ALLOW_ORIGIN" default:"*"`
 	LogLevel           string `envconfig:"LOG_LEVEL" default:"info"`
 
-	ShowcaserPopularRebuildInterval time.Duration `envconfig:"SHOWCASER_POPULAR_REBUILD_INTERVAL" default:"5m"`
+	ShowcaserPopularRebuildInterval time.Duration `envconfig:"SHOWCASER_POPULAR_REBUILD_INTERVAL" default:"1m"`
 }
 
 func InitializeConfig() {
