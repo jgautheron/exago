@@ -5,7 +5,6 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/Sirupsen/logrus"
 	. "github.com/hotolab/exago-svc/config"
 )
 
@@ -27,7 +26,7 @@ func (s *Showcase) periodicallyRebuildPopularList() {
 	for {
 		select {
 		case <-signals:
-			logrus.Info("periodicallyRebuildPopularList closing")
+			logger.Debug("periodicallyRebuildPopularList closing")
 			return
 		case <-time.After(Config.ShowcaserPopularRebuildInterval):
 			err := s.updatePopular()

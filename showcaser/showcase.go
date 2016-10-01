@@ -11,6 +11,7 @@ import (
 	"github.com/dgryski/go-topk"
 	"github.com/hotolab/exago-svc/leveldb"
 	"github.com/hotolab/exago-svc/repository"
+	st "github.com/palantir/stacktrace"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )
 
@@ -112,7 +113,7 @@ func (d *Showcase) updatePopular() error {
 
 	repos, err := d.loadReposFromList(list)
 	if err != nil {
-		return err
+		return st.Propagate(err, "Failed to load the repos from the list: %#v", repos)
 	}
 
 	d.popular = repos
@@ -148,7 +149,7 @@ func (d *Showcase) serialize() ([]byte, error) {
 func (d *Showcase) save() error {
 	b, err := d.serialize()
 	if err != nil {
-		return err
+		return st.Propagate(err, "Could not serialize the index")
 	}
 	return d.db.Put([]byte(DatabaseKey), b)
 }
@@ -173,29 +174,29 @@ func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 		return s, false, nil
 	}
 	if b == nil || err != nil {
-		return s, false, err
+		return s, false, st.Propagate(err, "An error occurred while trying to load the snapshot", err)
 	}
 
 	var sc serialisedShowcase
 	if err = json.Unmarshal(b, &sc); err != nil {
-		return s, false, err
+		return s, false, st.Propagate(err, "Failed to unmarshal the snapshot", err)
 	}
 
 	repos, err = d.loadReposFromList(sc.Recent)
 	if err != nil {
-		return s, false, err
+		return s, false, st.Propagate(err, "Could not load recent repos", err)
 	}
 	s.recent = repos
 
 	repos, err = d.loadReposFromList(sc.Popular)
 	if err != nil {
-		return s, false, err
+		return s, false, st.Propagate(err, "Could not load popular repos", err)
 	}
 	s.popular = repos
 
 	repos, err = d.loadReposFromList(sc.TopRanked)
 	if err != nil {
-		return s, false, err
+		return s, false, st.Propagate(err, "Could not load top repos", err)
 	}
 	s.topRanked = repos
 
@@ -221,10 +222,11 @@ func GetInstance() *Showcase {
 }
 
 func Init() (err error) {
+	db := leveldb.GetInstance()
 	showcase = &Showcase{
 		itemCount: ItemCount,
 		tk:        topk.New(TopkCount),
-		db:        leveldb.GetInstance(),
+		db:        db,
 	}
 
 	snapshot, exists, err := showcase.loadFromDB()
@@ -232,6 +234,7 @@ func Init() (err error) {
 		logger.Errorf("An error occurred while loading the snapshot: %v", err)
 	} else if exists {
 		showcase = &snapshot
+		showcase.db = db
 		showcase.itemCount = ItemCount
 		logger.Info("Snapshot loaded")
 	}
