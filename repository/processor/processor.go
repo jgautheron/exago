@@ -13,7 +13,7 @@ import (
 
 const (
 	// Lambda function time limit
-	RoutineTimeout = time.Second * 1
+	RoutineTimeout = time.Minute * 5
 )
 
 var (
