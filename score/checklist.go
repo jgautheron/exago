@@ -47,7 +47,7 @@ func (ce *checkListEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	r := ce.NewResponse(100, 1.8, "", nil)
 	cl := d.ProjectRunner
 
-	for _, failed := range cl.Checklist.Failed {
+	for _, failed := range cl.Goprove.Data.Failed {
 		if ch, ok := ce.checkers[failed.Name]; ok {
 			ch.score = 0
 		}

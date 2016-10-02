@@ -110,13 +110,6 @@ func (rc *Checker) Run() {
 				if err == nil {
 					rc.Repository.SetProjectRunner(out.(model.ProjectRunner))
 				} else {
-					// Expose isolated errors
-					switch ts := out.(model.ProjectRunner); {
-					case ts.Errors.Goget != "":
-						err = processingError{"goget", ts.Errors.Goget, ts.RawOutput.Goget}
-					case ts.Errors.Gotest != "":
-						err = processingError{"gotest", ts.Errors.Gotest, ts.RawOutput.Gotest}
-					}
 					rc.Repository.SetError(tp, err)
 				}
 			case model.LintMessagesName:

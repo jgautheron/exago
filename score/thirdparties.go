@@ -33,7 +33,7 @@ func (ie *thirdPartiesEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 		6: -0.18,
 	}
 
-	imp, cs := d.ProjectRunner.ThirdParties, d.CodeStats
+	imp, cs := d.ProjectRunner.Thirdparties.Data, d.CodeStats
 
 	imps := float64(len(imp))
 	r := ie.NewResponse(100, 1.5, "", nil)

@@ -63,7 +63,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, "", string(rank), "blue")
 	case "cov":
 		title := "coverage"
-		err, cov := repo.Load(), repo.GetProjectRunner().GetAvgCodeCov()
+		err, cov := repo.Load(), repo.GetProjectRunner().GetMeanCodeCov()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -72,7 +72,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
 	case "duration":
 		title := "tests duration"
-		err, avg := repo.Load(), repo.GetProjectRunner().GetAvgTestDuration()
+		err, avg := repo.Load(), repo.GetProjectRunner().GetMeanTestDuration()
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -90,7 +90,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%d", tests), "blue")
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties := repo.Load(), len(repo.GetProjectRunner().ThirdParties)
+		err, thirdParties := repo.Load(), len(repo.GetProjectRunner().Thirdparties.Data)
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)

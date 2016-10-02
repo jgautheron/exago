@@ -10,52 +10,77 @@ const (
 )
 
 type ChecklistItem struct {
-	Category string `json:"Category"`
-	Desc     string `json:"Desc"`
-	Name     string `json:"Name"`
+	Category string `json:"category"`
+	Desc     string `json:"desc"`
+	Name     string `json:"name"`
 }
 
-type Package struct {
-	Coverage      float64 `json:"coverage"`
-	ExecutionTime float64 `json:"execution_time"`
-	Name          string  `json:"name"`
-	Success       bool    `json:"success"`
-	Tests         []struct {
-		Name          string  `json:"name"`
-		ExecutionTime float64 `json:"execution_time"`
-		Passed        bool    `json:"passed"`
-	} `json:"tests"`
+type CoveragePackage struct {
+	Name     string  `json:"name"`
+	Path     string  `json:"path"`
+	Coverage float64 `json:"coverage"`
 }
 
 type Checklist struct {
-	Failed []ChecklistItem `json:"Failed"`
-	Passed []ChecklistItem `json:"Passed"`
+	Failed []ChecklistItem `json:"failed"`
+	Passed []ChecklistItem `json:"passed"`
 }
 
 // ProjectRunner received from the test runner.
 type ProjectRunner struct {
-	Checklist     Checklist `json:"checklist"`
-	Packages      []Package `json:"packages"`
-	ThirdParties  []string  `json:"third_parties"`
-	ExecutionTime struct {
-		Goget   string `json:"goget,omitempty"`
-		Goprove string `json:"goprove"`
-		Gotest  string `json:"gotest"`
-	} `json:"execution_time"`
-	RawOutput struct {
-		Goget  string `json:"goget"`
-		Gotest string `json:"gotest"`
-	} `json:"raw_output"`
-	Errors struct {
-		Goget  string `json:"goget"`
-		Gotest string `json:"gotest"`
-	} `json:"errors"`
+	Coverage struct {
+		Label string `json:"label"`
+		Data  struct {
+			Packages []CoveragePackage `json:"packages"`
+			Coverage float64           `json:"coverage"`
+		} `json:"data"`
+		RawOutput     string      `json:"raw_output"`
+		ExecutionTime float64     `json:"execution_time"`
+		Error         interface{} `json:"error"`
+	} `json:"coverage"`
+	Download struct {
+		Label         string      `json:"label"`
+		Data          interface{} `json:"data"`
+		RawOutput     string      `json:"raw_output"`
+		ExecutionTime float64     `json:"execution_time"`
+		Error         interface{} `json:"error"`
+	} `json:"download"`
+	Goprove struct {
+		Label         string      `json:"label"`
+		Data          Checklist   `json:"data"`
+		RawOutput     string      `json:"raw_output"`
+		ExecutionTime float64     `json:"execution_time"`
+		Error         interface{} `json:"error"`
+	} `json:"goprove"`
+	Test struct {
+		Label string `json:"label"`
+		Data  []struct {
+			Name          string  `json:"name"`
+			ExecutionTime float64 `json:"execution_time"`
+			Success       bool    `json:"success"`
+			Tests         []struct {
+				Name          string  `json:"name"`
+				ExecutionTime float64 `json:"execution_time"`
+				Passed        bool    `json:"passed"`
+			} `json:"tests"`
+		} `json:"data"`
+		RawOutput     string      `json:"raw_output"`
+		ExecutionTime float64     `json:"execution_time"`
+		Error         interface{} `json:"error"`
+	} `json:"test"`
+	Thirdparties struct {
+		Label         string      `json:"label"`
+		Data          []string    `json:"data"`
+		RawOutput     string      `json:"raw_output"`
+		ExecutionTime float64     `json:"execution_time"`
+		Error         interface{} `json:"error"`
+	} `json:"thirdparties"`
 }
 
 // GetAvgTestDuration returns the average test duration.
-func (t ProjectRunner) GetAvgTestDuration() float64 {
+func (t ProjectRunner) GetMeanTestDuration() float64 {
 	var duration []float64
-	for _, pkg := range t.Packages {
+	for _, pkg := range t.Test.Data {
 		duration = append(duration, pkg.ExecutionTime)
 	}
 	if len(duration) == 0 {
@@ -65,13 +90,6 @@ func (t ProjectRunner) GetAvgTestDuration() float64 {
 }
 
 // GetAvgCodeCov returns the code coverage average.
-func (t ProjectRunner) GetAvgCodeCov() float64 {
-	var cov []float64
-	for _, pkg := range t.Packages {
-		cov = append(cov, pkg.Coverage)
-	}
-	if len(cov) == 0 {
-		return 0
-	}
-	return xmath.Geometric(cov)
+func (t ProjectRunner) GetMeanCodeCov() float64 {
+	return t.Coverage.Data.Coverage
 }
