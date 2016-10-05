@@ -52,8 +52,6 @@ func TestRunnerGotError(t *testing.T) {
 	rp.On("SetCodeStats", Anything).Return(nil).Once()
 
 	runner := model.ProjectRunner{}
-	runner.Errors.Goget = "error!"
-	runner.RawOutput.Goget = "error! something really bad happened :("
 	tr.On("FetchProjectRunner").Return(runner, errors.New("error")).Once()
 	rp.On("SetProjectRunner", Anything).Return(nil).Once()
 

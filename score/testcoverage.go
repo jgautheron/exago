@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	"simonwaldherr.de/go/golibs/xmath"
-
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
@@ -30,17 +28,8 @@ func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 
 	r := te.NewResponse(100, 3, "", nil)
 
-	// Initialise values from test results
-	var cov []float64
-	for _, pkg := range t.Packages {
-		cov = append(cov, pkg.Coverage)
-	}
-
 	// Calculate mean for coverage
-	var covMean float64
-	if len(cov) > 0 {
-		covMean = xmath.Geometric(cov)
-	}
+	covMean := t.GetMeanCodeCov()
 
 	logger.WithField(
 		"coverage (geometric mean)", covMean,

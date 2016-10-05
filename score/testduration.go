@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"math"
 
-	"simonwaldherr.de/go/golibs/xmath"
-
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
@@ -54,16 +52,7 @@ func (te *testDurationEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 		return r
 	}
 
-	// Initialise values from test results
-	var durations []float64
-	for _, pkg := range t.Packages {
-		durations = append(durations, pkg.ExecutionTime)
-	}
-	// Calculate overall sum for execution time
-	var duration float64
-	if len(durations) > 0 {
-		duration = xmath.Sum(durations)
-	}
+	duration := t.GetMeanTestDuration()
 
 	logger.WithField(
 		"duration (overall)", duration,

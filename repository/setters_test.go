@@ -21,9 +21,9 @@ func TestCodeStatsChanged(t *testing.T) {
 func TestProjectRunnerChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
 	pr := rp.GetProjectRunner()
-	pr.ThirdParties = append(pr.ThirdParties, "github.com/bar/moo")
+	pr.Thirdparties.Data = append(pr.Thirdparties.Data, "github.com/bar/moo")
 	rp.SetProjectRunner(pr)
-	if len(pr.ThirdParties) != 2 {
+	if len(pr.Thirdparties.Data) != 1 {
 		t.Error("The third parties have not changed")
 	}
 }
@@ -31,9 +31,9 @@ func TestProjectRunnerChanged(t *testing.T) {
 func TestLintMessagesChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
 	lm := rp.GetLintMessages()
-	lm["codename.go"]["errcheck"][0]["col"] = 123
+	lm["codename.go"]["golint"][0]["col"] = 123
 	rp.SetLintMessages(lm)
-	if rp.GetLintMessages()["codename.go"]["errcheck"][0]["col"] != lm["codename.go"]["errcheck"][0]["col"] {
+	if rp.GetLintMessages()["codename.go"]["golint"][0]["col"] != lm["codename.go"]["golint"][0]["col"] {
 		t.Error("The col has not changed")
 	}
 }
@@ -54,8 +54,10 @@ func TestExecutionTimeChanged(t *testing.T) {
 	now := time.Now()
 	rp.SetStartTime(now)
 	rp.SetExecutionTime()
-	if rp.GetExecutionTime() != "0s" {
-		t.Error("The execution time has not changed")
+
+	et := rp.GetExecutionTime()
+	if et != "0s" {
+		t.Errorf("The execution time has not changed, got %s", et)
 	}
 }
 

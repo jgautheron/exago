@@ -18,15 +18,14 @@ func TestScore(t *testing.T) {
 func getStubData(loc int, cloc int, duration, coverage float64, thirdParties int, checklist []string) model.Data {
 	d := model.Data{}
 
-	p := []model.Package{}
-	p = append(p, model.Package{ExecutionTime: duration, Coverage: coverage})
-
 	d.CodeStats = map[string]int{"LOC": loc, "CLOC": cloc, "Test": 123}
-	d.ProjectRunner = model.ProjectRunner{
-		Packages:     p,
-		ThirdParties: getThirdParties(thirdParties),
-		Checklist:    getStubChecklist(checklist),
-	}
+
+	pr := model.ProjectRunner{}
+	pr.Coverage.Data.Coverage = coverage
+	pr.Thirdparties.Data = getThirdParties(thirdParties)
+	pr.Goprove.Data = getStubChecklist(checklist)
+	d.ProjectRunner = pr
+
 	d.LintMessages = getStubMessages(map[string]int{"gas": 3})
 
 	return d

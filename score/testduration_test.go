@@ -55,11 +55,11 @@ func TestDuration(t *testing.T) {
 }
 
 func getStubDuration(duration []float64) model.ProjectRunner {
-	d := []model.Package{}
+	tp := []model.TestPackage{}
 	for _, item := range duration {
-		d = append(d, model.Package{ExecutionTime: item})
+		tp = append(tp, model.TestPackage{ExecutionTime: item})
 	}
-	return model.ProjectRunner{
-		Packages: d,
-	}
+	pr := model.ProjectRunner{}
+	pr.Test.Data = tp
+	return pr
 }

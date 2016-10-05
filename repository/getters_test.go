@@ -19,7 +19,7 @@ func TestGotName(t *testing.T) {
 
 func TestGotRank(t *testing.T) {
 	rp, _ := loadStubRepo()
-	if rp.GetRank() != "F" {
+	if rp.GetRank() != "D" {
 		t.Error("The rank is wrong")
 	}
 }
