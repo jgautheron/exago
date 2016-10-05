@@ -37,3 +37,4 @@ import:
 - package: simonwaldherr.de/go/golibs
   subpackages:
   - xmath
+- package: github.com/palantir/stacktrace
