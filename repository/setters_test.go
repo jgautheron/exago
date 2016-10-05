@@ -54,8 +54,10 @@ func TestExecutionTimeChanged(t *testing.T) {
 	now := time.Now()
 	rp.SetStartTime(now)
 	rp.SetExecutionTime()
-	if rp.GetExecutionTime() != "0s" {
-		t.Error("The execution time has not changed")
+
+	et := rp.GetExecutionTime()
+	if et != "0s" {
+		t.Errorf("The execution time has not changed, got %s", et)
 	}
 }
 
