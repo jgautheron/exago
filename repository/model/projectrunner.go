@@ -31,8 +31,8 @@ type ProjectRunner struct {
 	Coverage struct {
 		Label string `json:"label"`
 		Data  struct {
-			Packages map[string]CoveragePackage `json:"packages"`
-			Coverage float64                    `json:"coverage"`
+			Packages []CoveragePackage `json:"packages"`
+			Coverage float64           `json:"coverage"`
 		} `json:"data"`
 		RawOutput     string      `json:"raw_output"`
 		ExecutionTime float64     `json:"execution_time"`
