@@ -20,7 +20,7 @@ check:
 # but does not run the tests.
 .PHONY: test
 test:
-	$(GO) test $(glide novendor)
+	$(GO) test ./badge/... ./cmd/... ./config/... ./github/... ./godoc/... ./indexer/... ./leveldb/... ./mocks/... ./queue/... ./repository/... ./requestlock/... ./score/... ./server/... ./showcaser/... ./taskrunner/...
 
 # Create Docker image
 .PHONY: image

@@ -3,6 +3,8 @@ package score_test
 import (
 	"testing"
 
+	"simonwaldherr.de/go/golibs/xmath"
+
 	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/score"
 )
@@ -39,26 +41,22 @@ func TestCoverage(t *testing.T) {
 		switch tt.operator {
 		case "<":
 			if res.Score > tt.expected {
-				t.Errorf("Wrong score %s", tt.desc)
+				t.Errorf("Wrong score %s: %d is not > to %d", tt.desc, res.Score, tt.expected)
 			}
 		case ">":
 			if res.Score < tt.expected {
-				t.Errorf("Wrong score %s", tt.desc)
+				t.Errorf("Wrong score %s: %d is not < to %d", tt.desc, res.Score, tt.expected)
 			}
 		case "=":
 			if res.Score != tt.expected {
-				t.Errorf("Wrong score %s", tt.desc)
+				t.Errorf("Wrong score %s: %d is not = to %d", tt.desc, res.Score, tt.expected)
 			}
 		}
 	}
 }
 
 func getStubCoverage(coverage []float64) model.ProjectRunner {
-	d := []model.Package{}
-	for _, item := range coverage {
-		d = append(d, model.Package{Coverage: item})
-	}
-	return model.ProjectRunner{
-		Packages: d,
-	}
+	pr := model.ProjectRunner{}
+	pr.Coverage.Data.Coverage = xmath.Arithmetic(coverage)
+	return pr
 }

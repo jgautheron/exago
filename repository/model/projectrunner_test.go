@@ -33,16 +33,7 @@ func TestGotNullMeanCoverage(t *testing.T) {
 func getMockProjectRunner() ProjectRunner {
 	tr := ProjectRunner{}
 	tr.Coverage.Data.Coverage = 20.799
-	tr.Test.Data = append(tr.Test.Data, struct {
-		Name          string  `json:"name"`
-		ExecutionTime float64 `json:"execution_time"`
-		Success       bool    `json:"success"`
-		Tests         []struct {
-			Name          string  `json:"name"`
-			ExecutionTime float64 `json:"execution_time"`
-			Passed        bool    `json:"passed"`
-		} `json:"tests"`
-	}{
+	tr.Test.Data = append(tr.Test.Data, TestPackage{
 		ExecutionTime: 0.05,
 	})
 	return tr

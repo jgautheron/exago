@@ -21,6 +21,19 @@ type CoveragePackage struct {
 	Coverage float64 `json:"coverage"`
 }
 
+type TestPackage struct {
+	Name          string     `json:"name"`
+	ExecutionTime float64    `json:"execution_time"`
+	Success       bool       `json:"success"`
+	Tests         []TestFile `json:"tests"`
+}
+
+type TestFile struct {
+	Name          string  `json:"name"`
+	ExecutionTime float64 `json:"execution_time"`
+	Passed        bool    `json:"passed"`
+}
+
 type Checklist struct {
 	Failed []ChecklistItem `json:"failed"`
 	Passed []ChecklistItem `json:"passed"`
@@ -53,20 +66,11 @@ type ProjectRunner struct {
 		Error         interface{} `json:"error"`
 	} `json:"goprove"`
 	Test struct {
-		Label string `json:"label"`
-		Data  []struct {
-			Name          string  `json:"name"`
-			ExecutionTime float64 `json:"execution_time"`
-			Success       bool    `json:"success"`
-			Tests         []struct {
-				Name          string  `json:"name"`
-				ExecutionTime float64 `json:"execution_time"`
-				Passed        bool    `json:"passed"`
-			} `json:"tests"`
-		} `json:"data"`
-		RawOutput     string      `json:"raw_output"`
-		ExecutionTime float64     `json:"execution_time"`
-		Error         interface{} `json:"error"`
+		Label         string        `json:"label"`
+		Data          []TestPackage `json:"data"`
+		RawOutput     string        `json:"raw_output"`
+		ExecutionTime float64       `json:"execution_time"`
+		Error         interface{}   `json:"error"`
 	} `json:"test"`
 	Thirdparties struct {
 		Label         string      `json:"label"`
