@@ -120,7 +120,12 @@ func fileHandler(w http.ResponseWriter, r *http.Request) {
 func cachedHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
 	rp := repository.New(repo, "")
-	send(w, r, rp.IsCached(), nil)
+	if rp.IsCached() {
+		err := rp.Load()
+		send(w, r, rp.GetData(), err)
+		return
+	}
+	send(w, r, false, nil)
 }
 
 func recentHandler(w http.ResponseWriter, r *http.Request) {
