@@ -4,7 +4,6 @@ import (
 	"log"
 	"testing"
 
-	"github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
 	"github.com/hotolab/exago-svc/mocks"
 	. "github.com/stretchr/testify/mock"
