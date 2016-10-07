@@ -7,7 +7,7 @@ import (
 	"github.com/hotolab/exago-svc/score"
 )
 
-var criterias = []string{"projectBuilds", "isFormatted", "hasReadme", "isDirMatch", "isLinted", "hasBenches"}
+var criterias = []string{"projectBuilds", "isFormatted", "hasReadme", "isDirMatch", "isLinted", "isVetted", "hasContributing", "hasBenches"}
 
 func TestChecklist(t *testing.T) {
 	var tests = []struct {

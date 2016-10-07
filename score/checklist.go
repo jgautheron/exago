@@ -31,12 +31,13 @@ func CheckListEvaluator() CriteriaEvaluator {
 func (ce *checkListEvaluator) Setup() {
 	c := make(map[string]*checker)
 	c = map[string]*checker{
-		"projectBuilds": {100, 1.5, "https://github.com/matttproud/gochecklist/blob/master/publication/compilation.md"},
-		"isFormatted":   {100, 3, "https://github.com/matttproud/gochecklist/blob/master/publication/code_correctness.md"},
-		"hasReadme":     {100, 3, "https://github.com/matttproud/gochecklist/blob/master/publication/documentation_entrypoint.md"},
-		"isDirMatch":    {100, .7, "https://github.com/matttproud/gochecklist/blob/master/publication/dir_pkg_match.md"},
-		"isLinted":      {100, .5, "https://github.com/matttproud/gochecklist/blob/master/publication/code_correctness.md"},
-		"hasBenches":    {100, .5, ""},
+		"isFormatted":     {100, 3, "https://github.com/matttproud/gochecklist/blob/master/publication/code_correctness.md"},
+		"isDirMatch":      {100, .7, "https://github.com/matttproud/gochecklist/blob/master/publication/dir_pkg_match.md"},
+		"isLinted":        {100, .5, "https://github.com/matttproud/gochecklist/blob/master/publication/code_correctness.md"},
+		"isVetted":        {100, .5, "https://github.com/matttproud/gochecklist/blob/master/publication/govet_correctness.md"},
+		"hasReadme":       {100, 3, "https://github.com/matttproud/gochecklist/blob/master/publication/documentation_entrypoint.md"},
+		"hasBenches":      {100, .5, ""},
+		"hasContributing": {100, .3, ""},
 	}
 
 	ce.checkers = c
