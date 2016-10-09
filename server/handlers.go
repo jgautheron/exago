@@ -21,7 +21,9 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	rp := repository.New(repo, "")
 	if rp.IsCached() {
 		err := rp.Load()
-		go showcaser.GetInstance().Process(rp)
+		if !rp.HasError() {
+			go showcaser.GetInstance().Process(rp)
+		}
 		send(w, r, rp.GetData(), err)
 		return
 	}
@@ -30,7 +32,9 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	data, err := q.PushSync(repo, 10)
 	if err == nil {
 		rp.SetData(data.(model.Data))
-		go showcaser.GetInstance().Process(rp)
+		if !rp.HasError() {
+			go showcaser.GetInstance().Process(rp)
+		}
 	}
 	send(w, r, data, err)
 }

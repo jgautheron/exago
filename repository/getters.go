@@ -57,3 +57,7 @@ func (r *Repository) GetLintMessages() model.LintMessages {
 func (r *Repository) GetData() model.Data {
 	return r.Data
 }
+
+func (r *Repository) HasError() bool {
+	return len(r.Data.Errors) > 0
+}
