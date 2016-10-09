@@ -23,8 +23,7 @@ func IndexCommand() cli.Command {
 						items = append(items, item)
 					}
 
-					idx := indexer.New(items)
-					idx.Start()
+					indexer.Start(items)
 					return nil
 				},
 			},
@@ -44,7 +43,6 @@ func indexGodoc() error {
 	if err != nil {
 		return fmt.Errorf("Got error while trying to load repos from GitHub: %v", err)
 	}
-	idx := indexer.New(repos)
-	idx.Start()
+	indexer.Start(repos)
 	return nil
 }
