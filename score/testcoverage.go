@@ -32,7 +32,7 @@ func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 	covMean := t.GetMeanCodeCov()
 
 	logger.WithField(
-		"coverage (geometric mean)", covMean,
+		"coverage", covMean,
 	).Debugf("[%s] coverage mean", model.TestCoverageName)
 
 	// Apply logistic growth formula
@@ -45,10 +45,6 @@ func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 	// The equation is X = M/(S + [(M - S) * exp(R*V)])
 	// this logistic model has two important parameters – a growth constant and a maximum size.
 	r.Score = 100 / (1 + (100-1)*math.Exp(coverageFactor*covMean))
-
-	// Lines of code will impact the weight
-	// We use a logarithm to calculate the factor with a base10 of LOCs
-	r.Weight = math.Log10(float64(cs["LOC"]))
 
 	if covMean > 0 {
 		r.Message = fmt.Sprintf("coverage is greater or equal to %.2f", covMean)
