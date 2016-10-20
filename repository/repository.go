@@ -10,12 +10,6 @@ import (
 )
 
 var (
-	// DefaultLinters ran by default in Lambda.
-	DefaultLinters = []string{
-		"deadcode", "dupl", "gas", "goconst", "gocyclo", "gofmt",
-		"golint", "gosimple", "ineffassign", "staticcheck", "vet", "vetshadow",
-	}
-
 	// Make sure it satisfies the interface.
 	_ Record = (*Repository)(nil)
 )

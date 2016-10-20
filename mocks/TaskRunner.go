@@ -31,19 +31,19 @@ func (_m TaskRunner) FetchCodeStats() (model.CodeStats, error) {
 }
 
 // FetchLintMessages provides a mock function with given fields: linters
-func (_m TaskRunner) FetchLintMessages(linters []string) (model.LintMessages, error) {
-	ret := _m.Called(linters)
+func (_m TaskRunner) FetchLintMessages() (model.LintMessages, error) {
+	ret := _m.Called()
 
 	var r0 model.LintMessages
-	if rf, ok := ret.Get(0).(func([]string) model.LintMessages); ok {
-		r0 = rf(linters)
+	if rf, ok := ret.Get(0).(func() model.LintMessages); ok {
+		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(model.LintMessages)
 	}
 
 	var r1 error
-	if rf, ok := ret.Get(1).(func([]string) error); ok {
-		r1 = rf(linters)
+	if rf, ok := ret.Get(1).(func() error); ok {
+		r1 = rf()
 	} else {
 		r1 = ret.Error(1)
 	}

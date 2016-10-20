@@ -29,7 +29,7 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	q := queue.GetInstance()
-	data, err := q.PushSync(repo, 10)
+	data, err := q.PushSync(repo)
 	if err == nil {
 		rp.SetData(data.(model.Data))
 		if !rp.HasError() {

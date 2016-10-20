@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"regexp"
 	"strings"
 	"time"
 
@@ -12,22 +11,18 @@ import (
 	"github.com/didip/tollbooth"
 	"github.com/gorilla/context"
 	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/github"
+	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/requestlock"
 	"github.com/julienschmidt/httprouter"
 )
 
 const (
 	rateLimitCount = 20
-	sizeLimit      = 1000000 // bytes
 )
 
 var (
-	ErrInvalidParameter  = errors.New("Invalid parameter passed")
 	ErrTooManyCalls      = errors.New("Too many calls in a short period of time")
 	ErrRateLimitExceeded = errors.New("Rate limit exceeded")
-	ErrInvalidLanguage   = errors.New("The repository does not contain Go code")
-	ErrTooLarge          = errors.New("The repository is too large")
 )
 
 func recoverHandler(next http.Handler) http.Handler {
@@ -47,48 +42,24 @@ func recoverHandler(next http.Handler) http.Handler {
 func checkValidRepository(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
-		repository := ps.ByName("repository")[1:]
+		repo := ps.ByName("repository")[1:]
 
-		if !strings.HasPrefix(repository, "github.com") {
-			writeData(w, r, http.StatusNotImplemented, "Only GitHub is implemented right now")
-			return
-		}
-		re := regexp.MustCompile(`^github\.com/[\w\d\-\._]+/[\w\d\-\._]+`)
-		if !re.MatchString(repository) {
-			writeError(w, r, ErrInvalidParameter)
-			return
-		}
-
-		// Check with the GitHub API if the repository contains Go code
-		sp := strings.Split(repository, "/")
-		data, err := github.GetInstance().Get(sp[1], sp[2])
+		data, err := repository.IsValid(repo)
 		if err != nil {
 			writeError(w, r, err)
 			return
 		}
 
-		languages := data["languages"].(map[string]int)
-		size, exists := languages["Go"]
-		if !exists {
-			writeError(w, r, ErrInvalidLanguage)
-			return
-		}
-
-		if size > sizeLimit {
-			writeError(w, r, ErrTooLarge)
-			return
-		}
-
 		HTMLURL := strings.Replace(data["html_url"].(string), "https://", "", 1)
-		repo := strings.Split(HTMLURL, "/")
+		rp := strings.Split(HTMLURL, "/")
 
 		context.Set(r, "provider", repo[0])
 		context.Set(r, "owner", repo[1])
 		context.Set(r, "project", repo[2])
 		context.Set(r, "repository", HTMLURL)
 
-		if len(sp) > 3 {
-			context.Set(r, "path", strings.Join(sp[3:], "/"))
+		if len(rp) > 3 {
+			context.Set(r, "path", strings.Join(rp[3:], "/"))
 		}
 
 		next.ServeHTTP(w, r)

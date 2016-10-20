@@ -7,16 +7,24 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
+var (
+	// DefaultLinters ran by default in Lambda.
+	DefaultLinters = []string{
+		"deadcode", "dupl", "gas", "goconst", "gocyclo", "gofmt",
+		"golint", "gosimple", "ineffassign", "staticcheck", "vet", "vetshadow",
+	}
+)
+
 var lintCmd = &cmd{
 	name:      model.LintMessagesName,
 	unMarshal: unMarshalLint,
 }
 
-func (l Runner) FetchLintMessages(linters []string) (model.LintMessages, error) {
+func (l Runner) FetchLintMessages() (model.LintMessages, error) {
 	lintCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,
-		Linters:    strings.Join(linters, ","),
+		Linters:    strings.Join(DefaultLinters, ","),
 	}
 	d, err := lintCmd.Data()
 	if err != nil {

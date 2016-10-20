@@ -2,9 +2,10 @@ package main
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/hotolab/exago-svc/godoc"
-	"github.com/hotolab/exago-svc/indexer"
+	"github.com/hotolab/exago-svc/queue"
 	"github.com/urfave/cli"
 )
 
@@ -23,7 +24,7 @@ func IndexCommand() cli.Command {
 						items = append(items, item)
 					}
 
-					indexer.Start(items)
+					indexRepos(items)
 					return nil
 				},
 			},
@@ -43,6 +44,16 @@ func indexGodoc() error {
 	if err != nil {
 		return fmt.Errorf("Got error while trying to load repos from GitHub: %v", err)
 	}
-	indexer.Start(repos)
+	indexRepos(repos)
 	return nil
+}
+
+func indexRepos(repos []string) {
+	q := queue.GetInstance()
+	list := repos[:5]
+	for _, repo := range list {
+		q.PushAsync(repo)
+	}
+	time.Sleep(1 * time.Second)
+	q.WaitUntilEmpty()
 }
