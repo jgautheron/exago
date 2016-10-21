@@ -58,58 +58,59 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 
 	switch tp := ps.ByName("type"); tp {
 	case "rank":
-		err, rank := repo.Load(), repo.GetRank()
+		err, rank, score := repo.Load(), repo.GetRank(), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, "")
 			return
 		}
-		badge.Write(w, "", string(rank), "blue")
+
+		badge.Write(w, "", string(rank), score)
 	case "cov":
 		title := "coverage"
-		err, cov := repo.Load(), repo.GetProjectRunner().GetMeanCodeCov()
+		err, cov, score := repo.Load(), repo.GetProjectRunner().GetMeanCodeCov(), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
+		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), score)
 	case "duration":
 		title := "tests duration"
-		err, avg := repo.Load(), repo.GetProjectRunner().GetMeanTestDuration()
+		err, avg, score := repo.Load(), repo.GetProjectRunner().GetMeanTestDuration(), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), "blue")
+		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), score)
 	case "tests":
 		title := "tests"
-		err, tests := repo.Load(), repo.GetCodeStats()["Test"]
+		err, tests, score := repo.Load(), repo.GetCodeStats()["Test"], repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%d", tests), "blue")
+		badge.Write(w, title, fmt.Sprintf("%d", tests), score)
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties := repo.Load(), len(repo.GetProjectRunner().Thirdparties.Data)
+		err, thirdParties, score := repo.Load(), len(repo.GetProjectRunner().Thirdparties.Data), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
+		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	case "loc":
 		title := "LOC"
-		err, thirdParties := repo.Load(), repo.GetCodeStats()["LOC"]
+		err, thirdParties, score := repo.Load(), repo.GetCodeStats()["LOC"], repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
+		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	}
 }
 
