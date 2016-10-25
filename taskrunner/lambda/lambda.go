@@ -3,6 +3,7 @@ package lambda
 import (
 	"encoding/json"
 	"errors"
+	"sync"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -20,7 +21,9 @@ var (
 	ErrNoData = errors.New("Empty dataset")
 
 	// Make sure it satisfies the interface.
-	_ taskrunner.TaskRunner = (*Runner)(nil)
+	_    taskrunner.TaskRunner = (*Runner)(nil)
+	once sync.Once
+	svc  *lambda.Lambda
 )
 
 type Runner struct {
@@ -50,6 +53,23 @@ type cmd struct {
 	unMarshal func(l *cmd, j []byte) (data interface{}, err error)
 }
 
+func GetInstance() *lambda.Lambda {
+	once.Do(func() {
+		creds := credentials.NewStaticCredentials(
+			Config.AwsAccessKeyID,
+			Config.AwsSecretAccessKey,
+			"",
+		)
+		svc = lambda.New(
+			session.New(),
+			aws.NewConfig().
+				WithRegion(Config.AwsRegion).
+				WithCredentials(creds),
+		)
+	})
+	return svc
+}
+
 // Data returns the response from Lambda.
 func (l *cmd) Data() (interface{}, error) {
 	res, err := l.call()
@@ -65,18 +85,6 @@ func (l *cmd) Data() (interface{}, error) {
 }
 
 func (l *cmd) call() (lrsp Response, err error) {
-	creds := credentials.NewStaticCredentials(
-		Config.AwsAccessKeyID,
-		Config.AwsSecretAccessKey,
-		"",
-	)
-	svc := lambda.New(
-		session.New(),
-		aws.NewConfig().
-			WithRegion(Config.AwsRegion).
-			WithCredentials(creds),
-	)
-
 	payload, _ := json.Marshal(l.ctxt)
 	params := &lambda.InvokeInput{
 		FunctionName: aws.String(fnPrefix + l.name),
@@ -114,5 +122,5 @@ func (l *cmd) call() (lrsp Response, err error) {
 		return lrsp, errors.New(msg.Message)
 	}
 
-	return resp, err
+	return resp, nil
 }

@@ -50,8 +50,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	lgr := context.Get(r, "lgr").(*log.Entry)
 
 	repo := repository.New(ps.ByName("repository")[1:], "")
-	isCached := repo.IsCached()
-	if !isCached {
+	if !repo.IsCached() {
 		badge.WriteError(w, "")
 		return
 	}

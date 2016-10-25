@@ -22,7 +22,7 @@ var (
 )
 
 type Queue struct {
-	processorFn func(value string, tr taskrunner.TaskRunner) (interface{}, error)
+	processorFn func(repo, branch string, tr taskrunner.TaskRunner) (interface{}, error)
 	in          chan string
 	out         chan map[string]interface{}
 	quit        chan bool
@@ -38,7 +38,7 @@ func GetInstance() *Queue {
 		queue = &Queue{
 			processorFn: processor.ProcessRepository,
 			sem:         make(chan bool, 4),
-			in:          make(chan string),
+			in:          make(chan string, 1000),
 			out:         make(chan map[string]interface{}),
 			quit:        make(chan bool),
 			wg:          &sync.WaitGroup{},
@@ -52,14 +52,17 @@ func GetInstance() *Queue {
 func (pq *Queue) Init() {
 	pq.wg.Add(1)
 	go pq.Wait()
+	go pq.ProcessAll()
 
 	// Trap interruption signals
-	go func() {
-		sn := make(chan os.Signal, 1)
-		signal.Notify(sn, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
-		<-sn
-		pq.Stop()
-	}()
+	go StopOnSignal()
+}
+
+func (pq *Queue) StopOnSignal() {
+	sn := make(chan os.Signal, 1)
+	signal.Notify(sn, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL)
+	<-sn
+	pq.Stop()
 }
 
 // Wait processes incoming queue items.
@@ -67,55 +70,59 @@ func (pq *Queue) Wait() {
 	defer pq.wg.Done()
 	for {
 		select {
-		case in := <-pq.in:
-			if in == "" {
-				continue
-			}
-			pq.wg.Add(1)
-			go pq.Process(in)
 		case out := <-pq.out:
 			for repository := range out {
 				logger.WithField("repository", repository).Debug("Item processed")
 			}
 		case <-pq.quit:
 			return
+		default:
 		}
 	}
 }
 
+func (pq *Queue) ProcessAll() {
+	defer pq.wg.Done()
+	for {
+		log.Warn("foo")
+		pq.sem <- true
+		in := <-pq.in
+		pq.Process(in)
+	}
+}
+
 // Process waits for an available slot, processes the item and frees the slot.
-func (pq *Queue) Process(repository string) {
-	pq.sem <- true
+func (pq *Queue) Process(repo string) {
 	defer pq.wg.Done()
 	defer func() { <-pq.sem }()
 
-	logger.WithFields(log.Fields{
-		"repository": repository,
-	}).Debug("Beginning processing")
+	lgr := logger.WithFields(log.Fields{
+		"repository": repo,
+	})
 
-	data, err := pq.processorFn(repository, lambda.Runner{Repository: repository})
+	lgr.Debug("Begin processing")
+	data, err := pq.processorFn(repo, "", lambda.Runner{Repository: repo})
 	if err != nil {
-		logger.Error(err)
+		lgr.Error(err)
 		return
 	}
 	out := map[string]interface{}{}
-	out[repository] = data
+	out[repo] = data
 	pq.out <- out
 }
 
 // WaitUntilEmpty blocks until the queue is empty.
 func (pq *Queue) WaitUntilEmpty() {
-	wg := &sync.WaitGroup{}
-	wg.Add(1)
+	doneCh := make(chan bool)
 	go func() {
 		for {
 			if len(pq.sem) == 0 {
-				wg.Done()
+				doneCh <- true
 				return
 			}
 		}
 	}()
-	wg.Wait()
+	<-doneCh
 }
 
 // PushAsync adds an item to the queue asynchronously.
@@ -124,6 +131,15 @@ func (pq *Queue) PushAsync(repository string) error {
 		return ErrQueueIsClosing
 	}
 	pq.in <- repository
+
+	// Read from the channel
+	// go func() {
+	// 	out := <-pq.out
+	// 	for repository := range out {
+	// 		logger.WithField("repository", repository).Debug("Item processed")
+	// 	}
+	// }()
+
 	return nil
 }
 
@@ -151,6 +167,7 @@ func (pq *Queue) PushSync(repository string) (data interface{}, err error) {
 				}
 			case <-pq.quit:
 				return
+			default:
 			}
 		}
 	}()
@@ -161,6 +178,7 @@ func (pq *Queue) PushSync(repository string) (data interface{}, err error) {
 
 // Stop gracefully closes the queue and all its workers.
 func (pq *Queue) Stop() {
+	logger.Debug("Stop called")
 	pq.closing = true
 	close(pq.in)
 	close(pq.quit)

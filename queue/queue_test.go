@@ -7,7 +7,7 @@ import (
 	"github.com/hotolab/exago-svc/taskrunner"
 )
 
-func process(repo string, tr taskrunner.TaskRunner) (interface{}, error) {
+func process(repo, branch string, tr taskrunner.TaskRunner) (interface{}, error) {
 	return "foo", nil
 }
 

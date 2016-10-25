@@ -1,11 +1,14 @@
 package main
 
 import (
-	"fmt"
+	"errors"
+	"log"
 	"time"
 
+	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/godoc"
 	"github.com/hotolab/exago-svc/queue"
+	"github.com/hotolab/exago-svc/taskrunner/lambda"
 	"github.com/urfave/cli"
 )
 
@@ -40,15 +43,21 @@ func IndexCommand() cli.Command {
 }
 
 func indexGodoc() error {
+	github.GetInstance()
+	lambda.GetInstance()
+
 	repos, err := godoc.New().GetIndex()
+	log.Println(repos)
 	if err != nil {
-		return fmt.Errorf("Got error while trying to load repos from GitHub: %v", err)
+		return errors.New("Got error while trying to load the repos, did you index before godoc?")
 	}
 	indexRepos(repos)
 	return nil
 }
 
 func indexRepos(repos []string) {
+	github.GetInstance()
+	lambda.GetInstance()
 	q := queue.GetInstance()
 	list := repos[:5]
 	for _, repo := range list {

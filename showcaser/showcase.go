@@ -155,6 +155,9 @@ func (d *Showcase) save() error {
 }
 
 func (d *Showcase) loadReposFromList(list []string) (repos []repository.Record, err error) {
+	if len(list) == 0 {
+		return
+	}
 	for _, name := range list {
 		rp := &repository.Repository{Name: name, DB: d.db}
 		if err = rp.Load(); err != nil {

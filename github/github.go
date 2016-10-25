@@ -26,6 +26,7 @@ var (
 type GitHub struct {
 	client *gh.Client
 	cache  *lru.ARCCache
+	sync.RWMutex
 }
 
 func GetInstance() GitHub {
@@ -43,7 +44,10 @@ func GetInstance() GitHub {
 			log.Fatal("Could not create the ARC cache")
 		}
 
-		gi = GitHub{client, cache}
+		gi = GitHub{
+			client: client,
+			cache:  cache,
+		}
 	})
 	return gi
 }

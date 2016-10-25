@@ -7,6 +7,8 @@ import (
 
 	"gopkg.in/tylerb/graceful.v1"
 
+	_ "net/http/pprof"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
 	. "github.com/hotolab/exago-svc/config"

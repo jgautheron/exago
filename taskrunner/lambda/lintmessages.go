@@ -15,12 +15,11 @@ var (
 	}
 )
 
-var lintCmd = &cmd{
-	name:      model.LintMessagesName,
-	unMarshal: unMarshalLint,
-}
-
 func (l Runner) FetchLintMessages() (model.LintMessages, error) {
+	lintCmd := &cmd{
+		name:      model.LintMessagesName,
+		unMarshal: unMarshalLint,
+	}
 	lintCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,
