@@ -55,7 +55,7 @@ func (pq *Queue) Init() {
 	go pq.ProcessAll()
 
 	// Trap interruption signals
-	go StopOnSignal()
+	go pq.StopOnSignal()
 }
 
 func (pq *Queue) StopOnSignal() {

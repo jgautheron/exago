@@ -33,6 +33,7 @@ func init() {
 }
 
 func main() {
+
 	AddCommands()
 	if err := App.Run(os.Args); err != nil {
 		log.Fatal(err)
