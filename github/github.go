@@ -57,6 +57,7 @@ func (g GitHub) GetFileContent(owner, repository, path string) (string, error) {
 		return "", err
 	}
 	out := *file.Content
+
 	if *file.Encoding == "base64" {
 		b, err := base64.StdEncoding.DecodeString(out)
 		if err != nil {

@@ -52,12 +52,12 @@ func checkValidRepository(next http.Handler) http.Handler {
 
 		HTMLURL := strings.Replace(data["html_url"].(string), "https://", "", 1)
 		rp := strings.Split(HTMLURL, "/")
-
-		context.Set(r, "provider", repo[0])
-		context.Set(r, "owner", repo[1])
-		context.Set(r, "project", repo[2])
+		context.Set(r, "provider", rp[0])
+		context.Set(r, "owner", rp[1])
+		context.Set(r, "project", rp[2])
 		context.Set(r, "repository", HTMLURL)
 
+		rp = strings.Split(repo, "/")
 		if len(rp) > 3 {
 			context.Set(r, "path", strings.Join(rp[3:], "/"))
 		}
