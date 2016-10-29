@@ -8,6 +8,7 @@ import (
 
 type Record interface {
 	GetName() string
+	SetName(string)
 	GetRank() string
 	GetData() model.Data
 	GetMetadata() model.Metadata

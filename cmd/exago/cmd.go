@@ -27,13 +27,9 @@ func init() {
 
 	InitializeConfig()
 	InitializeLogging(Config.LogLevel)
-
-	// Initialise the showcaser data
-	// showcaser.GetInstance()
 }
 
 func main() {
-
 	AddCommands()
 	if err := App.Run(os.Args); err != nil {
 		log.Fatal(err)

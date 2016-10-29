@@ -1,16 +1,12 @@
 package mocks
 
-import (
-	"time"
+import "github.com/stretchr/testify/mock"
 
-	"github.com/stretchr/testify/mock"
-)
-
+import "time"
 import "github.com/hotolab/exago-svc/repository/model"
 
 type Record struct {
 	mock.Mock
-	Name, Branch string
 }
 
 func NewRecord(name, rank string) *Record {
@@ -38,6 +34,11 @@ func (_m *Record) GetName() string {
 	}
 
 	return r0
+}
+
+// SetName provides a mock function with given fields: _a0
+func (_m *Record) SetName(_a0 string) {
+	_m.Called(_a0)
 }
 
 // GetRank provides a mock function with given fields:
@@ -110,9 +111,9 @@ func (_m *Record) GetLastUpdate() time.Time {
 	return r0
 }
 
-// SetLastUpdate provides a mock function with given fields:
-func (_m *Record) SetLastUpdate() {
-	_m.Called()
+// SetLastUpdate provides a mock function with given fields: t
+func (_m *Record) SetLastUpdate(t time.Time) {
+	_m.Called(t)
 }
 
 // GetExecutionTime provides a mock function with given fields:
@@ -129,9 +130,9 @@ func (_m *Record) GetExecutionTime() string {
 	return r0
 }
 
-// SetExecutionTime provides a mock function with given fields:
-func (_m *Record) SetExecutionTime() {
-	_m.Called()
+// SetExecutionTime provides a mock function with given fields: duration
+func (_m *Record) SetExecutionTime(duration time.Duration) {
+	_m.Called(duration)
 }
 
 // GetScore provides a mock function with given fields:
@@ -160,25 +161,6 @@ func (_m *Record) SetScore() error {
 	}
 
 	return r0
-}
-
-// GetImports provides a mock function with given fields:
-func (_m *Record) GetImports() model.Imports {
-	ret := _m.Called()
-
-	var r0 model.Imports
-	if rf, ok := ret.Get(0).(func() model.Imports); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(model.Imports)
-	}
-
-	return r0
-}
-
-// SetImports provides a mock function with given fields: _a0
-func (_m *Record) SetImports(_a0 model.Imports) {
-	_m.Called(_a0)
 }
 
 // GetCodeStats provides a mock function with given fields:
@@ -249,7 +231,7 @@ func (_m *Record) SetError(tp string, err error) {
 }
 
 // IsCached provides a mock function with given fields:
-func (_m Record) IsCached() bool {
+func (_m *Record) IsCached() bool {
 	ret := _m.Called()
 
 	var r0 bool
@@ -291,7 +273,7 @@ func (_m *Record) Load() error {
 }
 
 // ClearCache provides a mock function with given fields:
-func (_m Record) ClearCache() error {
+func (_m *Record) ClearCache() error {
 	ret := _m.Called()
 
 	var r0 error
@@ -305,7 +287,7 @@ func (_m Record) ClearCache() error {
 }
 
 // Save provides a mock function with given fields:
-func (_m Record) Save() error {
+func (_m *Record) Save() error {
 	ret := _m.Called()
 
 	var r0 error

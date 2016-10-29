@@ -53,7 +53,7 @@ func TestExecutionTimeChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
 	now := time.Now()
 	rp.SetStartTime(now)
-	rp.SetExecutionTime()
+	rp.SetExecutionTime(time.Since(now))
 
 	et := rp.GetExecutionTime()
 	if et != "0s" {
@@ -66,8 +66,8 @@ func TestLastUpdateTimeChanged(t *testing.T) {
 		Name: repo,
 	}
 	now := time.Now()
-	rp.SetLastUpdate()
-	if rp.GetLastUpdate().Day() != now.Day() {
+	rp.SetLastUpdate(now)
+	if rp.GetLastUpdate() != now {
 		t.Error("The last update time has not changed")
 	}
 }

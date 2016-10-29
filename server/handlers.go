@@ -9,9 +9,8 @@ import (
 	"github.com/hotolab/exago-svc/badge"
 	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/godoc"
-	"github.com/hotolab/exago-svc/queue"
+	"github.com/hotolab/exago-svc/pool"
 	"github.com/hotolab/exago-svc/repository"
-	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/julienschmidt/httprouter"
 )
@@ -28,15 +27,11 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := queue.GetInstance()
-	data, err := q.PushSync(repo)
-	if err == nil {
-		rp.SetData(data.(model.Data))
-		if !rp.HasError() {
-			go showcaser.GetInstance().Process(rp)
-		}
+	rp, err := pool.GetInstance().PushSync(repo)
+	if err == nil && !rp.HasError() {
+		go showcaser.GetInstance().Process(rp)
 	}
-	send(w, r, data, err)
+	send(w, r, rp.GetData(), err)
 }
 
 func refreshHandler(w http.ResponseWriter, r *http.Request) {

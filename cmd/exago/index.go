@@ -1,13 +1,11 @@
 package main
 
 import (
-	"time"
+	"errors"
 
-	"github.com/hotolab/exago-svc/github"
+	"github.com/hotolab/exago-svc/godoc"
 	"github.com/hotolab/exago-svc/pool"
-	"github.com/hotolab/exago-svc/repository/processor"
-	"github.com/hotolab/exago-svc/taskrunner/lambda"
-	"github.com/pkg/profile"
+	"github.com/hotolab/exago-svc/pool/job"
 	"github.com/urfave/cli"
 )
 
@@ -42,32 +40,19 @@ func IndexCommand() cli.Command {
 }
 
 func indexGodoc() error {
-	github.GetInstance()
-	// lambda.GetInstance()
-
-	pool.TestCustomWorkers()
-
-	// repos, err := godoc.New().GetIndex()
-	// if err != nil {
-	// 	return errors.New("Got error while trying to load the repos, did you index before godoc?")
-	// }
-	// indexRepos(repos)
+	repos, err := godoc.New().GetIndex()
+	if err != nil {
+		return errors.New("Got error while trying to load the repos, did you index before godoc?")
+	}
+	indexRepos(repos)
 	return nil
 }
 
 func indexRepos(repos []string) {
-	// github.GetInstance()
-	// lambda.GetInstance()
-	// q := queue.GetInstance()
-	list := repos[:30]
-	defer profile.Start(profile.BlockProfile).Stop()
-	for _, repo := range list {
-		go process(repo)
+	job.Init()
+	p := pool.GetInstance()
+	for _, repo := range repos {
+		p.PushAsync(repo)
 	}
-	time.Sleep(6 * time.Minute)
-	// q.WaitUntilEmpty()
-}
-
-func process(repo string) {
-	processor.ProcessRepository(repo, "", lambda.Runner{Repository: repo})
+	p.WaitUntilEmpty()
 }
