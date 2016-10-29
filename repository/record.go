@@ -8,14 +8,15 @@ import (
 
 type Record interface {
 	GetName() string
+	SetName(string)
 	GetRank() string
 	GetData() model.Data
 	GetMetadata() model.Metadata
 	SetMetadata() (err error)
 	GetLastUpdate() time.Time
-	SetLastUpdate()
+	SetLastUpdate(t time.Time)
 	GetExecutionTime() string
-	SetExecutionTime()
+	SetExecutionTime(duration time.Duration)
 	GetScore() model.Score
 	SetScore() (err error)
 	GetCodeStats() model.CodeStats

@@ -6,12 +6,11 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-var runnerCmd = &cmd{
-	name:      model.ProjectRunnerName,
-	unMarshal: unMarshalProjectRunner,
-}
-
 func (l Runner) FetchProjectRunner() (tr model.ProjectRunner, err error) {
+	runnerCmd := &cmd{
+		name:      model.ProjectRunnerName,
+		unMarshal: unMarshalProjectRunner,
+	}
 	runnerCmd.ctxt = context{
 		Repository: l.Repository,
 		Cleanup:    l.ShouldCleanup,

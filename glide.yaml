@@ -19,9 +19,11 @@ import:
 - package: github.com/gorilla/context
 - package: github.com/hashicorp/golang-lru
 - package: github.com/hotolab/envconfig
+- package: github.com/jeffail/tunny
 - package: github.com/julienschmidt/httprouter
 - package: github.com/justinas/alice
 - package: github.com/narqo/go-badge
+- package: github.com/palantir/stacktrace
 - package: github.com/stretchr/testify
   subpackages:
   - mock
@@ -37,4 +39,3 @@ import:
 - package: simonwaldherr.de/go/golibs
   subpackages:
   - xmath
-- package: github.com/palantir/stacktrace

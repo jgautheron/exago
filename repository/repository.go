@@ -50,6 +50,8 @@ func (r *Repository) Load() error {
 	}
 
 	r.Data = data
+	r.Data.Name = r.Name
+	r.Data.Branch = r.Branch
 	r.loaded = true
 
 	return nil

@@ -49,7 +49,9 @@ func TestPeriodicallyRebuilt(t *testing.T) {
 	showcase.Process(mocks.NewRecord("github.com/moo/bar", "B"))
 
 	go showcase.periodicallyRebuildPopularList()
-	time.Sleep(15 * time.Millisecond)
+	time.Sleep(25 * time.Millisecond)
+	showcase.RLock()
+	defer showcase.RUnlock()
 	if len(showcase.popular) != 1 {
 		t.Errorf("The popular slice should have a length of 1, got %d", len(showcase.popular))
 	}
