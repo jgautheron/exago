@@ -1,7 +1,7 @@
 GO ?= go
 
 build:
-	cd cmd/exago && GOOS=linux CGO_ENABLED=0 $(GO) build -tags netgo -ldflags="-w -s" -v -i -o exago
+	cd cmd/exago && GOOS=linux $(GO) build -race -tags netgo -ldflags="-w -s" -v -o exago
 
 # Compile the binary for all available OSes and ARCHes.
 .PHONY: buildall
@@ -20,7 +20,7 @@ check:
 # but does not run the tests.
 .PHONY: test
 test:
-	$(GO) test -v ./badge/... ./cmd/... ./config/... ./github/... ./godoc/... ./leveldb/... ./mocks/... ./queue/... ./repository/... ./requestlock/... ./score/... ./server/... ./showcaser/... ./taskrunner/...
+	$(GO) test -race -v ./badge/... ./cmd/... ./config/... ./github/... ./godoc/... ./leveldb/... ./mocks/... ./pool/... ./repository/... ./requestlock/... ./score/... ./server/... ./showcaser/... ./taskrunner/...
 
 # Create Docker image
 .PHONY: image

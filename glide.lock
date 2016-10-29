@@ -1,5 +1,5 @@
-hash: 4b7a2937e7adc8e32766be520987008114d4a21dd68c8621b085795e697303f4
-updated: 2016-10-05T14:08:46.124447067+02:00
+hash: 60f2bc7f1bf0d5dd5a35f76ef60f205d8a4926c4ea690981b8c4b01fb574787a
+updated: 2016-10-29T21:48:31.814508056+02:00
 imports:
 - name: github.com/andybalholm/cascadia
   version: 1c31af6f6c1a7b101ed05aacc7d8a738b43ae86e
@@ -73,6 +73,8 @@ imports:
   - simplelru
 - name: github.com/hotolab/envconfig
   version: 52f095323172d544fb3b6c2144478d1bfb1b97e9
+- name: github.com/jeffail/tunny
+  version: c757dde1c2969a4756e8a99622e2f2ddbab35b10
 - name: github.com/jmespath/go-jmespath
   version: bd40a432e4c76585ef6b72d3fd96fb9b6dc7b68d
 - name: github.com/juju/ratelimit
@@ -165,4 +167,6 @@ imports:
   subpackages:
   - xmath
   - as
+- name: simonwaldherr.de/go/golibs/xmath
+  version: beb7ee4ab176f8676000447dd54c6d6bac41bc83
 testImports: []

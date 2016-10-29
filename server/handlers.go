@@ -9,9 +9,8 @@ import (
 	"github.com/hotolab/exago-svc/badge"
 	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/godoc"
-	"github.com/hotolab/exago-svc/queue"
+	"github.com/hotolab/exago-svc/pool"
 	"github.com/hotolab/exago-svc/repository"
-	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/julienschmidt/httprouter"
 )
@@ -28,15 +27,11 @@ func repositoryHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	q := queue.GetInstance()
-	data, err := q.PushSync(repo)
-	if err == nil {
-		rp.SetData(data.(model.Data))
-		if !rp.HasError() {
-			go showcaser.GetInstance().Process(rp)
-		}
+	rp, err := pool.GetInstance().PushSync(repo)
+	if err == nil && !rp.HasError() {
+		go showcaser.GetInstance().Process(rp)
 	}
-	send(w, r, data, err)
+	send(w, r, rp.GetData(), err)
 }
 
 func refreshHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,66 +45,66 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	lgr := context.Get(r, "lgr").(*log.Entry)
 
 	repo := repository.New(ps.ByName("repository")[1:], "")
-	isCached := repo.IsCached()
-	if !isCached {
+	if !repo.IsCached() {
 		badge.WriteError(w, "")
 		return
 	}
 
 	switch tp := ps.ByName("type"); tp {
 	case "rank":
-		err, rank := repo.Load(), repo.GetRank()
+		err, rank, score := repo.Load(), repo.GetRank(), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, "")
 			return
 		}
-		badge.Write(w, "", string(rank), "blue")
+
+		badge.Write(w, "", string(rank), score)
 	case "cov":
 		title := "coverage"
-		err, cov := repo.Load(), repo.GetProjectRunner().GetMeanCodeCov()
+		err, cov, score := repo.Load(), repo.GetProjectRunner().GetMeanCodeCov(), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), "blue")
+		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), score)
 	case "duration":
 		title := "tests duration"
-		err, avg := repo.Load(), repo.GetProjectRunner().GetMeanTestDuration()
+		err, avg, score := repo.Load(), repo.GetProjectRunner().GetMeanTestDuration(), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), "blue")
+		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), score)
 	case "tests":
 		title := "tests"
-		err, tests := repo.Load(), repo.GetCodeStats()["Test"]
+		err, tests, score := repo.Load(), repo.GetCodeStats()["Test"], repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%d", tests), "blue")
+		badge.Write(w, title, fmt.Sprintf("%d", tests), score)
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties := repo.Load(), len(repo.GetProjectRunner().Thirdparties.Data)
+		err, thirdParties, score := repo.Load(), len(repo.GetProjectRunner().Thirdparties.Data), repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
+		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	case "loc":
 		title := "LOC"
-		err, thirdParties := repo.Load(), repo.GetCodeStats()["LOC"]
+		err, thirdParties, score := repo.Load(), repo.GetCodeStats()["LOC"], repo.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
 			return
 		}
-		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), "blue")
+		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	}
 }
 
