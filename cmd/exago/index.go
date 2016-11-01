@@ -3,10 +3,19 @@ package main
 import (
 	"errors"
 
-	"github.com/Sirupsen/logrus"
+	. "github.com/hotolab/exago-svc"
+	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/godoc"
+	"github.com/hotolab/exago-svc/leveldb"
+	"github.com/hotolab/exago-svc/pool"
+	"github.com/hotolab/exago-svc/pool/job"
+	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/hotolab/exago-svc/repository/processor"
 	"github.com/urfave/cli"
 )
+
+var db model.Database
 
 // IndexCommand saves the godoc index in DB.
 func IndexCommand() cli.Command {
@@ -22,8 +31,11 @@ func IndexCommand() cli.Command {
 					for _, item := range c.Args() {
 						items = append(items, item)
 					}
-
-					// indexRepos(items)
+					pl, err := initPool()
+					if err != nil {
+						return err
+					}
+					indexRepos(pl, items)
 					return nil
 				},
 			},
@@ -38,21 +50,55 @@ func IndexCommand() cli.Command {
 	}
 }
 
+func initPool() (pl model.Pool, err error) {
+	// Initialise the lambda connection
+	job.New()
+
+	db, err = leveldb.New()
+	if err != nil {
+		return nil, err
+	}
+
+	rh, err := github.New()
+	if err != nil {
+		return nil, err
+	}
+
+	rl := repository.NewLoader(
+		WithDatabase(db),
+		WithRepositoryHost(rh),
+	)
+
+	po := processor.New(
+		WithRepositoryLoader(rl),
+	)
+
+	return pool.New(
+		WithProcessor(po.ProcessRepository),
+	)
+}
+
 func indexGodoc() error {
-	repos, err := godoc.New().GetIndex()
+	pl, err := initPool()
+	if err != nil {
+		return err
+	}
+
+	repos, err := godoc.New(
+		WithDatabase(db),
+	).GetIndex()
 	if err != nil {
 		return errors.New("Got error while trying to load the repos, did you index before godoc?")
 	}
-	indexRepos(repos)
+
+	repos = repos[:6]
+	indexRepos(pl, repos)
 	return nil
 }
 
-func indexRepos(repos []string) {
-	logrus.Warnln("to be implemented")
-	// job.New()
-	// p := pool.GetInstance()
-	// for _, repo := range repos {
-	// 	p.PushAsync(repo)
-	// }
-	// p.WaitUntilEmpty()
+func indexRepos(pl model.Pool, repos []string) {
+	for _, repo := range repos {
+		pl.PushAsync(repo)
+	}
+	pl.WaitUntilEmpty()
 }
