@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hotolab/exago-svc/mocks"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 func TestCodeStatsChanged(t *testing.T) {
@@ -73,32 +73,23 @@ func TestLastUpdateTimeChanged(t *testing.T) {
 }
 
 func TestMetadataChanged(t *testing.T) {
-	rhMock := mocks.RepositoryHost{}
-	rhMock.On("Get", "foo", "bar").Return(
-		map[string]interface{}{
-			"avatar_url":  "http://foo.com/img.png",
-			"description": "repository description",
-			"language":    "go",
-			"stargazers":  123,
-			"last_push":   time.Now(),
-		}, nil)
+	m := map[string]interface{}{
+		"avatar_url":  "http://foo.com/img.png",
+		"description": "repository description",
+		"language":    "go",
+		"stargazers":  123,
+		"last_push":   time.Now(),
+	}
 	rp := &Repository{
-		Name:           repo,
-		RepositoryHost: rhMock,
+		Name: repo,
 	}
-	if err := rp.SetMetadata(); err != nil {
-		t.Error("Could not set metadata")
-	}
+	rp.SetMetadata(model.Metadata{
+		Image:       m["avatar_url"].(string),
+		Description: m["description"].(string),
+		Stars:       m["stargazers"].(int),
+	})
 	if rp.GetMetadata().Stars != 123 {
 		t.Error("The metadata has not changed")
-	}
-}
-
-func TestScoreChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
-	rp.SetScore()
-	if rp.GetScore().Rank != "D" {
-		t.Error("The rank has not changed")
 	}
 }
 

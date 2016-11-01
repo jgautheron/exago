@@ -3,14 +3,15 @@ package showcaser
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"strings"
 	"sync"
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/dgryski/go-topk"
-	"github.com/hotolab/exago-svc/leveldb"
-	"github.com/hotolab/exago-svc/repository"
+	exago "github.com/hotolab/exago-svc"
+	"github.com/hotolab/exago-svc/repository/model"
 	st "github.com/palantir/stacktrace"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )
@@ -18,38 +19,62 @@ import (
 const (
 	ItemCount   = 6
 	TopkCount   = 100
-	DatabaseKey = "showcase"
+	DatabaseKey = "showcaser"
 )
 
 var (
-	showcase *Showcase
-	once     sync.Once
-	logger   = log.WithField("prefix", "showcaser")
-	signals  = make(chan os.Signal, 1)
+	logger  = log.WithField("prefix", "showcaser")
+	signals = make(chan os.Signal, 1)
+
+	// Make sure it satisfies the interface.
+	_ model.Promoter = (*Showcaser)(nil)
 )
 
-type serialisedShowcase struct {
-	Recent    []string
-	TopRanked []string
-	Popular   []string
-	Topk      []byte
-}
-
-type Showcase struct {
-	recent    []repository.Record
-	topRanked []repository.Record
-	popular   []repository.Record
+type Showcaser struct {
+	recent    []model.Record
+	topRanked []model.Record
+	popular   []model.Record
 
 	// How many items per category
 	itemCount int
 	tk        *topk.Stream
 
-	db leveldb.Database
+	config exago.Config
 	sync.RWMutex
 }
 
+func New(options ...exago.Option) (*Showcaser, error) {
+	showcaser := &Showcaser{
+		itemCount: ItemCount,
+		tk:        topk.New(TopkCount),
+	}
+
+	// Apply options
+	for _, option := range options {
+		option.Apply(&showcaser.config)
+	}
+
+	snapshot, exists, err := showcaser.loadFromDB()
+	if err != nil {
+		return nil, fmt.Errorf("An error occurred while loading the snapshot: %v", err)
+	} else if exists {
+		s := &snapshot
+		s.itemCount = ItemCount
+		s.config = showcaser.config
+		logger.Info("Snapshot loaded")
+		return s, nil
+	}
+
+	return showcaser, nil
+}
+
+func (d *Showcaser) StartRoutines() {
+	go d.catchInterrupt()
+	go d.periodicallyRebuildPopularList()
+}
+
 // AddRecent pushes to the stack latest new items, pops the old ones.
-func (d *Showcase) AddRecent(repo repository.Record) {
+func (d *Showcaser) AddRecent(repo model.Record) {
 	d.Lock()
 	defer d.Unlock()
 
@@ -68,7 +93,7 @@ func (d *Showcase) AddRecent(repo repository.Record) {
 }
 
 // AddTopRanked pushes to the stack latest new A-ranked items, pops the old ones.
-func (d *Showcase) AddTopRanked(repo repository.Record) {
+func (d *Showcaser) AddTopRanked(repo model.Record) {
 	d.Lock()
 	defer d.Unlock()
 
@@ -91,16 +116,15 @@ func (d *Showcase) AddTopRanked(repo repository.Record) {
 
 // AddPopular inserts the repository name into the topk data structure.
 // The collection will not be updated in real-time (see updatePopular).
-func (d *Showcase) AddPopular(repo repository.Record) {
+func (d *Showcaser) AddPopular(repo model.Record) {
 	d.Lock()
-	defer d.Unlock()
-
 	d.tk.Insert(repo.GetName(), 1)
+	d.Unlock()
 }
 
 // updatePopular rebuilds the popular list from the topk stream.
 // Doing it in real time would be unecessarily too expensive.
-func (d *Showcase) updatePopular() error {
+func (d *Showcaser) updatePopular() error {
 	d.Lock()
 	defer d.Unlock()
 
@@ -121,7 +145,7 @@ func (d *Showcase) updatePopular() error {
 }
 
 // serialize the index as an easily loadable format.
-func (d *Showcase) serialize() ([]byte, error) {
+func (d *Showcaser) serialize() ([]byte, error) {
 	sc := serialisedShowcase{}
 
 	for _, r := range d.recent {
@@ -146,20 +170,20 @@ func (d *Showcase) serialize() ([]byte, error) {
 }
 
 // save persists periodically the index in database.
-func (d *Showcase) save() error {
+func (d *Showcaser) save() error {
 	b, err := d.serialize()
 	if err != nil {
 		return st.Propagate(err, "Could not serialize the index")
 	}
-	return d.db.Put([]byte(DatabaseKey), b)
+	return d.config.DB.Put([]byte(DatabaseKey), b)
 }
 
-func (d *Showcase) loadReposFromList(list []string) (repos []repository.Record, err error) {
+func (d *Showcaser) loadReposFromList(list []string) (repos []model.Record, err error) {
 	if len(list) == 0 {
 		return
 	}
 	for _, name := range list {
-		rp := &repository.Repository{Name: name, DB: d.db}
+		rp := d.config.RepositoryLoader.Load(name, "")
 		if err = rp.Load(); err != nil {
 			return nil, err
 		}
@@ -169,10 +193,10 @@ func (d *Showcase) loadReposFromList(list []string) (repos []repository.Record, 
 }
 
 // loadFromDB attempts to load a previously saved snapshot.
-func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
-	var repos []repository.Record
+func (d *Showcaser) loadFromDB() (s Showcaser, exists bool, err error) {
+	var repos []model.Record
 
-	b, err := d.db.Get([]byte(DatabaseKey))
+	b, err := d.config.DB.Get([]byte(DatabaseKey))
 	if err == ldb.ErrNotFound {
 		return s, false, nil
 	}
@@ -209,41 +233,15 @@ func (d *Showcase) loadFromDB() (s Showcase, exists bool, err error) {
 	return s, true, nil
 }
 
-func (d *Showcase) Process(repo repository.Record) {
+func (d *Showcaser) Process(repo model.Record) {
 	d.AddRecent(repo)
 	d.AddTopRanked(repo)
 	d.AddPopular(repo)
 }
 
-func GetInstance() *Showcase {
-	once.Do(func() {
-		if err := Init(); err != nil {
-			logger.Fatal(err)
-		}
-	})
-	return showcase
-}
-
-func Init() (err error) {
-	db := leveldb.GetInstance()
-	showcase = &Showcase{
-		itemCount: ItemCount,
-		tk:        topk.New(TopkCount),
-		db:        db,
-	}
-
-	snapshot, exists, err := showcase.loadFromDB()
-	if err != nil {
-		logger.Errorf("An error occurred while loading the snapshot: %v", err)
-	} else if exists {
-		showcase = &snapshot
-		showcase.db = db
-		showcase.itemCount = ItemCount
-		logger.Info("Snapshot loaded")
-	}
-
-	go showcase.catchInterrupt()
-	go showcase.periodicallyRebuildPopularList()
-	// go data.periodicallySave()
-	return
+type serialisedShowcase struct {
+	Recent    []string
+	TopRanked []string
+	Popular   []string
+	Topk      []byte
 }

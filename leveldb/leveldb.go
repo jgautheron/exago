@@ -2,37 +2,33 @@
 package leveldb
 
 import (
-	"sync"
+	"fmt"
 
 	log "github.com/Sirupsen/logrus"
 	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/repository/model"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"
 )
 
 var (
-	db     LevelDB
-	once   sync.Once
-	logger = log.WithField("prefix", "leveldb")
+	logger = log.WithField("prefix", "database")
 
 	// Make sure it satisfies the interface.
-	_ Database = (*LevelDB)(nil)
+	_ model.Database = (*LevelDB)(nil)
 )
 
 type LevelDB struct {
 	conn *ldb.DB
 }
 
-func GetInstance() LevelDB {
-	once.Do(func() {
-		conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
-		if err != nil {
-			logger.Fatalf("An error occurred while trying to open the DB: %s", err)
-		}
-		db = LevelDB{conn}
-	})
-	return db
+func New() (model.Database, error) {
+	conn, err := ldb.OpenFile(Config.DatabasePath, &opt.Options{})
+	if err != nil {
+		return nil, fmt.Errorf("An error occurred while trying to open the DB: %s", err)
+	}
+	return &LevelDB{conn}, nil
 }
 
 func (l LevelDB) DeleteAllMatchingPrefix(prefix []byte) error {
@@ -61,11 +57,4 @@ func (l LevelDB) Get(key []byte) ([]byte, error) {
 
 func (l LevelDB) Delete(key []byte) error {
 	return l.conn.Delete(key, nil)
-}
-
-type Database interface {
-	DeleteAllMatchingPrefix(prefix []byte) error
-	Delete(key []byte) error
-	Put(key []byte, data []byte) error
-	Get(key []byte) ([]byte, error)
 }

@@ -8,7 +8,7 @@ import (
 var githubTest GitHub
 
 func init() {
-	githubTest = GetInstance()
+	githubTest, _ = New()
 }
 
 func TestCacheSaved(t *testing.T) {

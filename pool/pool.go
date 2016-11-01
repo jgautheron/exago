@@ -1,11 +1,10 @@
 package pool
 
 import (
-	"sync"
 	"time"
 
-	"github.com/hotolab/exago-svc/repository"
-	"github.com/hotolab/exago-svc/repository/processor"
+	exago "github.com/hotolab/exago-svc"
+	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/jeffail/tunny"
 )
 
@@ -14,33 +13,35 @@ const (
 )
 
 var (
-	poolRunner *PoolRunner
-	once       sync.Once
+	// Make sure it satisfies the interface.
+	_ model.Pool = (*PoolRunner)(nil)
 )
 
 type PoolRunner struct {
-	pool *tunny.WorkPool
+	pool   *tunny.WorkPool
+	config exago.Config
 }
 
-// GetInstance returns the pool instance.
-func GetInstance() *PoolRunner {
-	once.Do(func() {
-		numCPUs := 4
-		pool, _ := tunny.CreatePool(numCPUs, processor.ProcessRepository).Open()
-		poolRunner = &PoolRunner{
-			pool: pool,
-		}
-	})
-	return poolRunner
+func New(options ...exago.Option) (model.Pool, error) {
+	var p PoolRunner
+	for _, option := range options {
+		option.Apply(&p.config)
+	}
+	pool, err := tunny.CreatePool(4, p.config.RepositoryProcessor).Open()
+	if err != nil {
+		return nil, err
+	}
+	p.pool = pool
+	return &p, nil
 }
 
-func (pr *PoolRunner) PushSync(repo string) (*repository.Repository, error) {
+func (pr *PoolRunner) PushSync(repo string) (model.Record, error) {
 	value, _ := pr.pool.SendWork(repo)
 	switch value.(type) {
 	case error:
 		return nil, value.(error)
 	default:
-		return value.(*repository.Repository), nil
+		return value.(model.Record), nil
 	}
 	return nil, nil
 }

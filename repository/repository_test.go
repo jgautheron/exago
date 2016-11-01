@@ -46,17 +46,25 @@ func TestStartTimeSet(t *testing.T) {
 	}
 }
 
+func TestScoreChanged(t *testing.T) {
+	rp, _ := loadStubRepo()
+	if err := rp.ApplyScore(); err != nil {
+		t.Errorf("Error while calculating the score: %v", err)
+	}
+	if rp.GetScore().Rank != "D" {
+		t.Error("The rank has not changed")
+	}
+}
+
 func loadStubRepo() (*Repository, error) {
-	rhMock := mocks.RepositoryHost{}
 	dbMock := mocks.Database{}
 	dbMock.On("Get",
 		[]byte(fmt.Sprintf("%s-%s", repo, "")),
 	).Return([]byte(data), nil)
 
 	rp := &Repository{
-		Name:           repo,
-		DB:             dbMock,
-		RepositoryHost: rhMock,
+		Name: repo,
+		DB:   dbMock,
 	}
 	if err := rp.Load(); err != nil {
 		return nil, fmt.Errorf("Got error while loading data: %v", err)

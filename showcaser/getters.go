@@ -12,7 +12,7 @@ type RepositoryInfo struct {
 	Rank        string `json:"rank"`
 }
 
-func (s *Showcase) GetRecentRepositories() (repos []RepositoryInfo) {
+func (s *Showcaser) GetRecentRepositories() (repos []interface{}) {
 	for i := len(s.recent) - 1; i >= 0; i-- {
 		repo := s.recent[i]
 		meta := repo.GetMetadata()
@@ -26,7 +26,7 @@ func (s *Showcase) GetRecentRepositories() (repos []RepositoryInfo) {
 	return
 }
 
-func (s *Showcase) GetTopRankedRepositories() (repos []RepositoryInfo) {
+func (s *Showcaser) GetTopRankedRepositories() (repos []interface{}) {
 	rand.Seed(time.Now().UTC().UnixNano())
 	for i, item := range rand.Perm(len(s.topRanked)) {
 		if i == s.itemCount {
@@ -44,7 +44,7 @@ func (s *Showcase) GetTopRankedRepositories() (repos []RepositoryInfo) {
 	return
 }
 
-func (s *Showcase) GetPopularRepositories() (repos []RepositoryInfo) {
+func (s *Showcaser) GetPopularRepositories() (repos []interface{}) {
 	for _, repo := range s.popular {
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{

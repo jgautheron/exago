@@ -11,6 +11,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
+	exago "github.com/hotolab/exago-svc"
 	. "github.com/hotolab/exago-svc/config"
 	"github.com/justinas/alice"
 )
@@ -20,33 +21,51 @@ var (
 	logger               = log.WithField("prefix", "server")
 )
 
+type Server struct {
+	config exago.Config
+}
+
+// New creates a new Server instance.
+// Dependencies:
+// - DB
+// - RepositoryHost
+// - Pool
+// - Showcaser
+func New(options ...exago.Option) *Server {
+	var s Server
+	for _, option := range options {
+		option.Apply(&s.config)
+	}
+	return &s
+}
+
 // ListenAndServe binds the HTTP port and listens for requests.
-func ListenAndServe() {
+func (s *Server) ListenAndServe() error {
 	repoHandlers := alice.New(
 		context.ClearHandler,
-		recoverHandler,
-		setLogger,
-		checkValidRepository,
+		s.recoverHandler,
+		s.setLogger,
+		s.checkValidRepository,
 		// rateLimit,
 		// requestLock,
 	)
 	router := NewRouter()
 
-	router.Get("/project/*repository", repoHandlers.ThenFunc(repositoryHandler))
-	router.Get("/refresh/*repository", repoHandlers.ThenFunc(refreshHandler))
-	router.Get("/contents/*repository", repoHandlers.ThenFunc(fileHandler))
-	router.Get("/cached/*repository", repoHandlers.ThenFunc(cachedHandler))
-	router.Get("/badge/:type/*repository", repoHandlers.ThenFunc(badgeHandler))
+	router.Get("/project/*repository", repoHandlers.ThenFunc(s.repositoryHandler))
+	router.Get("/refresh/*repository", repoHandlers.ThenFunc(s.refreshHandler))
+	router.Get("/contents/*repository", repoHandlers.ThenFunc(s.fileHandler))
+	router.Get("/cached/*repository", repoHandlers.ThenFunc(s.cachedHandler))
+	router.Get("/badge/:type/*repository", repoHandlers.ThenFunc(s.badgeHandler))
 
 	baseHandlers := alice.New(
 		context.ClearHandler,
-		recoverHandler,
+		s.recoverHandler,
 	)
-	router.Get("/projects/recent", baseHandlers.ThenFunc(recentHandler))
-	router.Get("/projects/top", baseHandlers.ThenFunc(topHandler))
-	router.Get("/projects/popular", baseHandlers.ThenFunc(popularHandler))
-	router.Get("/godocindex", baseHandlers.ThenFunc(godocIndexHandler))
+	router.Get("/projects/recent", baseHandlers.ThenFunc(s.recentHandler))
+	router.Get("/projects/top", baseHandlers.ThenFunc(s.topHandler))
+	router.Get("/projects/popular", baseHandlers.ThenFunc(s.popularHandler))
+	router.Get("/godocindex", baseHandlers.ThenFunc(s.godocIndexHandler))
 
 	logger.Infof("Listening on port %d", Config.HttpPort)
-	logger.Fatal(graceful.RunWithErr(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router))
+	return graceful.RunWithErr(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router)
 }

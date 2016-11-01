@@ -11,7 +11,6 @@ import (
 	"github.com/didip/tollbooth"
 	"github.com/gorilla/context"
 	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/requestlock"
 	"github.com/julienschmidt/httprouter"
 )
@@ -25,7 +24,7 @@ var (
 	ErrRateLimitExceeded = errors.New("Rate limit exceeded")
 )
 
-func recoverHandler(next http.Handler) http.Handler {
+func (s *Server) recoverHandler(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		defer func() {
 			if err := recover(); err != nil {
@@ -39,12 +38,12 @@ func recoverHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func checkValidRepository(next http.Handler) http.Handler {
+func (s *Server) checkValidRepository(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
 		repo := ps.ByName("repository")[1:]
 
-		data, err := repository.IsValid(repo)
+		data, err := s.config.RepositoryLoader.IsValid(repo)
 		if err != nil {
 			writeError(w, r, err)
 			return
@@ -67,7 +66,7 @@ func checkValidRepository(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func requestLock(next http.Handler) http.Handler {
+func (s *Server) requestLock(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
 		rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
@@ -82,7 +81,7 @@ func requestLock(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func setLogger(next http.Handler) http.Handler {
+func (s *Server) setLogger(next http.Handler) http.Handler {
 	fn := func(w http.ResponseWriter, r *http.Request) {
 		ps := context.Get(r, "params").(httprouter.Params)
 
@@ -96,7 +95,7 @@ func setLogger(next http.Handler) http.Handler {
 	return http.HandlerFunc(fn)
 }
 
-func rateLimit(next http.Handler) http.Handler {
+func (s *Server) rateLimit(next http.Handler) http.Handler {
 	limiter := tollbooth.NewLimiter(rateLimitCount, time.Hour*4)
 	limiter.Methods = []string{"GET"}
 

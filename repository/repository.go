@@ -4,31 +4,30 @@ import (
 	"encoding/json"
 	"time"
 
-	"github.com/hotolab/exago-svc/github"
-	"github.com/hotolab/exago-svc/leveldb"
+	"github.com/go-xweb/log"
 	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/hotolab/exago-svc/score"
 )
 
 var (
 	// Make sure it satisfies the interface.
-	_ Record = (*Repository)(nil)
+	_ model.Record = (*Repository)(nil)
 )
 
 type Repository struct {
-	Name, Branch   string
-	DB             leveldb.Database
-	RepositoryHost github.RepositoryHost
-	Data           model.Data
-	startTime      time.Time
-	loaded         bool
+	Name, Branch string
+	Data         model.Data
+	startTime    time.Time
+	loaded       bool
+
+	DB model.Database
 }
 
-func New(repo, branch string) *Repository {
+func New(repo, branch string, db model.Database, repositoryHost model.RepositoryHost) model.Record {
 	return &Repository{
-		Name:           repo,
-		Branch:         branch,
-		DB:             leveldb.GetInstance(),
-		RepositoryHost: github.GetInstance(),
+		Name:   repo,
+		Branch: branch,
+		DB:     db,
 	}
 }
 
@@ -53,6 +52,23 @@ func (r *Repository) Load() error {
 	r.Data.Name = r.Name
 	r.Data.Branch = r.Branch
 	r.loaded = true
+
+	return nil
+}
+
+// ApplyScore calculates the score based on the repository results.
+func (r *Repository) ApplyScore() (err error) {
+	val, res := score.Process(r.Data)
+	r.Data.Score.Value = val
+	r.Data.Score.Details = res
+	r.Data.Score.Rank = score.Rank(r.Data.Score.Value)
+
+	log.Infof(
+		"[%s] Rank: %s, overall score: %.2f",
+		r.GetName(),
+		r.Data.Score.Rank,
+		r.Data.Score.Value,
+	)
 
 	return nil
 }

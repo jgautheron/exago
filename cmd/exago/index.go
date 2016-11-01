@@ -3,9 +3,8 @@ package main
 import (
 	"errors"
 
+	"github.com/Sirupsen/logrus"
 	"github.com/hotolab/exago-svc/godoc"
-	"github.com/hotolab/exago-svc/pool"
-	"github.com/hotolab/exago-svc/pool/job"
 	"github.com/urfave/cli"
 )
 
@@ -24,7 +23,7 @@ func IndexCommand() cli.Command {
 						items = append(items, item)
 					}
 
-					indexRepos(items)
+					// indexRepos(items)
 					return nil
 				},
 			},
@@ -49,10 +48,11 @@ func indexGodoc() error {
 }
 
 func indexRepos(repos []string) {
-	job.Init()
-	p := pool.GetInstance()
-	for _, repo := range repos {
-		p.PushAsync(repo)
-	}
-	p.WaitUntilEmpty()
+	logrus.Warnln("to be implemented")
+	// job.New()
+	// p := pool.GetInstance()
+	// for _, repo := range repos {
+	// 	p.PushAsync(repo)
+	// }
+	// p.WaitUntilEmpty()
 }

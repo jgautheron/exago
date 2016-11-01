@@ -7,8 +7,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
+	exago "github.com/hotolab/exago-svc"
 	"github.com/hotolab/exago-svc/pool/job"
-	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
@@ -23,24 +23,36 @@ var (
 	fns               = []string{"codestats", "projectrunner", "lintmessages"}
 )
 
-type ResultOutput struct {
+type Processor struct {
+	config exago.Config
+}
+
+type resultOutput struct {
 	Fn       string
 	Response job.Response
 	err      error
 }
 
-func ProcessRepository(value interface{}) interface{} {
+func New(options ...exago.Option) *Processor {
+	var p Processor
+	for _, option := range options {
+		option.Apply(&p.config)
+	}
+	return &p
+}
+
+func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	repo := value.(string)
 
 	// Check first if the repository is valid (still exists, contains Go code...)
-	data, err := repository.IsValid(repo)
+	data, err := p.config.RepositoryLoader.IsValid(repo)
 	if err != nil {
 		logger.WithField("repo", repo).Error(err)
 		return err
 	}
 
 	startTime := time.Now()
-	outCh := make(chan ResultOutput, len(fns))
+	outCh := make(chan resultOutput, len(fns))
 	wg := new(sync.WaitGroup)
 	for _, fn := range fns {
 		wg.Add(1)
@@ -48,26 +60,32 @@ func ProcessRepository(value interface{}) interface{} {
 			defer wg.Done()
 			out, err := job.CallLambdaFn(fn, repo, "")
 			if err != nil {
-				outCh <- ResultOutput{
+				outCh <- resultOutput{
 					Fn:  fn,
 					err: err,
 				}
 				return
 			}
-			outCh <- ResultOutput{fn, out, nil}
+			outCh <- resultOutput{fn, out, nil}
 			logger.Debugln(fn, out)
 		}(fn, repo)
 	}
 	wg.Wait()
 
-	output := map[string]ResultOutput{}
+	output := map[string]resultOutput{}
 	for i := 0; i < len(fns); i++ {
 		out := <-outCh
 		output[out.Fn] = out
 	}
 
-	rp := importData(repo, output)
+	rp := p.importData(repo, output)
 	rp.SetName(data["html_url"].(string))
+	rp.SetMetadata(model.Metadata{
+		Image:       data["avatar_url"].(string),
+		Description: data["description"].(string),
+		Stars:       data["stargazers"].(int),
+		LastPush:    data["last_push"].(time.Time),
+	})
 	rp.SetExecutionTime(time.Since(startTime))
 	rp.SetLastUpdate(time.Now())
 
@@ -79,9 +97,9 @@ func ProcessRepository(value interface{}) interface{} {
 	return rp
 }
 
-func importData(repo string, results map[string]ResultOutput) *repository.Repository {
+func (p *Processor) importData(repo string, results map[string]resultOutput) model.Record {
 	var err error
-	rp := repository.New(repo, "")
+	rp := p.config.RepositoryLoader.Load(repo, "")
 
 	// Handle codestats
 	var cs model.CodeStats
@@ -108,15 +126,8 @@ func importData(repo string, results map[string]ResultOutput) *repository.Reposi
 		rp.SetLintMessages(lm)
 	}
 
-	// Add the metadata
-	err = rp.SetMetadata()
-	if err != nil {
-		rp.SetError(model.MetadataName, err)
-	}
-
 	// Add the score
-	err = rp.SetScore()
-	if err != nil {
+	if err = rp.ApplyScore(); err != nil {
 		rp.SetError(model.ScoreName, err)
 	}
 

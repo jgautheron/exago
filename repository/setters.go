@@ -1,14 +1,9 @@
 package repository
 
 import (
-	"errors"
-	"regexp"
 	"time"
 
-	log "github.com/Sirupsen/logrus"
-
 	"github.com/hotolab/exago-svc/repository/model"
-	"github.com/hotolab/exago-svc/score"
 )
 
 func (r *Repository) SetName(name string) {
@@ -48,43 +43,8 @@ func (r *Repository) SetLastUpdate(t time.Time) {
 }
 
 // SetMetadata sets repository metadata such as description, stars...
-func (r *Repository) SetMetadata() (err error) {
-	reg, _ := regexp.Compile(`^github\.com/([\w\d\-\.]+)/([\w\d\-\.]+)`)
-	m := reg.FindStringSubmatch(r.Name)
-	if len(m) == 0 {
-		return errors.New("Can only get metadata for GitHub repositories")
-	}
-
-	res, err := r.RepositoryHost.Get(m[1], m[2])
-	if err != nil {
-		return err
-	}
-
-	r.Data.Metadata = model.Metadata{
-		Image:       res["avatar_url"].(string),
-		Description: res["description"].(string),
-		Stars:       res["stargazers"].(int),
-		LastPush:    res["last_push"].(time.Time),
-	}
-
-	return nil
-}
-
-// SetScore calculates the score based on the repository results.
-func (r *Repository) SetScore() (err error) {
-	val, res := score.Process(r.Data)
-	r.Data.Score.Value = val
-	r.Data.Score.Details = res
-	r.Data.Score.Rank = score.Rank(r.Data.Score.Value)
-
-	log.Infof(
-		"[%s] Rank: %s, overall score: %.2f",
-		r.GetName(),
-		r.Data.Score.Rank,
-		r.Data.Score.Value,
-	)
-
-	return nil
+func (r *Repository) SetMetadata(m model.Metadata) {
+	r.Data.Metadata = m
 }
 
 // SetError assigns a processing error to the given type (ex. ProjectRunner).

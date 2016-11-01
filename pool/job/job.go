@@ -33,7 +33,7 @@ type context struct {
 	Cleanup    bool   `json:"cleanup,omitempty"`
 }
 
-func Init() {
+func New() {
 	creds := credentials.NewStaticCredentials(
 		Config.AwsAccessKeyID,
 		Config.AwsSecretAccessKey,

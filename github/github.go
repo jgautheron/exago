@@ -4,10 +4,10 @@ import (
 	"encoding/base64"
 	"sync"
 
-	log "github.com/Sirupsen/logrus"
 	gh "github.com/google/go-github/github"
 	"github.com/hashicorp/golang-lru"
 	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/repository/model"
 	"golang.org/x/oauth2"
 )
 
@@ -16,11 +16,8 @@ const (
 )
 
 var (
-	gi   GitHub
-	once sync.Once
-
 	// Make sure it satisfies the interface.
-	_ RepositoryHost = (*GitHub)(nil)
+	_ model.RepositoryHost = (*GitHub)(nil)
 )
 
 type GitHub struct {
@@ -29,27 +26,24 @@ type GitHub struct {
 	sync.RWMutex
 }
 
-func GetInstance() GitHub {
-	once.Do(func() {
-		// Authenticate with the GitHub API
-		ts := oauth2.StaticTokenSource(
-			&oauth2.Token{AccessToken: Config.GithubAccessToken},
-		)
-		tc := oauth2.NewClient(oauth2.NoContext, ts)
-		client := gh.NewClient(tc)
+func New() (GitHub, error) {
+	// Authenticate with the GitHub API
+	ts := oauth2.StaticTokenSource(
+		&oauth2.Token{AccessToken: Config.GithubAccessToken},
+	)
+	tc := oauth2.NewClient(oauth2.NoContext, ts)
+	client := gh.NewClient(tc)
 
-		// Initialise the ARC cache
-		cache, err := lru.NewARC(CacheSize)
-		if err != nil {
-			log.Fatal("Could not create the ARC cache")
-		}
+	// Initialise the ARC cache
+	cache, err := lru.NewARC(CacheSize)
+	if err != nil {
+		return GitHub{}, err
+	}
 
-		gi = GitHub{
-			client: client,
-			cache:  cache,
-		}
-	})
-	return gi
+	return GitHub{
+		client: client,
+		cache:  cache,
+	}, nil
 }
 
 func (g GitHub) GetFileContent(owner, repository, path string) (string, error) {
@@ -109,9 +103,4 @@ func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
 // https://developer.github.com/v3/repos/
 func (g GitHub) repositories() *gh.RepositoriesService {
 	return g.client.Repositories
-}
-
-type RepositoryHost interface {
-	GetFileContent(owner, repository, path string) (string, error)
-	Get(owner, repository string) (map[string]interface{}, error)
 }

@@ -7,52 +7,54 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
 	"github.com/hotolab/exago-svc/badge"
-	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/godoc"
-	"github.com/hotolab/exago-svc/pool"
-	"github.com/hotolab/exago-svc/repository"
-	"github.com/hotolab/exago-svc/showcaser"
 	"github.com/julienschmidt/httprouter"
 )
 
-func repositoryHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rp := repository.New(repo, "")
+	rp := s.config.RepositoryLoader.Load(repo, "")
 	if rp.IsCached() {
 		err := rp.Load()
 		if !rp.HasError() {
-			go showcaser.GetInstance().Process(rp)
+			go s.config.Showcaser.Process(rp)
 		}
 		send(w, r, rp.GetData(), err)
 		return
 	}
 
-	rp, err := pool.GetInstance().PushSync(repo)
+	rp, err := s.config.Pool.PushSync(repo)
 	if err == nil && !rp.HasError() {
-		go showcaser.GetInstance().Process(rp)
+		go s.config.Showcaser.Process(rp)
 	}
 	send(w, r, rp.GetData(), err)
 }
 
-func refreshHandler(w http.ResponseWriter, r *http.Request) {
-	rp := repository.New(context.Get(r, "repository").(string), "")
+func (s *Server) refreshHandler(w http.ResponseWriter, r *http.Request) {
+	rp := s.config.RepositoryLoader.Load(
+		context.Get(r, "repository").(string),
+		"",
+	)
 	rp.ClearCache()
-	repositoryHandler(w, r)
+	s.repositoryHandler(w, r)
 }
 
-func badgeHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	lgr := context.Get(r, "lgr").(*log.Entry)
 
-	repo := repository.New(ps.ByName("repository")[1:], "")
-	if !repo.IsCached() {
+	rp := s.config.RepositoryLoader.Load(
+		ps.ByName("repository")[1:],
+		"",
+	)
+	if !rp.IsCached() {
 		badge.WriteError(w, "")
 		return
 	}
 
 	switch tp := ps.ByName("type"); tp {
 	case "rank":
-		err, rank, score := repo.Load(), repo.GetRank(), repo.GetScore().Value
+		err, rank, score := rp.Load(), rp.GetRank(), rp.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, "")
@@ -62,7 +64,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, "", string(rank), score)
 	case "cov":
 		title := "coverage"
-		err, cov, score := repo.Load(), repo.GetProjectRunner().GetMeanCodeCov(), repo.GetScore().Value
+		err, cov, score := rp.Load(), rp.GetProjectRunner().GetMeanCodeCov(), rp.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -71,7 +73,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), score)
 	case "duration":
 		title := "tests duration"
-		err, avg, score := repo.Load(), repo.GetProjectRunner().GetMeanTestDuration(), repo.GetScore().Value
+		err, avg, score := rp.Load(), rp.GetProjectRunner().GetMeanTestDuration(), rp.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -80,7 +82,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), score)
 	case "tests":
 		title := "tests"
-		err, tests, score := repo.Load(), repo.GetCodeStats()["Test"], repo.GetScore().Value
+		err, tests, score := rp.Load(), rp.GetCodeStats()["Test"], rp.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -89,7 +91,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%d", tests), score)
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties, score := repo.Load(), len(repo.GetProjectRunner().Thirdparties.Data), repo.GetScore().Value
+		err, thirdParties, score := rp.Load(), len(rp.GetProjectRunner().Thirdparties.Data), rp.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -98,7 +100,7 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	case "loc":
 		title := "LOC"
-		err, thirdParties, score := repo.Load(), repo.GetCodeStats()["LOC"], repo.GetScore().Value
+		err, thirdParties, score := rp.Load(), rp.GetCodeStats()["LOC"], rp.GetScore().Value
 		if err != nil {
 			lgr.Error(err)
 			badge.WriteError(w, title)
@@ -108,17 +110,17 @@ func badgeHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func fileHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
 	owner := context.Get(r, "owner").(string)
 	project := context.Get(r, "project").(string)
 	path := context.Get(r, "path").(string)
-	content, err := github.GetInstance().GetFileContent(owner, project, path)
+	content, err := s.config.RepositoryHost.GetFileContent(owner, project, path)
 	send(w, r, content, err)
 }
 
-func cachedHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) cachedHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rp := repository.New(repo, "")
+	rp := s.config.RepositoryLoader.Load(repo, "")
 	if rp.IsCached() {
 		err := rp.Load()
 		send(w, r, rp.GetData(), err)
@@ -127,8 +129,8 @@ func cachedHandler(w http.ResponseWriter, r *http.Request) {
 	send(w, r, false, nil)
 }
 
-func recentHandler(w http.ResponseWriter, r *http.Request) {
-	repos := showcaser.GetInstance().GetRecentRepositories()
+func (s *Server) recentHandler(w http.ResponseWriter, r *http.Request) {
+	repos := s.config.Showcaser.GetRecentRepositories()
 	out := map[string]interface{}{
 		"type":         "recent",
 		"repositories": repos,
@@ -136,8 +138,8 @@ func recentHandler(w http.ResponseWriter, r *http.Request) {
 	send(w, r, out, nil)
 }
 
-func topHandler(w http.ResponseWriter, r *http.Request) {
-	repos := showcaser.GetInstance().GetTopRankedRepositories()
+func (s *Server) topHandler(w http.ResponseWriter, r *http.Request) {
+	repos := s.config.Showcaser.GetTopRankedRepositories()
 	out := map[string]interface{}{
 		"type":         "top",
 		"repositories": repos,
@@ -145,8 +147,8 @@ func topHandler(w http.ResponseWriter, r *http.Request) {
 	send(w, r, out, nil)
 }
 
-func popularHandler(w http.ResponseWriter, r *http.Request) {
-	repos := showcaser.GetInstance().GetPopularRepositories()
+func (s *Server) popularHandler(w http.ResponseWriter, r *http.Request) {
+	repos := s.config.Showcaser.GetPopularRepositories()
 	out := map[string]interface{}{
 		"type":         "popular",
 		"repositories": repos,
@@ -154,7 +156,7 @@ func popularHandler(w http.ResponseWriter, r *http.Request) {
 	send(w, r, out, nil)
 }
 
-func godocIndexHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) godocIndexHandler(w http.ResponseWriter, r *http.Request) {
 	repos, err := godoc.New().GetIndex()
 	send(w, r, repos, err)
 }

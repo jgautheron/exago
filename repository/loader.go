@@ -5,7 +5,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/hotolab/exago-svc/github"
+	exago "github.com/hotolab/exago-svc"
+	"github.com/hotolab/exago-svc/repository/model"
 )
 
 const (
@@ -17,9 +18,28 @@ var (
 	ErrInvalidRepository = errors.New("The repository name is invalid")
 	ErrInvalidLanguage   = errors.New("The repository does not contain Go code")
 	ErrTooLarge          = errors.New("The repository is too large")
+
+	// Make sure it satisfies the interface.
+	_ model.RepositoryLoader = (*Loader)(nil)
 )
 
-func IsValid(repository string) (map[string]interface{}, error) {
+type Loader struct {
+	config exago.Config
+}
+
+func NewLoader(options ...exago.Option) *Loader {
+	var l Loader
+	for _, option := range options {
+		option.Apply(&l.config)
+	}
+	return &l
+}
+
+func (l Loader) Load(repository, branch string) model.Record {
+	return New(repository, branch, l.config.DB, l.config.RepositoryHost)
+}
+
+func (l Loader) IsValid(repository string) (map[string]interface{}, error) {
 	if !strings.HasPrefix(repository, "github.com") {
 		return nil, ErrOnlyGitHub
 	}
@@ -29,7 +49,7 @@ func IsValid(repository string) (map[string]interface{}, error) {
 	}
 
 	sp := strings.Split(repository, "/")
-	data, err := github.GetInstance().Get(sp[1], sp[2])
+	data, err := l.config.RepositoryHost.Get(sp[1], sp[2])
 	if err != nil {
 		return nil, err
 	}

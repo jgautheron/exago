@@ -15,12 +15,14 @@ func init() {
 }
 
 func TestInterrupted(t *testing.T) {
-	dbMock := mocks.Database{}
+	dbMock := getDatabaseMock()
+	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
 	dbMock.On("Put", Anything, Anything).Return(nil)
-	showcase = getShowcaseMock(dbMock)
+
+	showcaser := getShowcaseMock(getDatabaseMock())
+	go showcaser.catchInterrupt()
 
 	done := make(chan bool, 1)
-	go showcase.catchInterrupt()
 
 	go func() {
 		select {
@@ -42,17 +44,17 @@ func TestInterrupted(t *testing.T) {
 }
 
 func TestPeriodicallyRebuilt(t *testing.T) {
-	dbMock := mocks.Database{}
+	dbMock := getDatabaseMock()
 	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
-	showcase = getShowcaseMock(dbMock)
+	showcaser := getShowcaseMock(dbMock)
 
-	showcase.Process(mocks.NewRecord("github.com/moo/bar", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "B"))
 
-	go showcase.periodicallyRebuildPopularList()
+	go showcaser.periodicallyRebuildPopularList()
 	time.Sleep(25 * time.Millisecond)
-	showcase.RLock()
-	defer showcase.RUnlock()
-	if len(showcase.popular) != 1 {
-		t.Errorf("The popular slice should have a length of 1, got %d", len(showcase.popular))
+	showcaser.RLock()
+	defer showcaser.RUnlock()
+	if len(showcaser.popular) != 1 {
+		t.Errorf("The popular slice should have a length of 1, got %d", len(showcaser.popular))
 	}
 }

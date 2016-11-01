@@ -7,7 +7,7 @@ import (
 
 	"github.com/PuerkitoBio/goquery"
 	log "github.com/Sirupsen/logrus"
-	"github.com/hotolab/exago-svc/leveldb"
+	exago "github.com/hotolab/exago-svc"
 )
 
 const (
@@ -16,19 +16,21 @@ const (
 )
 
 type Godoc struct {
-	db leveldb.Database
+	config exago.Config
 }
 
-func New() *Godoc {
-	return &Godoc{
-		db: leveldb.GetInstance(),
+func New(options ...exago.Option) *Godoc {
+	var gd Godoc
+	for _, option := range options {
+		option.Apply(&gd.config)
 	}
+	return &gd
 }
 
 // GetIndex retrieves the Godoc Index from the database, meaning that SaveIndex
 // must have been called before.
 func (g *Godoc) GetIndex() (repos []string, err error) {
-	b, err := g.db.Get([]byte(GodocDatabaseKey))
+	b, err := g.config.DB.Get([]byte(GodocDatabaseKey))
 	if err != nil {
 		return nil, err
 	}
@@ -66,5 +68,5 @@ func (g *Godoc) SaveIndex() error {
 	if err != nil {
 		return err
 	}
-	return g.db.Put([]byte(GodocDatabaseKey), b)
+	return g.config.DB.Put([]byte(GodocDatabaseKey), b)
 }

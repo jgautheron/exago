@@ -1,9 +1,9 @@
 package mocks
 
+import "github.com/hotolab/exago-svc/repository/model"
 import "github.com/stretchr/testify/mock"
 
 import "time"
-import "github.com/hotolab/exago-svc/repository/model"
 
 type Record struct {
 	mock.Mock
@@ -83,18 +83,9 @@ func (_m *Record) GetMetadata() model.Metadata {
 	return r0
 }
 
-// SetMetadata provides a mock function with given fields:
-func (_m *Record) SetMetadata() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
+// SetMetadata provides a mock function with given fields: _a0
+func (_m *Record) SetMetadata(_a0 model.Metadata) {
+	_m.Called(_a0)
 }
 
 // GetLastUpdate provides a mock function with given fields:
@@ -144,20 +135,6 @@ func (_m *Record) GetScore() model.Score {
 		r0 = rf()
 	} else {
 		r0 = ret.Get(0).(model.Score)
-	}
-
-	return r0
-}
-
-// SetScore provides a mock function with given fields:
-func (_m *Record) SetScore() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
 	}
 
 	return r0
@@ -228,6 +205,34 @@ func (_m *Record) SetStartTime(t time.Time) {
 // SetError provides a mock function with given fields: tp, err
 func (_m *Record) SetError(tp string, err error) {
 	_m.Called(tp, err)
+}
+
+// HasError provides a mock function with given fields:
+func (_m *Record) HasError() bool {
+	ret := _m.Called()
+
+	var r0 bool
+	if rf, ok := ret.Get(0).(func() bool); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(bool)
+	}
+
+	return r0
+}
+
+// ApplyScore provides a mock function with given fields:
+func (_m *Record) ApplyScore() error {
+	ret := _m.Called()
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func() error); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
 }
 
 // IsCached provides a mock function with given fields:
