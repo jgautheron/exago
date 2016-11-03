@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"github.com/go-xweb/log"
+	log "github.com/Sirupsen/logrus"
 	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/score"
 )
