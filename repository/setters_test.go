@@ -38,29 +38,6 @@ func TestLintMessagesChanged(t *testing.T) {
 	}
 }
 
-func TestStartTimeChanged(t *testing.T) {
-	rp := &Repository{
-		Name: repo,
-	}
-	now := time.Now()
-	rp.SetStartTime(now)
-	if rp.startTime != now {
-		t.Error("The start time has not changed")
-	}
-}
-
-func TestExecutionTimeChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
-	now := time.Now()
-	rp.SetStartTime(now)
-	rp.SetExecutionTime(time.Since(now))
-
-	et := rp.GetExecutionTime()
-	if et != "0s" {
-		t.Errorf("The execution time has not changed, got %s", et)
-	}
-}
-
 func TestLastUpdateTimeChanged(t *testing.T) {
 	rp := &Repository{
 		Name: repo,

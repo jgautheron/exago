@@ -9,7 +9,7 @@ import (
 )
 
 func getRecordMock(repo, rank string) model.Record {
-	mock := mocks.NewRecord(repo, rank)
+	mock := mocks.NewRecord(repo, "", rank)
 	return mock
 }
 

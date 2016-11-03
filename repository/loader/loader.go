@@ -1,11 +1,13 @@
-package repository
+package loader
 
 import (
+	"encoding/json"
 	"errors"
 	"regexp"
 	"strings"
 
 	exago "github.com/hotolab/exago-svc"
+	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
@@ -27,7 +29,7 @@ type Loader struct {
 	config exago.Config
 }
 
-func NewLoader(options ...exago.Option) *Loader {
+func New(options ...exago.Option) *Loader {
 	var l Loader
 	for _, option := range options {
 		option.Apply(&l.config)
@@ -35,8 +37,21 @@ func NewLoader(options ...exago.Option) *Loader {
 	return &l
 }
 
-func (l Loader) Load(repository, branch string) model.Record {
-	return New(repository, branch, l.config.DB, l.config.RepositoryHost)
+// Load retrieves the saved repository data from the database.
+func (l Loader) Load(repo, branch string) (model.Record, error) {
+	b, err := l.config.DB.Get(l.getCacheKey(repo, branch))
+	if err != nil {
+		return nil, err
+	}
+
+	var data model.Data
+	if err := json.Unmarshal(b, &data); err != nil {
+		return nil, err
+	}
+
+	r := repository.New(repo, branch)
+	r.SetData(data)
+	return r, nil
 }
 
 func (l Loader) IsValid(repository string) (map[string]interface{}, error) {

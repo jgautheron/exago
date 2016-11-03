@@ -6,7 +6,7 @@ import (
 	"github.com/hotolab/exago-svc/leveldb"
 	"github.com/hotolab/exago-svc/pool"
 	"github.com/hotolab/exago-svc/pool/job"
-	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/loader"
 	"github.com/hotolab/exago-svc/repository/processor"
 	"github.com/hotolab/exago-svc/server"
 	"github.com/hotolab/exago-svc/showcaser"
@@ -32,7 +32,7 @@ func ServerCommand() cli.Command {
 				return err
 			}
 
-			rl := repository.NewLoader(
+			rl := loader.New(
 				WithDatabase(db),
 				WithRepositoryHost(rh),
 			)

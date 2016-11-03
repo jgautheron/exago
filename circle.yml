@@ -3,7 +3,7 @@ machine:
     Europe/Warsaw
   environment:
     GOPATH: "$HOME/.go"
-    GOVERSION: "1.7.1"
+    GOVERSION: "1.7.3"
     PATH: "${PATH}:${GOPATH}/bin"
     TAG: $CIRCLE_BUILD_NUM
   services:
@@ -34,7 +34,6 @@ test:
   override:
     - pwd
     - make build
-    #- make check
     - make test
 
 deployment:

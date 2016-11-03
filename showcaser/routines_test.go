@@ -48,7 +48,7 @@ func TestPeriodicallyRebuilt(t *testing.T) {
 	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
 	showcaser := getShowcaseMock(dbMock)
 
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
 
 	go showcaser.periodicallyRebuildPopularList()
 	time.Sleep(25 * time.Millisecond)

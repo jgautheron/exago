@@ -5,9 +5,11 @@ import "time"
 // Record represents a repository.
 type Record interface {
 	GetName() string
+	GetBranch() string
 	SetName(string)
 	GetRank() string
 	GetData() Data
+	SetData(d Data)
 	GetMetadata() Metadata
 	SetMetadata(Metadata)
 	GetLastUpdate() time.Time
@@ -21,15 +23,9 @@ type Record interface {
 	SetProjectRunner(tr ProjectRunner)
 	GetLintMessages() LintMessages
 	SetLintMessages(LintMessages)
-	SetStartTime(t time.Time)
 	SetError(tp string, err error)
 	HasError() bool
 	ApplyScore() (err error)
-	IsCached() bool
-	IsLoaded() bool
-	Load() (err error)
-	ClearCache() (err error)
-	Save() error
 }
 
 // RepositoryHost represents a VCS hosting service.
@@ -40,8 +36,11 @@ type RepositoryHost interface {
 
 // Load wraps repository-related methods.
 type RepositoryLoader interface {
-	Load(repository, branch string) Record
+	Load(repository, branch string) (Record, error)
 	IsValid(repository string) (map[string]interface{}, error)
+	Save(repo Record) error
+	ClearCache(repo, branch string) error
+	IsCached(repo, branch string) bool
 }
 
 // Pool represents the routine pool.

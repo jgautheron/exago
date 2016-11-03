@@ -13,13 +13,16 @@ import (
 
 func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rp := s.config.RepositoryLoader.Load(repo, "")
-	if rp.IsCached() {
-		err := rp.Load()
+	branch := ""
+	if s.config.RepositoryLoader.IsCached(repo, branch) {
+		rp, err := s.config.RepositoryLoader.Load(repo, branch)
+		if err != nil {
+			send(w, r, rp, err)
+		}
 		if !rp.HasError() {
 			go s.config.Showcaser.Process(rp)
 		}
-		send(w, r, rp.GetData(), err)
+		send(w, r, rp.GetData(), nil)
 		return
 	}
 
@@ -31,11 +34,9 @@ func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *Server) refreshHandler(w http.ResponseWriter, r *http.Request) {
-	rp := s.config.RepositoryLoader.Load(
-		context.Get(r, "repository").(string),
-		"",
-	)
-	rp.ClearCache()
+	repo := context.Get(r, "repository").(string)
+	branch := ""
+	s.config.RepositoryLoader.ClearCache(repo, branch)
 	s.repositoryHandler(w, r)
 }
 
@@ -43,69 +44,44 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	ps := context.Get(r, "params").(httprouter.Params)
 	lgr := context.Get(r, "lgr").(*log.Entry)
 
-	rp := s.config.RepositoryLoader.Load(
-		ps.ByName("repository")[1:],
-		"",
-	)
-	if !rp.IsCached() {
+	repo := context.Get(r, "repository").(string)
+	branch := ""
+
+	if !s.config.RepositoryLoader.IsCached(repo, branch) {
 		badge.WriteError(w, "")
 		return
 	}
 
+	rp, err := s.config.RepositoryLoader.Load(repo, branch)
+	if err != nil {
+		lgr.Error(err)
+		badge.WriteError(w, "")
+		return
+	}
 	switch tp := ps.ByName("type"); tp {
 	case "rank":
-		err, rank, score := rp.Load(), rp.GetRank(), rp.GetScore().Value
-		if err != nil {
-			lgr.Error(err)
-			badge.WriteError(w, "")
-			return
-		}
+		rank, score := rp.GetRank(), rp.GetScore().Value
 
 		badge.Write(w, "", string(rank), score)
 	case "cov":
 		title := "coverage"
-		err, cov, score := rp.Load(), rp.GetProjectRunner().GetMeanCodeCov(), rp.GetScore().Value
-		if err != nil {
-			lgr.Error(err)
-			badge.WriteError(w, title)
-			return
-		}
+		cov, score := rp.GetProjectRunner().GetMeanCodeCov(), rp.GetScore().Value
 		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), score)
 	case "duration":
 		title := "tests duration"
-		err, avg, score := rp.Load(), rp.GetProjectRunner().GetMeanTestDuration(), rp.GetScore().Value
-		if err != nil {
-			lgr.Error(err)
-			badge.WriteError(w, title)
-			return
-		}
+		avg, score := rp.GetProjectRunner().GetMeanTestDuration(), rp.GetScore().Value
 		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), score)
 	case "tests":
 		title := "tests"
-		err, tests, score := rp.Load(), rp.GetCodeStats()["Test"], rp.GetScore().Value
-		if err != nil {
-			lgr.Error(err)
-			badge.WriteError(w, title)
-			return
-		}
+		tests, score := rp.GetCodeStats()["Test"], rp.GetScore().Value
 		badge.Write(w, title, fmt.Sprintf("%d", tests), score)
 	case "thirdparties":
 		title := "3rd parties"
-		err, thirdParties, score := rp.Load(), len(rp.GetProjectRunner().Thirdparties.Data), rp.GetScore().Value
-		if err != nil {
-			lgr.Error(err)
-			badge.WriteError(w, title)
-			return
-		}
+		thirdParties, score := len(rp.GetProjectRunner().Thirdparties.Data), rp.GetScore().Value
 		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	case "loc":
 		title := "LOC"
-		err, thirdParties, score := rp.Load(), rp.GetCodeStats()["LOC"], rp.GetScore().Value
-		if err != nil {
-			lgr.Error(err)
-			badge.WriteError(w, title)
-			return
-		}
+		thirdParties, score := rp.GetCodeStats()["LOC"], rp.GetScore().Value
 		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
 	}
 }
@@ -120,9 +96,9 @@ func (s *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
 
 func (s *Server) cachedHandler(w http.ResponseWriter, r *http.Request) {
 	repo := context.Get(r, "repository").(string)
-	rp := s.config.RepositoryLoader.Load(repo, "")
-	if rp.IsCached() {
-		err := rp.Load()
+	branch := ""
+	if s.config.RepositoryLoader.IsCached(repo, branch) {
+		rp, err := s.config.RepositoryLoader.Load(repo, branch)
 		send(w, r, rp.GetData(), err)
 		return
 	}

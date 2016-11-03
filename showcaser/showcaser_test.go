@@ -5,7 +5,7 @@ import (
 
 	. "github.com/hotolab/exago-svc"
 	"github.com/hotolab/exago-svc/mocks"
-	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/loader"
 	. "github.com/stretchr/testify/mock"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )
@@ -24,7 +24,7 @@ func getDatabaseMock() mocks.Database {
 
 func getShowcaseMock(db mocks.Database) *Showcaser {
 	rh := mocks.RepositoryHost{}
-	rl := repository.NewLoader(
+	rl := loader.New(
 		WithDatabase(db),
 		WithRepositoryHost(rh),
 	)
@@ -55,7 +55,7 @@ func TestSave(t *testing.T) {
 
 func TestRepositoryRankedAAdded(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "A"))
+	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "", "A"))
 	if len(showcaser.topRanked) != 1 || len(showcaser.recent) != 1 || len(showcaser.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -63,8 +63,8 @@ func TestRepositoryRankedAAdded(t *testing.T) {
 
 func TestRepositoryRankedADuplicated(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "A"))
-	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "A"))
+	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "", "A"))
+	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "", "A"))
 	if len(showcaser.topRanked) != 1 || len(showcaser.recent) != 1 || len(showcaser.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -72,7 +72,7 @@ func TestRepositoryRankedADuplicated(t *testing.T) {
 
 func TestRepositoryRankedBAdded(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
 	if len(showcaser.topRanked) != 0 || len(showcaser.recent) != 1 || len(showcaser.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -80,7 +80,7 @@ func TestRepositoryRankedBAdded(t *testing.T) {
 
 func TestDataSerialized(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
 	_, err := showcaser.serialize()
 	if err != nil {
 		t.Errorf("The serialization went wrong: %v", err)
@@ -92,7 +92,7 @@ func TestPopularDataUpdated(t *testing.T) {
 	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
 	showcaser := getShowcaseMock(dbMock)
 
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
 	err := showcaser.updatePopular()
 	if err != nil {
 		t.Errorf("Everything should go fine: %v", err)

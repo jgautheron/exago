@@ -9,7 +9,7 @@ import (
 	"github.com/hotolab/exago-svc/leveldb"
 	"github.com/hotolab/exago-svc/pool"
 	"github.com/hotolab/exago-svc/pool/job"
-	"github.com/hotolab/exago-svc/repository"
+	"github.com/hotolab/exago-svc/repository/loader"
 	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/repository/processor"
 	"github.com/urfave/cli"
@@ -64,7 +64,7 @@ func initPool() (pl model.Pool, err error) {
 		return nil, err
 	}
 
-	rl := repository.NewLoader(
+	rl := loader.New(
 		WithDatabase(db),
 		WithRepositoryHost(rh),
 	)

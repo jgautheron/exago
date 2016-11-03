@@ -183,8 +183,8 @@ func (d *Showcaser) loadReposFromList(list []string) (repos []model.Record, err 
 		return
 	}
 	for _, name := range list {
-		rp := d.config.RepositoryLoader.Load(name, "")
-		if err = rp.Load(); err != nil {
+		rp, err := d.config.RepositoryLoader.Load(name, "")
+		if err != nil {
 			return nil, err
 		}
 		repos = append(repos, rp)

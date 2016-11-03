@@ -9,9 +9,10 @@ type Record struct {
 	mock.Mock
 }
 
-func NewRecord(name, rank string) *Record {
+func NewRecord(name, branch, rank string) *Record {
 	repoMock := Record{}
 	repoMock.On("GetName").Return(name)
+	repoMock.On("GetBranch").Return(branch)
 	repoMock.On("GetRank").Return(rank)
 	repoMock.On("GetMetadata").Return(model.Metadata{
 		Image:       "http://foo.com/img.png",
@@ -24,6 +25,20 @@ func NewRecord(name, rank string) *Record {
 
 // GetName provides a mock function with given fields:
 func (_m *Record) GetName() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// GetBranch provides a mock function with given fields:
+func (_m *Record) GetBranch() string {
 	ret := _m.Called()
 
 	var r0 string
@@ -67,6 +82,11 @@ func (_m *Record) GetData() model.Data {
 	}
 
 	return r0
+}
+
+// SetData provides a mock function with given fields: d
+func (_m *Record) SetData(d model.Data) {
+	_m.Called(d)
 }
 
 // GetMetadata provides a mock function with given fields:
@@ -197,11 +217,6 @@ func (_m *Record) SetLintMessages(_a0 model.LintMessages) {
 	_m.Called(_a0)
 }
 
-// SetStartTime provides a mock function with given fields: t
-func (_m *Record) SetStartTime(t time.Time) {
-	_m.Called(t)
-}
-
 // SetError provides a mock function with given fields: tp, err
 func (_m *Record) SetError(tp string, err error) {
 	_m.Called(tp, err)
@@ -223,76 +238,6 @@ func (_m *Record) HasError() bool {
 
 // ApplyScore provides a mock function with given fields:
 func (_m *Record) ApplyScore() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// IsCached provides a mock function with given fields:
-func (_m *Record) IsCached() bool {
-	ret := _m.Called()
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func() bool); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// IsLoaded provides a mock function with given fields:
-func (_m *Record) IsLoaded() bool {
-	ret := _m.Called()
-
-	var r0 bool
-	if rf, ok := ret.Get(0).(func() bool); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(bool)
-	}
-
-	return r0
-}
-
-// Load provides a mock function with given fields:
-func (_m *Record) Load() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// ClearCache provides a mock function with given fields:
-func (_m *Record) ClearCache() error {
-	ret := _m.Called()
-
-	var r0 error
-	if rf, ok := ret.Get(0).(func() error); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Error(0)
-	}
-
-	return r0
-}
-
-// Save provides a mock function with given fields:
-func (_m *Record) Save() error {
 	ret := _m.Called()
 
 	var r0 error

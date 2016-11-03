@@ -26,11 +26,6 @@ func (r *Repository) SetProjectRunner(tr model.ProjectRunner) {
 	r.Data.ProjectRunner = tr
 }
 
-// SetStartTime stores the moment the processing started.
-func (r *Repository) SetStartTime(t time.Time) {
-	r.startTime = t
-}
-
 // SetExecutionTime sets the processing execution time.
 // The value is then used to determine an ETA for refreshing data.
 func (r *Repository) SetExecutionTime(duration time.Duration) {

@@ -9,6 +9,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 	exago "github.com/hotolab/exago-svc"
 	"github.com/hotolab/exago-svc/pool/job"
+	"github.com/hotolab/exago-svc/repository"
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
@@ -67,7 +68,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 				return
 			}
 			outCh <- resultOutput{fn, out, nil}
-			logger.Debugln(fn, out)
+			logger.WithField("fn", fn).Debug("Received output")
 		}(fn, repo)
 	}
 	wg.Wait()
@@ -90,7 +91,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	rp.SetLastUpdate(time.Now())
 
 	// Persist the dataset
-	if err := rp.Save(); err != nil {
+	if err := p.config.RepositoryLoader.Save(rp); err != nil {
 		logger.Errorf("Could not persist the dataset: %v", err)
 	}
 
@@ -99,7 +100,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 
 func (p *Processor) importData(repo string, results map[string]resultOutput) model.Record {
 	var err error
-	rp := p.config.RepositoryLoader.Load(repo, "")
+	rp := repository.New(repo, "")
 
 	// Handle codestats
 	var cs model.CodeStats
@@ -119,7 +120,6 @@ func (p *Processor) importData(repo string, results map[string]resultOutput) mod
 
 	// Handle lintmessages
 	var lm model.LintMessages
-	logger.Warnln(string(*results[model.LintMessagesName].Response.Data))
 	if err = json.Unmarshal(*results[model.LintMessagesName].Response.Data, &lm); err != nil {
 		rp.SetError(model.LintMessagesName, err)
 	} else {

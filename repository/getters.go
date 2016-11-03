@@ -12,6 +12,11 @@ func (r *Repository) GetName() string {
 	return r.Name
 }
 
+// GetBranch retrieves the branch name.
+func (r *Repository) GetBranch() string {
+	return r.Branch
+}
+
 // GetRank retrieves the project's rank, ex "B+".
 func (r *Repository) GetRank() string {
 	return r.Data.Score.Rank
