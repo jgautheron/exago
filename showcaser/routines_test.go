@@ -51,7 +51,7 @@ func TestPeriodicallyRebuilt(t *testing.T) {
 	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
 
 	go showcaser.periodicallyRebuildPopularList()
-	time.Sleep(50 * time.Millisecond)
+	time.Sleep(100 * time.Millisecond)
 	showcaser.RLock()
 	defer showcaser.RUnlock()
 	if len(showcaser.popular) != 1 {
