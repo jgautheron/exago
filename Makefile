@@ -1,7 +1,7 @@
 GO ?= go
 
 build:
-	cd cmd/exago && GOOS=linux $(GO) build -race -tags netgo -ldflags="-w -s" -v -o exago
+	cd cmd/exago && GOOS=linux CGO_ENABLED=0 $(GO) build -tags netgo -ldflags="-w -s" -v -o exago
 
 # Compile the binary for all available OSes and ARCHes.
 .PHONY: buildall
