@@ -16,10 +16,10 @@ func init() {
 
 func TestInterrupted(t *testing.T) {
 	dbMock := getDatabaseMock()
-	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
+	// dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
 	dbMock.On("Put", Anything, Anything).Return(nil)
 
-	showcaser := getShowcaseMock(getDatabaseMock())
+	showcaser := getShowcaseMock(dbMock)
 	go showcaser.catchInterrupt()
 
 	done := make(chan bool, 1)
