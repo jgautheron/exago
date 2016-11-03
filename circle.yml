@@ -29,6 +29,7 @@ dependencies:
   cache_directories:
     - /home/ubuntu/goinstall
     - /home/ubuntu/.go
+    - /home/ubuntu/.go/src/github.com/hotolab/exago-svc/vendor
 
 test:
   override:
