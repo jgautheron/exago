@@ -1,6 +1,8 @@
 package repository
 
 import (
+	"time"
+
 	log "github.com/Sirupsen/logrus"
 	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/hotolab/exago-svc/score"
@@ -12,13 +14,16 @@ var (
 )
 
 type Repository struct {
-	Name, Branch string
-	Data         model.Data
+	Name          string     `json:"name"`
+	Branch        string     `json:"branch"`
+	ExecutionTime string     `json:"execution_time"`
+	LastUpdate    time.Time  `json:"last_update"`
+	Data          model.Data `json:"data"`
 }
 
-func New(repo, branch string) model.Record {
+func New(name, branch string) *Repository {
 	return &Repository{
-		Name:   repo,
+		Name:   name,
 		Branch: branch,
 	}
 }

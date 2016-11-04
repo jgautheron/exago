@@ -9,7 +9,7 @@ import (
 
 // Save persists in database the repository data.
 func (l Loader) Save(repo model.Record) error {
-	b, err := json.Marshal(repo.GetData())
+	b, err := json.Marshal(repo)
 	if err != nil {
 		return err
 	}

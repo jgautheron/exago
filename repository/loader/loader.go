@@ -44,14 +44,12 @@ func (l Loader) Load(repo, branch string) (model.Record, error) {
 		return nil, err
 	}
 
-	var data model.Data
+	var rp repository.Repository
 	if err := json.Unmarshal(b, &data); err != nil {
 		return nil, err
 	}
 
-	r := repository.New(repo, branch)
-	r.SetData(data)
-	return r, nil
+	return rp, nil
 }
 
 func (l Loader) IsValid(repository string) (map[string]interface{}, error) {

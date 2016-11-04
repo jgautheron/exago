@@ -10,6 +10,21 @@ func (r *Repository) SetName(name string) {
 	r.Name = name
 }
 
+func (r *Repository) SetBranch(branch string) {
+	r.Branch = branch
+}
+
+// SetExecutionTime sets the processing execution time.
+// The value is then used to determine an ETA for refreshing data.
+func (r *Repository) SetExecutionTime(duration time.Duration) {
+	r.ExecutionTime = (duration - (duration % time.Second)).String()
+}
+
+// SetLastUpdate sets the last update timestamp.
+func (r *Repository) SetLastUpdate(t time.Time) {
+	r.LastUpdate = t
+}
+
 func (r *Repository) SetData(d model.Data) {
 	r.Data = d
 }
@@ -24,17 +39,6 @@ func (r *Repository) SetLintMessages(lm model.LintMessages) {
 
 func (r *Repository) SetProjectRunner(tr model.ProjectRunner) {
 	r.Data.ProjectRunner = tr
-}
-
-// SetExecutionTime sets the processing execution time.
-// The value is then used to determine an ETA for refreshing data.
-func (r *Repository) SetExecutionTime(duration time.Duration) {
-	r.Data.ExecutionTime = (duration - (duration % time.Second)).String()
-}
-
-// SetLastUpdate sets the last update timestamp.
-func (r *Repository) SetLastUpdate(t time.Time) {
-	r.Data.LastUpdate = t
 }
 
 // SetMetadata sets repository metadata such as description, stars...
