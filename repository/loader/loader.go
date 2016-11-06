@@ -45,11 +45,11 @@ func (l Loader) Load(repo, branch string) (model.Record, error) {
 	}
 
 	var rp repository.Repository
-	if err := json.Unmarshal(b, &data); err != nil {
+	if err := json.Unmarshal(b, &rp); err != nil {
 		return nil, err
 	}
 
-	return rp, nil
+	return &rp, nil
 }
 
 func (l Loader) IsValid(repository string) (map[string]interface{}, error) {
