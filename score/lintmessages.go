@@ -58,7 +58,7 @@ func (le *lintMessagesEvaluator) Setup() {
 // Calculate overloads Evaluator/Calculate
 func (le *lintMessagesEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
 	r := le.NewResponse(100, 2, "", nil)
-	lm, cs := d.LintMessages, d.CodeStats
+	lm, cs := d.LintMessages, d.ProjectRunner.CodeStats.Data
 
 	// Loop over messages, counting all warnings
 	// @todo improve incoming structure so we avoid these ugly nested loops

@@ -34,7 +34,7 @@ func TestChecklist(t *testing.T) {
 		d := model.Data{}
 		d.ProjectRunner = model.ProjectRunner{}
 		d.ProjectRunner.Goprove.Data = getStubChecklist(tt.criterias)
-		d.CodeStats = map[string]int{"LOC": tt.loc}
+		d.ProjectRunner.CodeStats.Data = map[string]int{"LOC": 123}
 		evaluator := score.CheckListEvaluator()
 		evaluator.Setup()
 		res := evaluator.Calculate(d)

@@ -26,7 +26,7 @@ func TestThirdParties(t *testing.T) {
 		d := model.Data{}
 		d.ProjectRunner = model.ProjectRunner{}
 		d.ProjectRunner.Thirdparties.Data = tt.thirdParties
-		d.CodeStats = map[string]int{"LOC": tt.loc}
+		d.ProjectRunner.CodeStats.Data = map[string]int{"LOC": tt.loc}
 		res := score.ThirdPartiesEvaluator().Calculate(d)
 
 		switch tt.operator {

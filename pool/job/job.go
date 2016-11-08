@@ -22,15 +22,14 @@ var (
 
 // Response contains the generic JSend response sent by Lambda functions.
 type Response struct {
-	Status   string                 `json:"status"`
-	Data     *json.RawMessage       `json:"data"`
-	Metadata map[string]interface{} `json:"_metadata"`
+	Success bool              `json:"success"`
+	Data    *json.RawMessage  `json:"data"`
+	Errors  map[string]string `json:"errors,omitempty"`
 }
 
 type context struct {
 	Repository string `json:"repository"`
 	Branch     string `json:"branch,omitempty"`
-	Cleanup    bool   `json:"cleanup,omitempty"`
 }
 
 func New() {
@@ -51,7 +50,6 @@ func CallLambdaFn(fn, repo, branch string) (lrsp Response, err error) {
 	payload, _ := json.Marshal(context{
 		Repository: repo,
 		Branch:     branch,
-		Cleanup:    true,
 	})
 	params := &lambda.InvokeInput{
 		FunctionName: aws.String(fnPrefix + fn),
@@ -74,15 +72,11 @@ func CallLambdaFn(fn, repo, branch string) (lrsp Response, err error) {
 	}
 
 	// If the Lambda request failed, return the message as an error
-	if resp.Status == "fail" {
-		var msg struct {
-			// Message is the only expected field in Data
-			Message string `json:"message"`
+	if !resp.Success {
+		for _, msg := range resp.Errors {
+			// Return the first error
+			return lrsp, errors.New(msg)
 		}
-		if err = json.Unmarshal(*resp.Data, &msg); err != nil {
-			return lrsp, err
-		}
-		return lrsp, errors.New(msg.Message)
 	}
 
 	return resp, nil

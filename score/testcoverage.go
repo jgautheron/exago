@@ -24,7 +24,7 @@ func TestCoverageEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
-	t, cs := d.ProjectRunner, d.CodeStats
+	t, cs := d.ProjectRunner, d.ProjectRunner.CodeStats.Data
 
 	r := te.NewResponse(100, 3, "", nil)
 

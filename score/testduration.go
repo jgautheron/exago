@@ -40,7 +40,7 @@ func TestDurationEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (te *testDurationEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
-	t, cs := d.ProjectRunner, d.CodeStats
+	t, cs := d.ProjectRunner, d.ProjectRunner.CodeStats.Data
 
 	r := te.NewResponse(100, 1.2, "", nil)
 

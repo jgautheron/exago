@@ -21,7 +21,7 @@ const (
 var (
 	logger            = log.WithField("prefix", "processor")
 	ErrRoutineTimeout = errors.New("The analysis timed out")
-	fns               = []string{"codestats", "projectrunner", "lintmessages"}
+	fns               = []string{"projectrunner", "lintmessages"}
 )
 
 type Processor struct {
@@ -101,14 +101,6 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 func (p *Processor) importData(repo string, results map[string]resultOutput) model.Record {
 	var err error
 	rp := repository.New(repo, "")
-
-	// Handle codestats
-	var cs model.CodeStats
-	if err = json.Unmarshal(*results[model.CodeStatsName].Response.Data, &cs); err != nil {
-		rp.SetError(model.CodeStatsName, err)
-	} else {
-		rp.SetCodeStats(cs)
-	}
 
 	// Handle projectrunner
 	var pr model.ProjectRunner

@@ -12,7 +12,6 @@ import (
 func TestCoverageNone(t *testing.T) {
 	d := model.Data{}
 	d.ProjectRunner = getStubCoverage([]float64{})
-	d.CodeStats = map[string]int{"Test": 0}
 	res := score.TestCoverageEvaluator().Calculate(d)
 	if res.Score != 0 {
 		t.Error("The score should be 0")
@@ -35,7 +34,6 @@ func TestCoverage(t *testing.T) {
 	for _, tt := range tests {
 		d := model.Data{}
 		d.ProjectRunner = getStubCoverage(tt.coverage)
-		d.CodeStats = map[string]int{"Test": 123}
 		res := score.TestCoverageEvaluator().Calculate(d)
 
 		switch tt.operator {
@@ -58,5 +56,6 @@ func TestCoverage(t *testing.T) {
 func getStubCoverage(coverage []float64) model.ProjectRunner {
 	pr := model.ProjectRunner{}
 	pr.Coverage.Data.Coverage = xmath.Arithmetic(coverage)
+	pr.CodeStats.Data = map[string]int{"LOC": 123}
 	return pr
 }
