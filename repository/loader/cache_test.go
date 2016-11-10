@@ -1,34 +1,31 @@
-package loader_test
+package loader
 
 import (
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	. "github.com/hotolab/exago-svc"
 	"github.com/hotolab/exago-svc/mocks"
 	"github.com/hotolab/exago-svc/repository"
-	"github.com/hotolab/exago-svc/repository/loader"
-	"github.com/hotolab/exago-svc/repository/model"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )
 
 const (
-	repo   = "test"
+	repo   = "github.com/foo/bar"
 	branch = ""
 )
 
 func TestDidSave(t *testing.T) {
-	stub := model.Data{}
+	stub := repository.Repository{Name: repo, Branch: branch}
 	b, _ := json.Marshal(stub)
 
 	dbMock := mocks.Database{}
 	dbMock.On("Put",
-		[]byte(fmt.Sprintf("%s-%s", repo, branch)), b,
+		getCacheKey(repo, branch), b,
 	).Return(nil)
 
 	rp := repository.New(repo, branch)
-	l := loader.New(
+	l := New(
 		WithDatabase(dbMock),
 	)
 	if err := l.Save(rp); err != nil {
@@ -39,10 +36,10 @@ func TestDidSave(t *testing.T) {
 func TestIsNotCached(t *testing.T) {
 	dbMock := mocks.Database{}
 	dbMock.On("Get",
-		[]byte(fmt.Sprintf("%s-%s", repo, branch)),
+		getCacheKey(repo, branch),
 	).Return([]byte(""), ldb.ErrNotFound)
 
-	l := loader.New(
+	l := New(
 		WithDatabase(dbMock),
 	)
 	if cached := l.IsCached(repo, branch); cached {
@@ -53,10 +50,10 @@ func TestIsNotCached(t *testing.T) {
 func TestIsCached(t *testing.T) {
 	dbMock := mocks.Database{}
 	dbMock.On("Get",
-		[]byte(fmt.Sprintf("%s-%s", repo, branch)),
+		getCacheKey(repo, branch),
 	).Return([]byte(""), nil)
 
-	l := loader.New(
+	l := New(
 		WithDatabase(dbMock),
 	)
 	if cached := l.IsCached(repo, branch); !cached {
@@ -67,10 +64,10 @@ func TestIsCached(t *testing.T) {
 func TestCacheCleared(t *testing.T) {
 	dbMock := mocks.Database{}
 	dbMock.On("Delete", []byte(
-		fmt.Sprintf("%s-%s", repo, branch),
+		getCacheKey(repo, branch),
 	)).Return(nil)
 
-	l := loader.New(
+	l := New(
 		WithDatabase(dbMock),
 	)
 	if err := l.ClearCache(repo, branch); err != nil {

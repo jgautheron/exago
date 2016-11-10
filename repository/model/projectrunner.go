@@ -4,6 +4,7 @@ import "simonwaldherr.de/go/golibs/xmath"
 
 const (
 	ProjectRunnerName = "projectrunner"
+	CodeStatsName     = "codestats"
 	ThirdPartiesName  = "thirdparties"
 	TestCoverageName  = "testcoverage"
 	TestDurationName  = "testduration"
@@ -47,37 +48,38 @@ type ProjectRunner struct {
 			Packages []CoveragePackage `json:"packages"`
 			Coverage float64           `json:"coverage"`
 		} `json:"data"`
-		RawOutput     string      `json:"raw_output"`
-		ExecutionTime float64     `json:"execution_time"`
-		Error         interface{} `json:"error"`
+		RawOutput     string  `json:"raw_output"`
+		ExecutionTime float64 `json:"execution_time"`
 	} `json:"coverage"`
 	Download struct {
 		Label         string      `json:"label"`
 		Data          interface{} `json:"data"`
 		RawOutput     string      `json:"raw_output"`
 		ExecutionTime float64     `json:"execution_time"`
-		Error         interface{} `json:"error"`
 	} `json:"download"`
+	CodeStats struct {
+		Label         string         `json:"label"`
+		Data          map[string]int `json:"data"`
+		RawOutput     string         `json:"raw_output"`
+		ExecutionTime float64        `json:"execution_time"`
+	} `json:"golocc"`
 	Goprove struct {
-		Label         string      `json:"label"`
-		Data          Checklist   `json:"data"`
-		RawOutput     string      `json:"raw_output"`
-		ExecutionTime float64     `json:"execution_time"`
-		Error         interface{} `json:"error"`
+		Label         string    `json:"label"`
+		Data          Checklist `json:"data"`
+		RawOutput     string    `json:"raw_output"`
+		ExecutionTime float64   `json:"execution_time"`
 	} `json:"goprove"`
 	Test struct {
 		Label         string        `json:"label"`
 		Data          []TestPackage `json:"data"`
 		RawOutput     string        `json:"raw_output"`
 		ExecutionTime float64       `json:"execution_time"`
-		Error         interface{}   `json:"error"`
 	} `json:"test"`
 	Thirdparties struct {
-		Label         string      `json:"label"`
-		Data          []string    `json:"data"`
-		RawOutput     string      `json:"raw_output"`
-		ExecutionTime float64     `json:"execution_time"`
-		Error         interface{} `json:"error"`
+		Label         string   `json:"label"`
+		Data          []string `json:"data"`
+		RawOutput     string   `json:"raw_output"`
+		ExecutionTime float64  `json:"execution_time"`
 	} `json:"thirdparties"`
 }
 

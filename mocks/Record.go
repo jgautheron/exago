@@ -160,25 +160,6 @@ func (_m *Record) GetScore() model.Score {
 	return r0
 }
 
-// GetCodeStats provides a mock function with given fields:
-func (_m *Record) GetCodeStats() model.CodeStats {
-	ret := _m.Called()
-
-	var r0 model.CodeStats
-	if rf, ok := ret.Get(0).(func() model.CodeStats); ok {
-		r0 = rf()
-	} else {
-		r0 = ret.Get(0).(model.CodeStats)
-	}
-
-	return r0
-}
-
-// SetCodeStats provides a mock function with given fields: _a0
-func (_m *Record) SetCodeStats(_a0 model.CodeStats) {
-	_m.Called(_a0)
-}
-
 // GetProjectRunner provides a mock function with given fields:
 func (_m *Record) GetProjectRunner() model.ProjectRunner {
 	ret := _m.Called()

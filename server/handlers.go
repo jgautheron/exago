@@ -58,32 +58,38 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 		badge.WriteError(w, "")
 		return
 	}
-	switch tp := ps.ByName("type"); tp {
-	case "rank":
-		rank, score := rp.GetRank(), rp.GetScore().Value
 
-		badge.Write(w, "", string(rank), score)
+	var title string
+	var value string
+	var score = rp.GetScore().Value
+
+	pr := rp.GetProjectRunner()
+	th := pr.Thirdparties.Data
+	cs := pr.CodeStats.Data
+
+	switch tp := ps.ByName("type"); tp {
 	case "cov":
-		title := "coverage"
-		cov, score := rp.GetProjectRunner().GetMeanCodeCov(), rp.GetScore().Value
-		badge.Write(w, title, fmt.Sprintf("%.2f%%", cov), score)
+		title = "coverage"
+		value = fmt.Sprintf("%.2f%%", pr.GetMeanCodeCov())
 	case "duration":
-		title := "tests duration"
-		avg, score := rp.GetProjectRunner().GetMeanTestDuration(), rp.GetScore().Value
-		badge.Write(w, title, fmt.Sprintf("%.2fs", avg), score)
+		title = "tests duration"
+		value = fmt.Sprintf("%.2fs", pr.GetMeanTestDuration())
 	case "tests":
-		title := "tests"
-		tests, score := rp.GetCodeStats()["Test"], rp.GetScore().Value
-		badge.Write(w, title, fmt.Sprintf("%d", tests), score)
+		title = "tests"
+		value = fmt.Sprintf("%d", cs["test"])
 	case "thirdparties":
-		title := "3rd parties"
-		thirdParties, score := len(rp.GetProjectRunner().Thirdparties.Data), rp.GetScore().Value
-		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
+		title = "3rd parties"
+		value = fmt.Sprintf("%d", len(th))
 	case "loc":
-		title := "LOC"
-		thirdParties, score := rp.GetCodeStats()["LOC"], rp.GetScore().Value
-		badge.Write(w, title, fmt.Sprintf("%d", thirdParties), score)
+		title = "LOC"
+		value = fmt.Sprintf("%d", cs["loc"])
+	case "rank":
+		fallthrough
+	default:
+		value = rp.GetRank()
 	}
+	
+	badge.Write(w, title, value, score)
 }
 
 func (s *Server) fileHandler(w http.ResponseWriter, r *http.Request) {

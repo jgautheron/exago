@@ -24,7 +24,7 @@ func TestCoverageEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorResponse {
-	t, cs := d.ProjectRunner, d.CodeStats
+	t, cs := d.ProjectRunner, d.ProjectRunner.CodeStats.Data
 
 	r := te.NewResponse(100, 3, "", nil)
 
@@ -53,7 +53,7 @@ func (te *testCoverageEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 		r.Score = 100
 		r.Weight = 1
 		r.Message = "some tests are available but could not be run, weight has been lowered"
-		if cs["Test"] == 0 {
+		if cs["test"] == 0 {
 			r.Score = 0
 			r.Weight = 3
 			r.Message = "no tests"

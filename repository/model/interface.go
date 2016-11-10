@@ -17,8 +17,6 @@ type Record interface {
 	GetExecutionTime() string
 	SetExecutionTime(duration time.Duration)
 	GetScore() Score
-	GetCodeStats() CodeStats
-	SetCodeStats(CodeStats)
 	GetProjectRunner() ProjectRunner
 	SetProjectRunner(tr ProjectRunner)
 	GetLintMessages() LintMessages

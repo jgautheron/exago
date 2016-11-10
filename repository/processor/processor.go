@@ -3,6 +3,7 @@ package processor
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,9 +20,9 @@ const (
 )
 
 var (
-	logger            = log.WithField("prefix", "processor")
 	ErrRoutineTimeout = errors.New("The analysis timed out")
-	fns               = []string{"codestats", "projectrunner", "lintmessages"}
+	logger            = log.WithField("prefix", "processor")
+	fns               = []string{"projectrunner", "lintmessages"}
 )
 
 type Processor struct {
@@ -79,8 +80,11 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 		output[out.Fn] = out
 	}
 
+	// Strip the protocol
+	repositoryName := strings.Replace(data["html_url"].(string), "https://", "", 1)
+
 	rp := p.importData(repo, output)
-	rp.SetName(data["html_url"].(string))
+	rp.SetName(repositoryName)
 	rp.SetMetadata(model.Metadata{
 		Image:       data["avatar_url"].(string),
 		Description: data["description"].(string),
@@ -101,14 +105,6 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 func (p *Processor) importData(repo string, results map[string]resultOutput) model.Record {
 	var err error
 	rp := repository.New(repo, "")
-
-	// Handle codestats
-	var cs model.CodeStats
-	if err = json.Unmarshal(*results[model.CodeStatsName].Response.Data, &cs); err != nil {
-		rp.SetError(model.CodeStatsName, err)
-	} else {
-		rp.SetCodeStats(cs)
-	}
 
 	// Handle projectrunner
 	var pr model.ProjectRunner

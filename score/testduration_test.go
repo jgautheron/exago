@@ -7,16 +7,6 @@ import (
 	"github.com/hotolab/exago-svc/score"
 )
 
-func TestDurationNone(t *testing.T) {
-	d := model.Data{}
-	d.ProjectRunner = getStubDuration([]float64{0.2})
-	d.CodeStats = map[string]int{"Test": 0}
-	res := score.TestDurationEvaluator().Calculate(d)
-	if res.Score != 0 {
-		t.Error("The score should be 0")
-	}
-}
-
 func TestDuration(t *testing.T) {
 	var tests = []struct {
 		duration []float64
@@ -34,7 +24,6 @@ func TestDuration(t *testing.T) {
 	for _, tt := range tests {
 		d := model.Data{}
 		d.ProjectRunner = getStubDuration(tt.duration)
-		d.CodeStats = map[string]int{"Test": 123}
 		res := score.TestDurationEvaluator().Calculate(d)
 
 		switch tt.operator {
@@ -60,6 +49,7 @@ func getStubDuration(duration []float64) model.ProjectRunner {
 		tp = append(tp, model.TestPackage{ExecutionTime: item})
 	}
 	pr := model.ProjectRunner{}
+	pr.CodeStats.Data = map[string]int{"loc": 123, "test": 123}
 	pr.Test.Data = tp
 	return pr
 }

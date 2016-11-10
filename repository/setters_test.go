@@ -8,16 +8,6 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-func TestCodeStatsChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
-	cs := rp.GetCodeStats()
-	cs["CLOC"] = 123
-	rp.SetCodeStats(cs)
-	if rp.GetCodeStats()["CLOC"] != cs["CLOC"] {
-		t.Error("The CLOC has not changed")
-	}
-}
-
 func TestProjectRunnerChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
 	pr := rp.GetProjectRunner()
@@ -39,9 +29,7 @@ func TestLintMessagesChanged(t *testing.T) {
 }
 
 func TestLastUpdateTimeChanged(t *testing.T) {
-	rp := &Repository{
-		Name: repo,
-	}
+	rp := New(repo, branch)
 	now := time.Now()
 	rp.SetLastUpdate(now)
 	if rp.GetLastUpdate() != now {
@@ -57,9 +45,7 @@ func TestMetadataChanged(t *testing.T) {
 		"stargazers":  123,
 		"last_push":   time.Now(),
 	}
-	rp := &Repository{
-		Name: repo,
-	}
+	rp := New(repo, branch)
 	rp.SetMetadata(model.Metadata{
 		Image:       m["avatar_url"].(string),
 		Description: m["description"].(string),

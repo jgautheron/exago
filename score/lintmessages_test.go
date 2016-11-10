@@ -23,7 +23,7 @@ func TestLintMessages(t *testing.T) {
 	for _, tt := range tests {
 		d := model.Data{}
 		d.LintMessages = getStubMessages(tt.messages)
-		d.CodeStats = map[string]int{"LOC": tt.loc}
+		d.ProjectRunner.CodeStats.Data = map[string]int{"loc": tt.loc}
 		evaluator := score.LintMessagesEvaluator()
 		evaluator.Setup()
 		res := evaluator.Calculate(d)

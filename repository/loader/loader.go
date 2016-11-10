@@ -39,19 +39,17 @@ func New(options ...exago.Option) *Loader {
 
 // Load retrieves the saved repository data from the database.
 func (l Loader) Load(repo, branch string) (model.Record, error) {
-	b, err := l.config.DB.Get(l.getCacheKey(repo, branch))
+	b, err := l.config.DB.Get(getCacheKey(repo, branch))
 	if err != nil {
 		return nil, err
 	}
 
-	var data model.Data
-	if err := json.Unmarshal(b, &data); err != nil {
+	var rp repository.Repository
+	if err := json.Unmarshal(b, &rp); err != nil {
 		return nil, err
 	}
 
-	r := repository.New(repo, branch)
-	r.SetData(data)
-	return r, nil
+	return &rp, nil
 }
 
 func (l Loader) IsValid(repository string) (map[string]interface{}, error) {

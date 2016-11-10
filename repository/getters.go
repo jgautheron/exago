@@ -17,6 +17,17 @@ func (r *Repository) GetBranch() string {
 	return r.Branch
 }
 
+// GetLastUpdate retrieves the timestamp when the project was last refreshed.
+func (r *Repository) GetLastUpdate() time.Time {
+	return r.LastUpdate
+}
+
+// GetExecutionTime retrieves the last execution time.
+// The value is used to determine an ETA for a project refresh.
+func (r *Repository) GetExecutionTime() string {
+	return r.ExecutionTime
+}
+
 // GetRank retrieves the project's rank, ex "B+".
 func (r *Repository) GetRank() string {
 	return r.Data.Score.Rank
@@ -27,25 +38,9 @@ func (r *Repository) GetMetadata() model.Metadata {
 	return r.Data.Metadata
 }
 
-// GetLastUpdate retrieves the timestamp when the project was last refreshed.
-func (r *Repository) GetLastUpdate() time.Time {
-	return r.Data.LastUpdate
-}
-
-// GetExecutionTime retrieves the last execution time.
-// The value is used to determine an ETA for a project refresh.
-func (r *Repository) GetExecutionTime() string {
-	return r.Data.ExecutionTime
-}
-
 // GetScore retrieves the entire score details.
 func (r *Repository) GetScore() model.Score {
 	return r.Data.Score
-}
-
-// GetCodeStats retrieves the code statistics (LOC...).
-func (r *Repository) GetCodeStats() model.CodeStats {
-	return r.Data.CodeStats
 }
 
 // GetProjectRunner retrieves the test and checklist results.
