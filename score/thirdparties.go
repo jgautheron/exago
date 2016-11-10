@@ -38,7 +38,7 @@ func (ie *thirdPartiesEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 	imps := float64(len(imp))
 	r := ie.NewResponse(100, 1.5, "", nil)
 
-	loc := float64(cs["LOC"])
+	loc := float64(cs["loc"])
 
 	// We simply compute the power of 10 using log10 and floor
 	// and retrieve the rate by associating the power to an index position

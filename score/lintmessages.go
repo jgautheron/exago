@@ -83,13 +83,13 @@ func (le *lintMessagesEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 
 	for n, d := range le.linters {
 		// Compute the ratio warnings/LOC that we multiply by 100
-		tmp := 100 * d.warnings / float64(cs["LOC"])
+		tmp := 100 * d.warnings / float64(cs["loc"])
 
 		logger.WithFields(log.Fields{
 			"defect ratio": tmp,
 			"threshold":    d.threshold,
 			"warnings":     d.warnings,
-			"loc":          cs["LOC"],
+			"loc":          cs["loc"],
 			"weight":       d.weight,
 		}).Debugf("[%s] threshold vs ratio", n)
 

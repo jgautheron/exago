@@ -8,16 +8,6 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-func TestCodeStatsChanged(t *testing.T) {
-	rp, _ := loadStubRepo()
-	cs := rp.GetCodeStats()
-	cs["CLOC"] = 123
-	rp.SetCodeStats(cs)
-	if rp.GetCodeStats()["CLOC"] != cs["CLOC"] {
-		t.Error("The CLOC has not changed")
-	}
-}
-
 func TestProjectRunnerChanged(t *testing.T) {
 	rp, _ := loadStubRepo()
 	pr := rp.GetProjectRunner()

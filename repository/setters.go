@@ -29,10 +29,6 @@ func (r *Repository) SetData(d model.Data) {
 	r.Data = d
 }
 
-func (r *Repository) SetCodeStats(cs model.CodeStats) {
-	r.Data.CodeStats = cs
-}
-
 func (r *Repository) SetLintMessages(lm model.LintMessages) {
 	r.Data.LintMessages = lm
 }

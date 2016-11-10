@@ -43,11 +43,6 @@ func (r *Repository) GetScore() model.Score {
 	return r.Data.Score
 }
 
-// GetCodeStats retrieves the code statistics (LOC...).
-func (r *Repository) GetCodeStats() model.CodeStats {
-	return r.Data.CodeStats
-}
-
 // GetProjectRunner retrieves the test and checklist results.
 func (r *Repository) GetProjectRunner() model.ProjectRunner {
 	return r.Data.ProjectRunner

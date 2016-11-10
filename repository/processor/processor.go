@@ -3,6 +3,7 @@ package processor
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"time"
 
@@ -19,8 +20,8 @@ const (
 )
 
 var (
-	logger            = log.WithField("prefix", "processor")
 	ErrRoutineTimeout = errors.New("The analysis timed out")
+	logger            = log.WithField("prefix", "processor")
 	fns               = []string{"projectrunner", "lintmessages"}
 )
 
@@ -79,8 +80,11 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 		output[out.Fn] = out
 	}
 
+	// Strip the protocol
+	repositoryName := strings.Replace(data["html_url"].(string), "https://", "", 1)
+
 	rp := p.importData(repo, output)
-	rp.SetName(data["html_url"].(string))
+	rp.SetName(repositoryName)
 	rp.SetMetadata(model.Metadata{
 		Image:       data["avatar_url"].(string),
 		Description: data["description"].(string),

@@ -45,7 +45,7 @@ func (te *testDurationEvaluator) Calculate(d model.Data) *model.EvaluatorRespons
 	r := te.NewResponse(100, 1.2, "", nil)
 
 	// If we have no tests, bypass the duration test
-	if cs["Test"] == 0 {
+	if cs["test"] == 0 {
 		r.Score = 0
 		r.Message = "no tests"
 
