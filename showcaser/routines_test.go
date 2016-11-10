@@ -1,7 +1,6 @@
 package showcaser
 
 import (
-	"syscall"
 	"testing"
 	"time"
 
