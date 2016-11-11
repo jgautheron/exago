@@ -45,6 +45,7 @@ func New(options ...exago.Option) *Processor {
 
 func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	repo := value.(string)
+	branch := ""
 
 	// Check first if the repository is valid (still exists, contains Go code...)
 	data, err := p.config.RepositoryLoader.IsValid(repo)
@@ -60,7 +61,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 		wg.Add(1)
 		go func(fn, repo string) {
 			defer wg.Done()
-			out, err := job.CallLambdaFn(fn, repo, "")
+			out, err := job.CallLambdaFn(fn, repo, branch)
 			if err != nil {
 				outCh <- resultOutput{
 					Fn:  fn,
@@ -77,13 +78,23 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	output := map[string]resultOutput{}
 	for i := 0; i < len(fns); i++ {
 		out := <-outCh
+
+		// Return directly the error if anything went wrong
+		if out.err != nil {
+			return out.err
+		}
+
 		output[out.Fn] = out
 	}
 
 	// Strip the protocol
 	repositoryName := strings.Replace(data["html_url"].(string), "https://", "", 1)
 
-	rp := p.importData(repo, output)
+	rp, err := p.importData(repo, output)
+	if err != nil {
+		return err
+	}
+
 	rp.SetName(repositoryName)
 	rp.SetMetadata(model.Metadata{
 		Image:       data["avatar_url"].(string),
@@ -94,7 +105,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	rp.SetExecutionTime(time.Since(startTime))
 	rp.SetLastUpdate(time.Now())
 
-	// Persist the dataset
+	// Persist the dataset if everything went well
 	if err := p.config.RepositoryLoader.Save(rp); err != nil {
 		logger.Errorf("Could not persist the dataset: %v", err)
 	}
@@ -102,32 +113,29 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	return rp
 }
 
-func (p *Processor) importData(repo string, results map[string]resultOutput) model.Record {
-	var err error
+func (p *Processor) importData(repo string, results map[string]resultOutput) (model.Record, error) {
 	rp := repository.New(repo, "")
 
 	// Handle projectrunner
 	var pr model.ProjectRunner
-	if err = extractData(results[model.ProjectRunnerName], &pr); err != nil {
-		rp.SetError(model.ProjectRunnerName, err)
-	} else {
-		rp.SetProjectRunner(pr)
+	if err := extractData(results[model.ProjectRunnerName], &pr); err != nil {
+		return nil, err
 	}
+	rp.SetProjectRunner(pr)
 
 	// Handle lintmessages
 	var lm model.LintMessages
-	if err = extractData(results[model.LintMessagesName], &lm); err != nil {
-		rp.SetError(model.LintMessagesName, err)
-	} else {
-		rp.SetLintMessages(lm)
+	if err := extractData(results[model.LintMessagesName], &lm); err != nil {
+		return nil, err
+	}
+	rp.SetLintMessages(lm)
+
+	// Calculate the score
+	if err := rp.ApplyScore(); err != nil {
+		return nil, err
 	}
 
-	// Add the score
-	if err = rp.ApplyScore(); err != nil {
-		rp.SetError(model.ScoreName, err)
-	}
-
-	return rp
+	return rp, nil
 }
 
 func extractData(data resultOutput, out interface{}) error {

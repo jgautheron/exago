@@ -8,29 +8,31 @@ import (
 	"github.com/gorilla/context"
 	"github.com/hotolab/exago-svc/badge"
 	"github.com/hotolab/exago-svc/godoc"
+	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/julienschmidt/httprouter"
 )
 
 func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
+	handleAction := func(rp model.Record, err error) {
+		if err != nil {
+			send(w, r, nil, err)
+			return
+		}
+		go s.config.Showcaser.Process(rp)
+		send(w, r, rp, nil)
+	}
+
 	repo := context.Get(r, "repository").(string)
 	branch := ""
+
 	if s.config.RepositoryLoader.IsCached(repo, branch) {
 		rp, err := s.config.RepositoryLoader.Load(repo, branch)
-		if err != nil {
-			send(w, r, rp, err)
-		}
-		if !rp.HasError() {
-			go s.config.Showcaser.Process(rp)
-		}
-		send(w, r, rp, nil)
+		handleAction(rp, err)
 		return
 	}
 
 	rp, err := s.config.Pool.PushSync(repo)
-	if err == nil && !rp.HasError() {
-		go s.config.Showcaser.Process(rp)
-	}
-	send(w, r, rp, err)
+	handleAction(rp, err)
 }
 
 func (s *Server) refreshHandler(w http.ResponseWriter, r *http.Request) {
