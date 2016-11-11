@@ -108,7 +108,7 @@ func (p *Processor) importData(repo string, results map[string]resultOutput) mod
 
 	// Handle projectrunner
 	var pr model.ProjectRunner
-	if err = json.Unmarshal(*results[model.ProjectRunnerName].Response.Data, &pr); err != nil {
+	if err = extractData(results[model.ProjectRunnerName], &pr); err != nil {
 		rp.SetError(model.ProjectRunnerName, err)
 	} else {
 		rp.SetProjectRunner(pr)
@@ -116,7 +116,7 @@ func (p *Processor) importData(repo string, results map[string]resultOutput) mod
 
 	// Handle lintmessages
 	var lm model.LintMessages
-	if err = json.Unmarshal(*results[model.LintMessagesName].Response.Data, &lm); err != nil {
+	if err = extractData(results[model.LintMessagesName], &lm); err != nil {
 		rp.SetError(model.LintMessagesName, err)
 	} else {
 		rp.SetLintMessages(lm)
@@ -128,4 +128,11 @@ func (p *Processor) importData(repo string, results map[string]resultOutput) mod
 	}
 
 	return rp
+}
+
+func extractData(data resultOutput, out interface{}) error {
+	if data.err != nil {
+		return data.err
+	}
+	return json.Unmarshal(*data.Response.Data, &out)
 }

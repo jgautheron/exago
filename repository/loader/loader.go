@@ -12,7 +12,7 @@ import (
 )
 
 const (
-	SizeLimit = 1000000 // bytes
+	SizeLimit = 1500000 // bytes
 )
 
 var (

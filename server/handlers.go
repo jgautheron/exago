@@ -22,7 +22,7 @@ func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
 		if !rp.HasError() {
 			go s.config.Showcaser.Process(rp)
 		}
-		send(w, r, rp.GetData(), nil)
+		send(w, r, rp, nil)
 		return
 	}
 
@@ -30,7 +30,7 @@ func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
 	if err == nil && !rp.HasError() {
 		go s.config.Showcaser.Process(rp)
 	}
-	send(w, r, rp.GetData(), err)
+	send(w, r, rp, err)
 }
 
 func (s *Server) refreshHandler(w http.ResponseWriter, r *http.Request) {
@@ -88,7 +88,7 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		value = rp.GetRank()
 	}
-	
+
 	badge.Write(w, title, value, score)
 }
 
@@ -105,7 +105,7 @@ func (s *Server) cachedHandler(w http.ResponseWriter, r *http.Request) {
 	branch := ""
 	if s.config.RepositoryLoader.IsCached(repo, branch) {
 		rp, err := s.config.RepositoryLoader.Load(repo, branch)
-		send(w, r, rp.GetData(), err)
+		send(w, r, rp, err)
 		return
 	}
 	send(w, r, false, nil)

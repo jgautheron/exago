@@ -18,7 +18,7 @@ type Repository struct {
 	Branch        string     `json:"branch"`
 	ExecutionTime string     `json:"execution_time"`
 	LastUpdate    time.Time  `json:"last_update"`
-	Data          model.Data `json:"data"`
+	Data          model.Data `json:"results"`
 }
 
 func New(name, branch string) *Repository {

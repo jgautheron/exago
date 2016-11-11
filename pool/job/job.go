@@ -66,11 +66,6 @@ func CallLambdaFn(fn, repo, branch string) (lrsp Response, err error) {
 		return lrsp, err
 	}
 
-	// Data is always expected from Lambda
-	if resp.Data == nil {
-		return lrsp, ErrNoData
-	}
-
 	// If the Lambda request failed, return the message as an error
 	if !resp.Success {
 		for _, msg := range resp.Errors {
