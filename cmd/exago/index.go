@@ -5,7 +5,7 @@ import (
 
 	. "github.com/hotolab/exago-svc"
 	"github.com/hotolab/exago-svc/github"
-	"github.com/hotolab/exago-svc/godoc"
+	"github.com/hotolab/exago-svc/gosearch"
 	"github.com/hotolab/exago-svc/leveldb"
 	"github.com/hotolab/exago-svc/pool"
 	"github.com/hotolab/exago-svc/pool/job"
@@ -40,10 +40,10 @@ func IndexCommand() cli.Command {
 				},
 			},
 			{
-				Name:  "godoc",
-				Usage: "Parse and index the entire Godoc.org index",
+				Name:  "gosearch",
+				Usage: "Process the entire Gosearch index",
 				Action: func(c *cli.Context) error {
-					return indexGodoc()
+					return indexGosearch()
 				},
 			},
 		},
@@ -78,20 +78,19 @@ func initPool() (pl model.Pool, err error) {
 	)
 }
 
-func indexGodoc() error {
+func indexGosearch() error {
 	pl, err := initPool()
 	if err != nil {
 		return err
 	}
 
-	repos, err := godoc.New(
+	repos, err := gosearch.New(
 		WithDatabase(db),
 	).GetIndex()
 	if err != nil {
 		return errors.New("Got error while trying to load the repos, did you index before godoc?")
 	}
 
-	repos = repos[:6]
 	indexRepos(pl, repos)
 	return nil
 }

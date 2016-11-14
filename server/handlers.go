@@ -7,7 +7,6 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
 	"github.com/hotolab/exago-svc/badge"
-	"github.com/hotolab/exago-svc/godoc"
 	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/julienschmidt/httprouter"
 )
@@ -138,9 +137,4 @@ func (s *Server) popularHandler(w http.ResponseWriter, r *http.Request) {
 		"repositories": repos,
 	}
 	send(w, r, out, nil)
-}
-
-func (s *Server) godocIndexHandler(w http.ResponseWriter, r *http.Request) {
-	repos, err := godoc.New().GetIndex()
-	send(w, r, repos, err)
 }

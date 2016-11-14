@@ -20,7 +20,7 @@ check:
 # but does not run the tests.
 .PHONY: test
 test:
-	$(GO) test -race -v ./badge/... ./cmd/... ./config/... ./github/... ./godoc/... ./leveldb/... ./mocks/... ./pool/... ./repository/... ./requestlock/... ./score/... ./server/... ./showcaser/...
+	$(GO) test -race -v ./badge/... ./cmd/... ./config/... ./github/... ./gosearch/... ./leveldb/... ./mocks/... ./pool/... ./repository/... ./requestlock/... ./score/... ./server/... ./showcaser/...
 
 # Create Docker image
 .PHONY: image

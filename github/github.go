@@ -2,8 +2,11 @@ package github
 
 import (
 	"encoding/base64"
+	"math/rand"
 	"sync"
+	"time"
 
+	log "github.com/Sirupsen/logrus"
 	gh "github.com/google/go-github/github"
 	"github.com/hashicorp/golang-lru"
 	. "github.com/hotolab/exago-svc/config"
@@ -16,6 +19,8 @@ const (
 )
 
 var (
+	logger = log.WithField("prefix", "github")
+
 	// Make sure it satisfies the interface.
 	_ model.RepositoryHost = (*GitHub)(nil)
 )
@@ -46,6 +51,22 @@ func New() (GitHub, error) {
 	}, nil
 }
 
+// DisplayRateLimit helps keeping track of GitHub's rate limits.
+func (g GitHub) DisplayRateLimit() {
+	s := rand.NewSource(time.Now().UnixNano())
+	r := rand.New(s)
+	n := r.Intn(5)
+
+	// Do not show every time
+	if n != 0 && n%4 == 0 {
+		limits, _, err := g.client.RateLimits()
+		if err == nil {
+			logger.Debugf("Current rate limit: %d", limits.Core.Remaining)
+		}
+	}
+}
+
+// GetFileContent loads the file content of the given repository/filename.
 func (g GitHub) GetFileContent(owner, repository, path string) (string, error) {
 	if data, cached := g.getCached(owner, repository, path); cached {
 		return data.(string), nil
@@ -55,6 +76,8 @@ func (g GitHub) GetFileContent(owner, repository, path string) (string, error) {
 		return "", err
 	}
 	out := *file.Content
+
+	g.DisplayRateLimit()
 
 	if *file.Encoding == "base64" {
 		b, err := base64.StdEncoding.DecodeString(out)
@@ -67,6 +90,7 @@ func (g GitHub) GetFileContent(owner, repository, path string) (string, error) {
 	return out, nil
 }
 
+// Get builds a trimmed down map of the few things we need to know about a repository.
 func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
 	if data, cached := g.getCached(owner, repository); cached {
 		return data.(map[string]interface{}), nil
@@ -75,6 +99,8 @@ func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	g.DisplayRateLimit()
 
 	desc := ""
 	if repo.Description != nil {
