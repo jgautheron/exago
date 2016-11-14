@@ -65,6 +65,8 @@ func (s *Server) ListenAndServe() error {
 	router.Get("/projects/top", baseHandlers.ThenFunc(s.topHandler))
 	router.Get("/projects/popular", baseHandlers.ThenFunc(s.popularHandler))
 
+	router.Get("/_health", baseHandlers.ThenFunc(s.healthHandler))
+
 	logger.Infof("Listening on port %d", Config.HttpPort)
 	return graceful.RunWithErr(fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), 10*time.Second, router)
 }

@@ -138,3 +138,7 @@ func (s *Server) popularHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	send(w, r, out, nil)
 }
+
+func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
+	writeData(w, r, http.StatusOK, `{"alive": true}`)
+}
