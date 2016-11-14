@@ -1,6 +1,5 @@
 package: github.com/hotolab/exago-svc
 import:
-- package: github.com/PuerkitoBio/goquery
 - package: github.com/SimonWaldherr/golibs
   subpackages:
   - xmath
