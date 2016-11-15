@@ -21,6 +21,7 @@ const (
 
 var (
 	ErrRoutineTimeout = errors.New("The analysis timed out")
+	ErrEmptyResponse  = errors.New("Empty response data")
 	logger            = log.WithField("prefix", "processor")
 	fns               = []string{"projectrunner", "lintmessages"}
 )
@@ -30,9 +31,9 @@ type Processor struct {
 }
 
 type resultOutput struct {
-	Fn       string
-	Response job.Response
-	err      error
+	Repository, Branch, Fn string
+	Response               job.Response
+	err                    error
 }
 
 func New(options ...exago.Option) *Processor {
@@ -59,19 +60,25 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	wg := new(sync.WaitGroup)
 	for _, fn := range fns {
 		wg.Add(1)
-		go func(fn, repo string) {
+		go func(fn, repo, branch string) {
 			defer wg.Done()
 			out, err := job.CallLambdaFn(fn, repo, branch)
 			if err != nil {
 				outCh <- resultOutput{
-					Fn:  fn,
-					err: err,
+					Repository: repo,
+					Branch:     branch,
+					Fn:         fn,
+					err:        err,
 				}
 				return
 			}
-			outCh <- resultOutput{fn, out, nil}
-			logger.WithField("fn", fn).Debug("Received output")
-		}(fn, repo)
+			outCh <- resultOutput{repo, branch, fn, out, nil}
+			logger.WithFields(log.Fields{
+				"repository": repo,
+				"branch":     branch,
+				"fn":         fn,
+			}).Debug("Received output")
+		}(fn, repo, branch)
 	}
 	wg.Wait()
 
@@ -90,7 +97,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	// Strip the protocol
 	repositoryName := strings.Replace(data["html_url"].(string), "https://", "", 1)
 
-	rp, err := p.importData(repo, output)
+	rp, err := p.importData(repo, branch, output)
 	if err != nil {
 		return err
 	}
@@ -113,12 +120,13 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	return rp
 }
 
-func (p *Processor) importData(repo string, results map[string]resultOutput) (model.Record, error) {
+func (p *Processor) importData(repo, branch string, results map[string]resultOutput) (model.Record, error) {
 	rp := repository.New(repo, "")
 
 	// Handle projectrunner
 	var pr model.ProjectRunner
 	if err := extractData(results[model.ProjectRunnerName], &pr); err != nil {
+		logError(repo, branch, fns[0], err)
 		return nil, err
 	}
 	rp.SetProjectRunner(pr)
@@ -126,6 +134,7 @@ func (p *Processor) importData(repo string, results map[string]resultOutput) (mo
 	// Handle lintmessages
 	var lm model.LintMessages
 	if err := extractData(results[model.LintMessagesName], &lm); err != nil {
+		logError(repo, branch, fns[1], err)
 		return nil, err
 	}
 	rp.SetLintMessages(lm)
@@ -142,5 +151,16 @@ func extractData(data resultOutput, out interface{}) error {
 	if data.err != nil {
 		return data.err
 	}
+	if data.Response.Data == nil {
+		return ErrEmptyResponse
+	}
 	return json.Unmarshal(*data.Response.Data, &out)
+}
+
+func logError(repo, branch, fn string, err error) {
+	logger.WithFields(log.Fields{
+		"repository": repo,
+		"branch":     branch,
+		"fn":         fn,
+	}).Error(err)
 }
