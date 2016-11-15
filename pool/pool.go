@@ -4,6 +4,7 @@ import (
 	"time"
 
 	exago "github.com/hotolab/exago-svc"
+	. "github.com/hotolab/exago-svc/config"
 	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/jeffail/tunny"
 )
@@ -27,7 +28,7 @@ func New(options ...exago.Option) (model.Pool, error) {
 	for _, option := range options {
 		option.Apply(&p.config)
 	}
-	pool, err := tunny.CreatePool(4, p.config.RepositoryProcessor).Open()
+	pool, err := tunny.CreatePool(Config.PoolSize, p.config.RepositoryProcessor).Open()
 	if err != nil {
 		return nil, err
 	}

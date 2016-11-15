@@ -21,6 +21,8 @@ type cfg struct {
 	LogLevel           string `envconfig:"LOG_LEVEL" default:"info"`
 
 	ShowcaserPopularRebuildInterval time.Duration `envconfig:"SHOWCASER_POPULAR_REBUILD_INTERVAL" default:"1m"`
+
+	PoolSize int `envconfig:"POOL_SIZE" default:"20"`
 }
 
 func InitializeConfig() {
