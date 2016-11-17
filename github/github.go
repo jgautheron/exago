@@ -51,6 +51,15 @@ func New() (GitHub, error) {
 	}, nil
 }
 
+// GetRateLimit helps keep track of the API rate limit.
+func (g GitHub) GetRateLimit() (int, error) {
+	limits, _, err := g.client.RateLimits()
+	if err != nil {
+		return 0, err
+	}
+	return limits.Core.Limit, nil
+}
+
 // DisplayRateLimit helps keeping track of GitHub's rate limits.
 func (g GitHub) DisplayRateLimit() {
 	s := rand.NewSource(time.Now().UnixNano())
@@ -59,9 +68,9 @@ func (g GitHub) DisplayRateLimit() {
 
 	// Do not show every time
 	if n != 0 && n%4 == 0 {
-		limits, _, err := g.client.RateLimits()
+		limit, err := g.GetRateLimit()
 		if err == nil {
-			logger.Debugf("Current rate limit: %d", limits.Core.Remaining)
+			logger.Debugf("Current rate limit: %d", limit)
 		}
 	}
 }

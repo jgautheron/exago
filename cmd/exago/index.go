@@ -15,7 +15,10 @@ import (
 	"github.com/urfave/cli"
 )
 
-var db model.Database
+var (
+	db model.Database
+	rl model.RepositoryLoader
+)
 
 // IndexCommand saves the godoc index in DB.
 func IndexCommand() cli.Command {
@@ -64,7 +67,7 @@ func initPool() (pl model.Pool, err error) {
 		return nil, err
 	}
 
-	rl := loader.New(
+	rl = loader.New(
 		WithDatabase(db),
 		WithRepositoryHost(rh),
 	)
@@ -97,7 +100,9 @@ func indexGosearch() error {
 
 func indexRepos(pl model.Pool, repos []string) {
 	for _, repo := range repos {
-		pl.PushAsync(repo)
+		if !rl.IsCached(repo, "") {
+			pl.PushAsync(repo)
+		}
 	}
 	pl.WaitUntilEmpty()
 }
