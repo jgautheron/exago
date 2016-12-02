@@ -7,7 +7,7 @@ import (
 	"github.com/hotolab/exago-svc/repository/model"
 )
 
-const coverageFactor = -0.095
+const coverageFactor = -0.11
 
 type testCoverageEvaluator struct {
 	Evaluator
