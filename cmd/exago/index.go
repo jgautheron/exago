@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 
+	log "github.com/Sirupsen/logrus"
 	. "github.com/hotolab/exago-svc"
 	"github.com/hotolab/exago-svc/github"
 	"github.com/hotolab/exago-svc/gosearch"
@@ -108,11 +109,19 @@ func indexGosearch(c *cli.Context) error {
 }
 
 func indexRepos(c *cli.Context, pl model.Pool, repos []string) {
-	branch := "master"
 	goversion := c.String("goversion")
 	for _, repo := range repos {
-		if !rl.IsCached(repo, branch, goversion) {
-			pl.PushAsync(repo, branch, goversion)
+		data, err := rl.IsValid(repo)
+		if err != nil {
+			log.WithFields(log.Fields{
+				"repository": repo,
+				"error":      err.Error(),
+			}).Error("Skipped indexing")
+			continue
+		}
+		defaultBranch := data["default_branch"].(string)
+		if !rl.IsCached(repo, defaultBranch, goversion) {
+			pl.PushAsync(repo, defaultBranch, goversion)
 		}
 	}
 	pl.WaitUntilEmpty()
