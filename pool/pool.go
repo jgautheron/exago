@@ -36,8 +36,8 @@ func New(options ...exago.Option) (model.Pool, error) {
 	return &p, nil
 }
 
-func (pr *PoolRunner) PushSync(repo string) (model.Record, error) {
-	value, _ := pr.pool.SendWork(repo)
+func (pr *PoolRunner) PushSync(repo, branch, goversion string) (model.Record, error) {
+	value, _ := pr.pool.SendWork([]string{repo, branch, goversion})
 	switch value.(type) {
 	case error:
 		return nil, value.(error)
@@ -47,8 +47,8 @@ func (pr *PoolRunner) PushSync(repo string) (model.Record, error) {
 	return nil, nil
 }
 
-func (pr *PoolRunner) PushAsync(repo string) {
-	pr.pool.SendWorkAsync(repo, nil)
+func (pr *PoolRunner) PushAsync(repo, branch, goversion string) {
+	pr.pool.SendWorkAsync([]string{repo, branch, goversion}, nil)
 }
 
 func (pr *PoolRunner) WaitUntilEmpty() {

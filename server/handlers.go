@@ -3,72 +3,75 @@ package server
 import (
 	"fmt"
 	"net/http"
+	"strings"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/gorilla/context"
 	"github.com/hotolab/exago-svc/badge"
-	"github.com/hotolab/exago-svc/repository/model"
-	"github.com/julienschmidt/httprouter"
+	"github.com/pressly/chi"
+	"github.com/pressly/chi/render"
 )
 
-func (s *Server) repositoryHandler(w http.ResponseWriter, r *http.Request) {
-	handleAction := func(rp model.Record, err error) {
-		if err != nil {
-			send(w, r, nil, err)
-			return
-		}
-		go s.config.Showcaser.Process(rp)
-		send(w, r, rp, nil)
-	}
+const (
+	WebsiteURL = "https://exago.io"
+)
 
-	repo := context.Get(r, "repository").(string)
-	branch := ""
+func (s *Server) processRepository(w http.ResponseWriter, r *http.Request) {
+	repo := r.Context().Value("repo").(string)
+	branch := r.Context().Value("branch").(string)
+	goversion := r.Context().Value("goversion").(string)
 
-	if s.config.RepositoryLoader.IsCached(repo, branch) {
-		rp, err := s.config.RepositoryLoader.Load(repo, branch)
-		handleAction(rp, err)
+	// Avoid double processing
+	if s.processingList.exists(repo, branch, goversion) {
+		render.Status(r, http.StatusTooManyRequests)
 		return
 	}
 
-	rp, err := s.config.Pool.PushSync(repo)
-	handleAction(rp, err)
+	s.processingList.add(repo, branch, goversion)
+	defer s.processingList.remove(repo, branch, goversion)
+
+	rp, err := s.config.Pool.PushSync(repo, branch, goversion)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		render.JSON(w, r, err.Error())
+		return
+	}
+
+	w.Header().Set("Location", fmt.Sprintf(
+		"%s/repos/%s/branches/%s/goversions/%s",
+		WebsiteURL,
+		strings.Replace(repo, "/", "|", 2),
+		branch,
+		goversion,
+	))
+	render.JSON(w, r, rp)
 }
 
-func (s *Server) refreshHandler(w http.ResponseWriter, r *http.Request) {
-	repo := context.Get(r, "repository").(string)
-	branch := ""
-	s.config.RepositoryLoader.ClearCache(repo, branch)
-	s.repositoryHandler(w, r)
-}
+func (s *Server) getBadge(w http.ResponseWriter, r *http.Request) {
+	repo := r.Context().Value("repo").(string)
+	branch := r.Context().Value("branch").(string)
+	goversion := r.Context().Value("goversion").(string)
+	lgr := r.Context().Value("lgr").(*log.Entry)
 
-func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
-	ps := context.Get(r, "params").(httprouter.Params)
-	lgr := context.Get(r, "lgr").(*log.Entry)
-
-	repo := context.Get(r, "repository").(string)
-	branch := ""
-
-	if !s.config.RepositoryLoader.IsCached(repo, branch) {
+	if !s.config.RepositoryLoader.IsCached(repo, branch, goversion) {
 		badge.WriteError(w, "")
 		return
 	}
 
-	rp, err := s.config.RepositoryLoader.Load(repo, branch)
+	rp, err := s.config.RepositoryLoader.Load(repo, branch, goversion)
 	if err != nil {
 		lgr.Error(err)
 		badge.WriteError(w, "")
 		return
 	}
 
-	var title string
-	var value string
+	var title, value string
 	var score = rp.GetScore().Value
 
 	pr := rp.GetProjectRunner()
 	th := pr.Thirdparties.Data
 	cs := pr.CodeStats.Data
 
-	switch tp := ps.ByName("type"); tp {
+	switch tp := chi.URLParam(r, "type"); tp {
 	case "cov":
 		title = "coverage"
 		value = fmt.Sprintf("%.2f%%", pr.GetMeanCodeCov())
@@ -93,52 +96,56 @@ func (s *Server) badgeHandler(w http.ResponseWriter, r *http.Request) {
 	badge.Write(w, title, value, score)
 }
 
-func (s *Server) fileHandler(w http.ResponseWriter, r *http.Request) {
-	owner := context.Get(r, "owner").(string)
-	project := context.Get(r, "project").(string)
-	path := context.Get(r, "path").(string)
-	content, err := s.config.RepositoryHost.GetFileContent(owner, project, path)
-	send(w, r, content, err)
-}
+func (s *Server) getRepo(w http.ResponseWriter, r *http.Request) {
+	repo := r.Context().Value("repo").(string)
+	branch := r.Context().Value("branch").(string)
+	goversion := r.Context().Value("goversion").(string)
 
-func (s *Server) cachedHandler(w http.ResponseWriter, r *http.Request) {
-	repo := context.Get(r, "repository").(string)
-	branch := ""
-	if s.config.RepositoryLoader.IsCached(repo, branch) {
-		rp, err := s.config.RepositoryLoader.Load(repo, branch)
-		send(w, r, rp, err)
+	rp, err := s.config.RepositoryLoader.Load(repo, branch, goversion)
+	if err != nil {
+		render.Status(r, http.StatusNotFound)
 		return
 	}
-	send(w, r, false, nil)
+	render.JSON(w, r, rp)
 }
 
-func (s *Server) recentHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getFile(w http.ResponseWriter, r *http.Request) {
+	owner := r.Context().Value("owner").(string)
+	name := r.Context().Value("name").(string)
+	// branch := r.Context().Value("branch").(string)
+	path := chi.URLParam(r, "path")
+	content, err := s.config.RepositoryHost.GetFileContent(owner, name, path)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		render.JSON(w, r, err.Error())
+		return
+	}
+	render.PlainText(w, r, content)
+}
+
+func (s *Server) getRecent(w http.ResponseWriter, r *http.Request) {
 	repos := s.config.Showcaser.GetRecentRepositories()
-	out := map[string]interface{}{
+	list := map[string]interface{}{
 		"type":         "recent",
 		"repositories": repos,
 	}
-	send(w, r, out, nil)
+	render.JSON(w, r, list)
 }
 
-func (s *Server) topHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getTop(w http.ResponseWriter, r *http.Request) {
 	repos := s.config.Showcaser.GetTopRankedRepositories()
-	out := map[string]interface{}{
+	list := map[string]interface{}{
 		"type":         "top",
 		"repositories": repos,
 	}
-	send(w, r, out, nil)
+	render.JSON(w, r, list)
 }
 
-func (s *Server) popularHandler(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getPopular(w http.ResponseWriter, r *http.Request) {
 	repos := s.config.Showcaser.GetPopularRepositories()
-	out := map[string]interface{}{
+	list := map[string]interface{}{
 		"type":         "popular",
 		"repositories": repos,
 	}
-	send(w, r, out, nil)
-}
-
-func (s *Server) healthHandler(w http.ResponseWriter, r *http.Request) {
-	writeData(w, r, http.StatusOK, `{"alive": true}`)
+	render.JSON(w, r, list)
 }

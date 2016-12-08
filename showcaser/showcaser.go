@@ -118,7 +118,7 @@ func (d *Showcaser) AddTopRanked(repo model.Record) {
 // The collection will not be updated in real-time (see updatePopular).
 func (d *Showcaser) AddPopular(repo model.Record) {
 	d.Lock()
-	d.tk.Insert(repo.GetName(), 1)
+	d.tk.Insert(getKey(repo), 1)
 	d.Unlock()
 }
 
@@ -149,15 +149,15 @@ func (d *Showcaser) serialize() ([]byte, error) {
 	sc := serialisedShowcase{}
 
 	for _, r := range d.recent {
-		sc.Recent = append(sc.Recent, r.GetName())
+		sc.Recent = append(sc.Recent, getKey(r))
 	}
 
 	for _, r := range d.topRanked {
-		sc.TopRanked = append(sc.TopRanked, r.GetName())
+		sc.TopRanked = append(sc.TopRanked, getKey(r))
 	}
 
 	for _, r := range d.popular {
-		sc.Popular = append(sc.Popular, r.GetName())
+		sc.Popular = append(sc.Popular, getKey(r))
 	}
 
 	tk, err := d.tk.GobEncode()
@@ -182,14 +182,19 @@ func (d *Showcaser) loadReposFromList(list []string) (repos []model.Record, err 
 	if len(list) == 0 {
 		return
 	}
-	for _, name := range list {
-		rp, err := d.config.RepositoryLoader.Load(name, "")
+	for _, repo := range list {
+		sp := strings.Split(repo, "|")
+		rp, err := d.config.RepositoryLoader.Load(sp[0], sp[1], sp[2])
 		if err != nil {
 			return nil, err
 		}
 		repos = append(repos, rp)
 	}
 	return
+}
+
+func getKey(repo model.Record) string {
+	return fmt.Sprintf("%s|%s|%s", repo.GetName(), repo.GetBranch(), repo.GetGoVersion())
 }
 
 // loadFromDB attempts to load a previously saved snapshot.

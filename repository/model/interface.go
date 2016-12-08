@@ -6,6 +6,7 @@ import "time"
 type Record interface {
 	GetName() string
 	GetBranch() string
+	GetGoVersion() string
 	SetName(string)
 	GetRank() string
 	GetData() Data
@@ -34,17 +35,17 @@ type RepositoryHost interface {
 
 // Load wraps repository-related methods.
 type RepositoryLoader interface {
-	Load(repository, branch string) (Record, error)
+	Load(repository, branch, goversion string) (Record, error)
 	IsValid(repository string) (map[string]interface{}, error)
 	Save(repo Record) error
-	ClearCache(repo, branch string) error
-	IsCached(repo, branch string) bool
+	ClearCache(repo, branch, goversion string) error
+	IsCached(repo, branch, goversion string) bool
 }
 
 // Pool represents the routine pool.
 type Pool interface {
-	PushSync(repo string) (Record, error)
-	PushAsync(repo string)
+	PushSync(repo, branch, goversion string) (Record, error)
+	PushAsync(repo, branch, goversion string)
 	WaitUntilEmpty()
 	Stop()
 }

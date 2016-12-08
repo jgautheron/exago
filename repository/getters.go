@@ -17,6 +17,11 @@ func (r *Repository) GetBranch() string {
 	return r.Branch
 }
 
+// GetGoVersion retrieves the go version semver.
+func (r *Repository) GetGoVersion() string {
+	return r.GoVersion
+}
+
 // GetLastUpdate retrieves the timestamp when the project was last refreshed.
 func (r *Repository) GetLastUpdate() time.Time {
 	return r.LastUpdate

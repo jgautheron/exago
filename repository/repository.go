@@ -16,15 +16,17 @@ var (
 type Repository struct {
 	Name          string     `json:"name"`
 	Branch        string     `json:"branch"`
-	ExecutionTime string     `json:"execution_time"`
-	LastUpdate    time.Time  `json:"last_update"`
+	GoVersion     string     `json:"goVersion"`
+	ExecutionTime string     `json:"executionTime"`
+	LastUpdate    time.Time  `json:"lastUpdate"`
 	Data          model.Data `json:"results"`
 }
 
-func New(name, branch string) *Repository {
+func New(name, branch, goversion string) *Repository {
 	return &Repository{
-		Name:   name,
-		Branch: branch,
+		Name:      name,
+		Branch:    branch,
+		GoVersion: goversion,
 	}
 }
 

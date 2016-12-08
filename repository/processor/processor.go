@@ -31,9 +31,9 @@ type Processor struct {
 }
 
 type resultOutput struct {
-	Repository, Branch, Fn string
-	Response               job.Response
-	err                    error
+	Repository, Branch, GoVersion, Fn string
+	Response                          job.Response
+	err                               error
 }
 
 func New(options ...exago.Option) *Processor {
@@ -45,8 +45,8 @@ func New(options ...exago.Option) *Processor {
 }
 
 func (p *Processor) ProcessRepository(value interface{}) interface{} {
-	repo := value.(string)
-	branch := ""
+	values := value.([]string)
+	repo, branch, goversion := values[0], values[1], values[2]
 
 	// Check first if the repository is valid (still exists, contains Go code...)
 	data, err := p.config.RepositoryLoader.IsValid(repo)
@@ -60,25 +60,27 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	wg := new(sync.WaitGroup)
 	for _, fn := range fns {
 		wg.Add(1)
-		go func(fn, repo, branch string) {
+		go func(fn, repo, branch, goversion string) {
 			defer wg.Done()
-			out, err := job.CallLambdaFn(fn, repo, branch)
+			out, err := job.CallLambdaFn(fn, repo, branch, goversion)
 			if err != nil {
 				outCh <- resultOutput{
 					Repository: repo,
 					Branch:     branch,
+					GoVersion:  goversion,
 					Fn:         fn,
 					err:        err,
 				}
 				return
 			}
-			outCh <- resultOutput{repo, branch, fn, out, nil}
+			outCh <- resultOutput{repo, branch, goversion, fn, out, nil}
 			logger.WithFields(log.Fields{
 				"repository": repo,
 				"branch":     branch,
+				"goversion":  goversion,
 				"fn":         fn,
 			}).Debug("Received output")
-		}(fn, repo, branch)
+		}(fn, repo, branch, goversion)
 	}
 	wg.Wait()
 
@@ -97,7 +99,7 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	// Strip the protocol
 	repositoryName := strings.Replace(data["html_url"].(string), "https://", "", 1)
 
-	rp, err := p.importData(repo, branch, output)
+	rp, err := p.importData(repo, branch, goversion, output)
 	if err != nil {
 		return err
 	}
@@ -120,13 +122,13 @@ func (p *Processor) ProcessRepository(value interface{}) interface{} {
 	return rp
 }
 
-func (p *Processor) importData(repo, branch string, results map[string]resultOutput) (model.Record, error) {
-	rp := repository.New(repo, "")
+func (p *Processor) importData(repo, branch, goversion string, results map[string]resultOutput) (model.Record, error) {
+	rp := repository.New(repo, branch, goversion)
 
 	// Handle projectrunner
 	var pr model.ProjectRunner
 	if err := extractData(results[model.ProjectRunnerName], &pr); err != nil {
-		logError(repo, branch, fns[0], err)
+		logError(repo, branch, goversion, fns[0], err)
 		return nil, err
 	}
 	rp.SetProjectRunner(pr)
@@ -134,7 +136,7 @@ func (p *Processor) importData(repo, branch string, results map[string]resultOut
 	// Handle lintmessages
 	var lm model.LintMessages
 	if err := extractData(results[model.LintMessagesName], &lm); err != nil {
-		logError(repo, branch, fns[1], err)
+		logError(repo, branch, goversion, fns[1], err)
 		return nil, err
 	}
 	rp.SetLintMessages(lm)
@@ -157,10 +159,11 @@ func extractData(data resultOutput, out interface{}) error {
 	return json.Unmarshal(*data.Response.Data, &out)
 }
 
-func logError(repo, branch, fn string, err error) {
+func logError(repo, branch, goversion, fn string, err error) {
 	logger.WithFields(log.Fields{
 		"repository": repo,
 		"branch":     branch,
+		"goversion":  goversion,
 		"fn":         fn,
 	}).Error(err)
 }

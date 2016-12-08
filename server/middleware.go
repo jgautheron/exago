@@ -1,120 +1,120 @@
 package server
 
 import (
+	"context"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strings"
-	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/didip/tollbooth"
-	"github.com/gorilla/context"
 	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/requestlock"
-	"github.com/julienschmidt/httprouter"
-)
-
-const (
-	rateLimitCount = 20
+	"github.com/pressly/chi"
+	"github.com/pressly/chi/render"
 )
 
 var (
-	ErrTooManyCalls      = errors.New("Too many calls in a short period of time")
-	ErrRateLimitExceeded = errors.New("Rate limit exceeded")
+	ErrInvalidVersion     = errors.New("The specified Go version is not supported")
+	ErrBranchDoesNotExist = errors.New("The specified branch does not exist")
 )
 
-func (s *Server) recoverHandler(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		defer func() {
-			if err := recover(); err != nil {
-				log.Errorf("panic: %+v", err)
-				http.Error(w, http.StatusText(500), 500)
+func (s *Server) checkValidData(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var (
+			host, owner, name string
+			branch, goversion string
+		)
+
+		if r.Method == http.MethodPost {
+			var data struct {
+				Host      string `json:"host"`
+				Owner     string `json:"owner"`
+				Name      string `json:"name"`
+				Branch    string `json:"repository"`
+				GoVersion string `json:"goversion"`
 			}
-		}()
+			if err := render.Bind(r.Body, &data); err != nil {
+				render.Status(r, http.StatusInternalServerError)
+				render.JSON(w, r, err.Error())
+				return
+			}
+			host, owner, name = data.Host, data.Owner, data.Name
+			branch, goversion = data.Branch, data.GoVersion
+		} else {
+			host, owner, name = chi.URLParam(r, "host"), chi.URLParam(r, "owner"), chi.URLParam(r, "name")
+			branch, goversion = chi.URLParam(r, "branch"), chi.URLParam(r, "goversion")
+		}
 
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (s *Server) checkValidRepository(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ps := context.Get(r, "params").(httprouter.Params)
-		repo := ps.ByName("repository")[1:]
-
+		repo := fmt.Sprintf("%s/%s/%s", host, owner, name)
 		data, err := s.config.RepositoryLoader.IsValid(repo)
 		if err != nil {
-			writeError(w, r, err)
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, err.Error())
 			return
 		}
 
+		// Validate the branch name
+		branchMatch := false
+		for _, branchName := range data["branches"].([]string) {
+			if branchName == branch {
+				branchMatch = true
+			}
+		}
+		if !branchMatch {
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, ErrBranchDoesNotExist)
+			return
+		}
+
+		// Validate the Go version
+		versionMatch := false
+		for _, allowedVersion := range Config.GoVersions {
+			if allowedVersion == goversion {
+				versionMatch = true
+			}
+		}
+		if !versionMatch {
+			render.Status(r, http.StatusNotImplemented)
+			render.JSON(w, r, ErrInvalidVersion)
+			return
+		}
+
+		// Reuse the proper owner/repository name with caps if any
 		HTMLURL := strings.Replace(data["html_url"].(string), "https://", "", 1)
 		rp := strings.Split(HTMLURL, "/")
-		context.Set(r, "provider", rp[0])
-		context.Set(r, "owner", rp[1])
-		context.Set(r, "project", rp[2])
-		context.Set(r, "repository", HTMLURL)
 
-		rp = strings.Split(repo, "/")
-		if len(rp) > 3 {
-			context.Set(r, "path", strings.Join(rp[3:], "/"))
-		}
+		ctx := context.WithValue(r.Context(), "host", rp[0])
+		ctx = context.WithValue(ctx, "owner", rp[1])
+		ctx = context.WithValue(ctx, "name", rp[2])
+		ctx = context.WithValue(ctx, "repo", HTMLURL)
+		ctx = context.WithValue(ctx, "branch", branch)
+		ctx = context.WithValue(ctx, "goversion", goversion)
 
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
-}
-
-func (s *Server) requestLock(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ps := context.Get(r, "params").(httprouter.Params)
-		rp := fmt.Sprintf("%s/%s/%s", ps.ByName("registry"), ps.ByName("owner"), ps.ByName("repository"))
-
-		if requestlock.Contains(rp, getIP(r.RemoteAddr)) {
-			writeError(w, r, ErrTooManyCalls)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 func (s *Server) setLogger(next http.Handler) http.Handler {
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		ps := context.Get(r, "params").(httprouter.Params)
-
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		lgr := logger.WithFields(log.Fields{
-			"repository": ps.ByName("repository")[1:],
-			"ip":         getIP(r.RemoteAddr),
+			"repo":      r.Context().Value("repo").(string),
+			"branch":    r.Context().Value("branch").(string),
+			"goversion": r.Context().Value("goversion").(string),
+			"ip":        getIP(r.RemoteAddr),
 		})
-		context.Set(r, "lgr", lgr)
-		next.ServeHTTP(w, r)
-	}
-	return http.HandlerFunc(fn)
+		ctx := context.WithValue(r.Context(), "lgr", lgr)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
-func (s *Server) rateLimit(next http.Handler) http.Handler {
-	limiter := tollbooth.NewLimiter(rateLimitCount, time.Hour*4)
-	limiter.Methods = []string{"GET"}
-
-	fn := func(w http.ResponseWriter, r *http.Request) {
-		lgr := context.Get(r, "lgr").(*log.Entry)
-
-		if r.Header.Get("Origin") == Config.AllowOrigin {
-			next.ServeHTTP(w, r)
-			return
-		}
-
-		httpErr := tollbooth.LimitByRequest(limiter, r)
-		if httpErr != nil {
-			w.Header().Add("Content-Type", limiter.MessageContentType)
-			lgr.WithField("URL", r.URL.String()).Error("Rate limit exceeded")
-			writeError(w, r, ErrRateLimitExceeded)
-			return
-		}
-		next.ServeHTTP(w, r)
+func getIP(s string) string {
+	if ip, _, err := net.SplitHostPort(s); err == nil {
+		return ip
 	}
-	return http.HandlerFunc(fn)
+	if ip := net.ParseIP(s); ip != nil {
+		return ip.To4().String()
+	}
+	logger.Errorf("Couldn't parse IP %s", s)
+	return ""
 }

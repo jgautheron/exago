@@ -121,14 +121,25 @@ func (g GitHub) Get(owner, repository string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
+	branches, _, err := g.repositories().ListBranches(owner, repository, nil)
+	if err != nil {
+		return nil, err
+	}
+	branchNameList := []string{}
+	for _, branch := range branches {
+		branchNameList = append(branchNameList, *branch.Name)
+	}
+
 	// Export only what we need
 	mp := map[string]interface{}{
-		"html_url":    *repo.HTMLURL,
-		"avatar_url":  *repo.Owner.AvatarURL,
-		"description": desc,
-		"languages":   languages,
-		"stargazers":  *repo.StargazersCount,
-		"last_push":   repo.PushedAt.Time,
+		"html_url":       *repo.HTMLURL,
+		"avatar_url":     *repo.Owner.AvatarURL,
+		"description":    desc,
+		"languages":      languages,
+		"stargazers":     *repo.StargazersCount,
+		"last_push":      repo.PushedAt.Time,
+		"default_branch": *repo.DefaultBranch,
+		"branches":       branchNameList,
 	}
 	g.saveCache(mp, owner, repository)
 	return mp, nil

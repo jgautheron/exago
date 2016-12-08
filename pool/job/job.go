@@ -46,7 +46,7 @@ func New() {
 	)
 }
 
-func CallLambdaFn(fn, repo, branch string) (lrsp Response, err error) {
+func CallLambdaFn(fn, repo, branch, goversion string) (lrsp Response, err error) {
 	payload, _ := json.Marshal(context{
 		Repository: repo,
 		Branch:     branch,
@@ -54,6 +54,7 @@ func CallLambdaFn(fn, repo, branch string) (lrsp Response, err error) {
 	params := &lambda.InvokeInput{
 		FunctionName: aws.String(fnPrefix + fn),
 		Payload:      payload,
+		Qualifier:    aws.String(goversion),
 	}
 
 	out, err := svc.Invoke(params)

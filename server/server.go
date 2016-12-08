@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/rs/cors"
 	"github.com/tylerb/graceful"
 
 	"net/http"
@@ -23,7 +24,8 @@ var (
 )
 
 type Server struct {
-	config exago.Config
+	processingList processingList
+	config         exago.Config
 }
 
 // New creates a new Server instance.
@@ -37,6 +39,8 @@ func New(options ...exago.Option) *Server {
 	for _, option := range options {
 		option.Apply(&s.config)
 	}
+
+	s.processingList = processingList{}
 	return &s
 }
 
@@ -53,50 +57,46 @@ func (s *Server) ListenAndServe() error {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 	r.Use(middleware.CloseNotify)
+	r.Use(middleware.Heartbeat("_health"))
+
+	cors := cors.New(cors.Options{
+		AllowedOrigins:   Config.AllowedOrigins,
+		AllowedMethods:   []string{"GET", "POST", "OPTIONS"},
+		AllowedHeaders:   []string{"Accept", "Authorization", "Content-Type", "X-CSRF-Token"},
+		ExposedHeaders:   []string{"Location"},
+		AllowCredentials: false,
+		MaxAge:           300,
+	})
+	r.Use(cors.Handler)
 
 	r.Route("/repos", func(r chi.Router) {
-		r.Use(s.checkValidRepository)
-		r.Post("/", s.repositoryHandler)
-		r.Route("/:host|:owner|:repo/branches/:branch/goversion/:goversion", func(r chi.Router) {
-			r.Get("/", s.cachedHandler)
-			r.Get("/file/*path", s.fileHandler)
-			r.Get("/badges/:type", s.badgeHandler)
+		r.Use(s.checkValidData)
+		r.Use(s.setLogger)
+		r.Post("/", s.processRepository)
+		r.Route("/:host|:owner|:name/branches/:branch/goversions/:goversion", func(r chi.Router) {
+			r.Get("/", s.getRepo)
+			r.Get("/files/*path", s.getFile)
+			r.Get("/badges/:type", s.getBadge)
 		})
 	})
 
-	r.Get("/_health", s.healthHandler)
-
-	// router.Get("/project/*repository", repoHandlers.ThenFunc(s.repositoryHandler))
-	// router.Get("/refresh/*repository", repoHandlers.ThenFunc(s.refreshHandler))
-	// router.Get("/contents/*repository", repoHandlers.ThenFunc(s.fileHandler))
-	// router.Get("/cached/*repository", repoHandlers.ThenFunc(s.cachedHandler))
-	// router.Get("/badge/:type/*repository", repoHandlers.ThenFunc(s.badgeHandler))
-
-	// baseHandlers := alice.New(
-	// 	context.ClearHandler,
-	// 	s.recoverHandler,
-	// )
-	// router.Get("/projects/recent", baseHandlers.ThenFunc(s.recentHandler))
-	// router.Get("/projects/top", baseHandlers.ThenFunc(s.topHandler))
-	// router.Get("/projects/popular", baseHandlers.ThenFunc(s.popularHandler))
-
-	// r.Get("/_health", baseHandlers.ThenFunc(s.healthHandler))
+	r.Get("/projects/recent", s.getRecent)
+	r.Get("/projects/top", s.getTop)
+	r.Get("/projects/popular", s.getPopular)
 
 	srv := &graceful.Server{
 		Timeout: 20 * time.Second,
 		Server:  &http.Server{Addr: fmt.Sprintf("%s:%d", Config.Bind, Config.HttpPort), Handler: chi.ServerBaseContext(r, baseCtx)},
 	}
 	srv.BeforeShutdown = func() bool {
-		fmt.Println("shutting down..")
+		logger.Infoln("Shutting down...")
 		err := valv.Shutdown(srv.Timeout)
 		if err != nil {
-			fmt.Println("Shutdown error -", err)
+			logger.Errorf("Shutdown error %v", err)
 		}
-
-		// the app code has stopped here now, and so this would be a good place
-		// to close up any db and other service connections, etc.
 		return true
 	}
+
 	logger.Infof("Listening on port %d", Config.HttpPort)
 	return srv.ListenAndServe()
 }

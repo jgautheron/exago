@@ -99,9 +99,11 @@ func indexGosearch() error {
 }
 
 func indexRepos(pl model.Pool, repos []string) {
+	branch := "master"
+	goversion := "1.7.4"
 	for _, repo := range repos {
-		if !rl.IsCached(repo, "") {
-			pl.PushAsync(repo)
+		if !rl.IsCached(repo, branch, goversion) {
+			pl.PushAsync(repo, branch, goversion)
 		}
 	}
 	pl.WaitUntilEmpty()

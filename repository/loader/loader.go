@@ -38,8 +38,8 @@ func New(options ...exago.Option) *Loader {
 }
 
 // Load retrieves the saved repository data from the database.
-func (l Loader) Load(repo, branch string) (model.Record, error) {
-	b, err := l.config.DB.Get(getCacheKey(repo, branch))
+func (l Loader) Load(repo, branch, goversion string) (model.Record, error) {
+	b, err := l.config.DB.Get(getCacheKey(repo, branch, goversion))
 	if err != nil {
 		return nil, err
 	}
