@@ -40,7 +40,7 @@ func New(options ...exago.Option) *Server {
 		option.Apply(&s.config)
 	}
 
-	s.processingList = processingList{}
+	s.processingList = processingList{repos: map[string]bool{}}
 	return &s
 }
 
@@ -70,10 +70,9 @@ func (s *Server) ListenAndServe() error {
 	r.Use(cors.Handler)
 
 	r.Route("/repos", func(r chi.Router) {
-		r.Use(s.checkValidData)
-		r.Use(s.setLogger)
-		r.Post("/", s.processRepository)
-		r.Route("/:host|:owner|:name/branches/:branch/goversions/:goversion", func(r chi.Router) {
+		r.With(s.checkValidData, s.setLogger).Post("/", s.processRepository)
+		r.Route("/:repo/branches/:branch/goversions/:goversion", func(r chi.Router) {
+			r.Use(s.checkValidData, s.setLogger)
 			r.Get("/", s.getRepo)
 			r.Get("/files/*path", s.getFile)
 			r.Get("/badges/:type", s.getBadge)

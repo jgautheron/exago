@@ -3,6 +3,7 @@ package job
 import (
 	"encoding/json"
 	"errors"
+	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/credentials"
@@ -51,10 +52,11 @@ func CallLambdaFn(fn, repo, branch, goversion string) (lrsp Response, err error)
 		Repository: repo,
 		Branch:     branch,
 	})
+	qualifier := strings.Replace(goversion, ".", "", -1)
 	params := &lambda.InvokeInput{
 		FunctionName: aws.String(fnPrefix + fn),
 		Payload:      payload,
-		Qualifier:    aws.String(goversion),
+		Qualifier:    aws.String("go-" + qualifier),
 	}
 
 	out, err := svc.Invoke(params)

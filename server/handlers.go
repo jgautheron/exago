@@ -23,13 +23,14 @@ func (s *Server) processRepository(w http.ResponseWriter, r *http.Request) {
 	// Avoid double processing
 	if s.processingList.exists(repo, branch, goversion) {
 		render.Status(r, http.StatusTooManyRequests)
+		render.JSON(w, r, http.StatusText(http.StatusTooManyRequests))
 		return
 	}
 
 	s.processingList.add(repo, branch, goversion)
 	defer s.processingList.remove(repo, branch, goversion)
 
-	rp, err := s.config.Pool.PushSync(repo, branch, goversion)
+	_, err := s.config.Pool.PushSync(repo, branch, goversion)
 	if err != nil {
 		render.Status(r, http.StatusInternalServerError)
 		render.JSON(w, r, err.Error())
@@ -43,7 +44,7 @@ func (s *Server) processRepository(w http.ResponseWriter, r *http.Request) {
 		branch,
 		goversion,
 	))
-	render.JSON(w, r, rp)
+	render.NoContent(w, r)
 }
 
 func (s *Server) getBadge(w http.ResponseWriter, r *http.Request) {
@@ -104,6 +105,7 @@ func (s *Server) getRepo(w http.ResponseWriter, r *http.Request) {
 	rp, err := s.config.RepositoryLoader.Load(repo, branch, goversion)
 	if err != nil {
 		render.Status(r, http.StatusNotFound)
+		render.JSON(w, r, http.StatusText(http.StatusNotFound))
 		return
 	}
 	render.JSON(w, r, rp)

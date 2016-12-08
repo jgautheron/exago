@@ -17,6 +17,7 @@ import (
 var (
 	ErrInvalidVersion     = errors.New("The specified Go version is not supported")
 	ErrBranchDoesNotExist = errors.New("The specified branch does not exist")
+	ErrNotValidRepository = errors.New("Not a valid repository")
 )
 
 func (s *Server) checkValidData(next http.Handler) http.Handler {
@@ -31,7 +32,7 @@ func (s *Server) checkValidData(next http.Handler) http.Handler {
 				Host      string `json:"host"`
 				Owner     string `json:"owner"`
 				Name      string `json:"name"`
-				Branch    string `json:"repository"`
+				Branch    string `json:"branch"`
 				GoVersion string `json:"goversion"`
 			}
 			if err := render.Bind(r.Body, &data); err != nil {
@@ -42,7 +43,13 @@ func (s *Server) checkValidData(next http.Handler) http.Handler {
 			host, owner, name = data.Host, data.Owner, data.Name
 			branch, goversion = data.Branch, data.GoVersion
 		} else {
-			host, owner, name = chi.URLParam(r, "host"), chi.URLParam(r, "owner"), chi.URLParam(r, "name")
+			repo := strings.Split(chi.URLParam(r, "repo"), "|")
+			if len(repo) != 3 {
+				render.Status(r, http.StatusBadRequest)
+				render.JSON(w, r, ErrNotValidRepository)
+				return
+			}
+			host, owner, name = repo[0], repo[1], repo[2]
 			branch, goversion = chi.URLParam(r, "branch"), chi.URLParam(r, "goversion")
 		}
 
