@@ -22,6 +22,13 @@ var (
 
 // IndexCommand saves the godoc index in DB.
 func IndexCommand() cli.Command {
+	flags := []cli.Flag{
+		cli.StringFlag{
+			Name:  "goversion",
+			Value: "1.7.4",
+			Usage: "Go version to be used for processing repositories",
+		},
+	}
 	return cli.Command{
 		Name:  "index",
 		Usage: "Index repositories in the database",
@@ -29,6 +36,7 @@ func IndexCommand() cli.Command {
 			{
 				Name:  "repos",
 				Usage: "Index the passed repositories",
+				Flags: flags,
 				Action: func(c *cli.Context) error {
 					items := []string{}
 					for _, item := range c.Args() {
@@ -38,15 +46,16 @@ func IndexCommand() cli.Command {
 					if err != nil {
 						return err
 					}
-					indexRepos(pl, items)
+					indexRepos(c, pl, items)
 					return nil
 				},
 			},
 			{
 				Name:  "gosearch",
 				Usage: "Process the entire Gosearch index",
+				Flags: flags,
 				Action: func(c *cli.Context) error {
-					return indexGosearch()
+					return indexGosearch(c)
 				},
 			},
 		},
@@ -81,7 +90,7 @@ func initPool() (pl model.Pool, err error) {
 	)
 }
 
-func indexGosearch() error {
+func indexGosearch(c *cli.Context) error {
 	pl, err := initPool()
 	if err != nil {
 		return err
@@ -94,13 +103,13 @@ func indexGosearch() error {
 		return errors.New("Got error while trying to load the repos, did you index before godoc?")
 	}
 
-	indexRepos(pl, repos)
+	indexRepos(c, pl, repos)
 	return nil
 }
 
-func indexRepos(pl model.Pool, repos []string) {
+func indexRepos(c *cli.Context, pl model.Pool, repos []string) {
 	branch := "master"
-	goversion := "1.7.4"
+	goversion := c.String("goversion")
 	for _, repo := range repos {
 		if !rl.IsCached(repo, branch, goversion) {
 			pl.PushAsync(repo, branch, goversion)
