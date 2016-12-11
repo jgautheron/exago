@@ -29,7 +29,7 @@ func TestLintMessagesChanged(t *testing.T) {
 }
 
 func TestLastUpdateTimeChanged(t *testing.T) {
-	rp := New(repo, branch)
+	rp := New(repo, branch, goversion)
 	now := time.Now()
 	rp.SetLastUpdate(now)
 	if rp.GetLastUpdate() != now {
@@ -45,7 +45,7 @@ func TestMetadataChanged(t *testing.T) {
 		"stargazers":  123,
 		"last_push":   time.Now(),
 	}
-	rp := New(repo, branch)
+	rp := New(repo, branch, goversion)
 	rp.SetMetadata(model.Metadata{
 		Image:       m["avatar_url"].(string),
 		Description: m["description"].(string),

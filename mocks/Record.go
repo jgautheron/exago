@@ -9,11 +9,12 @@ type Record struct {
 	mock.Mock
 }
 
-func NewRecord(name, branch, rank string) *Record {
+func NewRecord(name, branch, goversion, rank string) *Record {
 	repoMock := Record{}
 	repoMock.On("GetName").Return(name)
 	repoMock.On("GetBranch").Return(branch)
 	repoMock.On("GetRank").Return(rank)
+	repoMock.On("GetGoVersion").Return(goversion)
 	repoMock.On("GetMetadata").Return(model.Metadata{
 		Image:       "http://foo.com/img.png",
 		Description: "This is a repository description",
@@ -39,6 +40,20 @@ func (_m *Record) GetName() string {
 
 // GetBranch provides a mock function with given fields:
 func (_m *Record) GetBranch() string {
+	ret := _m.Called()
+
+	var r0 string
+	if rf, ok := ret.Get(0).(func() string); ok {
+		r0 = rf()
+	} else {
+		r0 = ret.Get(0).(string)
+	}
+
+	return r0
+}
+
+// GetGoVersion provides a mock function with given fields:
+func (_m *Record) GetGoVersion() string {
 	ret := _m.Called()
 
 	var r0 string

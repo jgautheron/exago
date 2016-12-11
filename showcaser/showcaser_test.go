@@ -12,7 +12,9 @@ import (
 
 var (
 	repoStubData = `{"metadata":{"image":"https://avatars.githubusercontent.com/u/683888?v=3","description":"A codename generator meant for naming software releases.","stars":13,"last_push":"2015-08-29T20:32:12Z"},"score":{"value":68.72365160829756,"rank":"D"}}`
-	snapshotStub = `{"Recent":["github.com/foo/bar","github.com/moo/bar"],"TopRanked":["github.com/foo/bar"],"Popular":["github.com/moo/bar","github.com/foo/bar"],"Topk":"BAQA/8gO/4EEAQL/ggABDAEEAAAs/4IAAhJnaXRodWIuY29tL2Zvby9iYXIAEmdpdGh1Yi5jb20vbW9vL2JhcgIN/4UCAQL/hgAB/4QAADH/gwMBAQdFbGVtZW50Af+EAAEDAQNLZXkBDAABBUNvdW50AQQAAQVFcnJvcgEEAAAAMv+GAAIBEmdpdGh1Yi5jb20vZm9vL2JhcgECAAESZ2l0aHViLmNvbS9tb28vYmFyAQIADP+HAgEC/4gAAQQAAP4CXv+IAP4CWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="}`
+	snapshotStub = `{"Recent":["github.com/foo/bar|master|1.7.4","github.com/moo/bar|master|1.7.4"],"TopRanked":["github.com/foo/bar|master|1.7.4"],"Popular":["github.com/moo/bar|master|1.7.4","github.com/foo/bar|master|1.7.4"],"Topk":"BAQA/8gO/4EEAQL/ggABDAEEAAAs/4IAAhJnaXRodWIuY29tL2Zvby9iYXIAEmdpdGh1Yi5jb20vbW9vL2JhcgIN/4UCAQL/hgAB/4QAADH/gwMBAQdFbGVtZW50Af+EAAEDAQNLZXkBDAABBUNvdW50AQQAAQVFcnJvcgEEAAAAMv+GAAIBEmdpdGh1Yi5jb20vZm9vL2JhcgECAAESZ2l0aHViLmNvbS9tb28vYmFyAQIADP+HAgEC/4gAAQQAAP4CXv+IAP4CWAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=="}`
+	branch       = "master"
+	goversion    = "1.7.4"
 )
 
 func getDatabaseMock() mocks.Database {
@@ -55,7 +57,7 @@ func TestSave(t *testing.T) {
 
 func TestRepositoryRankedAAdded(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "", "A"))
+	showcaser.Process(mocks.NewRecord("github.com/foo/bar", branch, goversion, "A"))
 	if len(showcaser.topRanked) != 1 || len(showcaser.recent) != 1 || len(showcaser.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -63,8 +65,8 @@ func TestRepositoryRankedAAdded(t *testing.T) {
 
 func TestRepositoryRankedADuplicated(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "", "A"))
-	showcaser.Process(mocks.NewRecord("github.com/foo/bar", "", "A"))
+	showcaser.Process(mocks.NewRecord("github.com/foo/bar", branch, goversion, "A"))
+	showcaser.Process(mocks.NewRecord("github.com/foo/bar", branch, goversion, "A"))
 	if len(showcaser.topRanked) != 1 || len(showcaser.recent) != 1 || len(showcaser.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -72,7 +74,7 @@ func TestRepositoryRankedADuplicated(t *testing.T) {
 
 func TestRepositoryRankedBAdded(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", branch, goversion, "B"))
 	if len(showcaser.topRanked) != 0 || len(showcaser.recent) != 1 || len(showcaser.tk.Keys()) != 1 {
 		t.Error("There should be exactly one entry per slice")
 	}
@@ -80,7 +82,7 @@ func TestRepositoryRankedBAdded(t *testing.T) {
 
 func TestDataSerialized(t *testing.T) {
 	showcaser := getShowcaseMock(getDatabaseMock())
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", branch, goversion, "B"))
 	_, err := showcaser.serialize()
 	if err != nil {
 		t.Errorf("The serialization went wrong: %v", err)
@@ -92,7 +94,7 @@ func TestPopularDataUpdated(t *testing.T) {
 	dbMock.On("Get", Anything).Return([]byte(repoStubData), nil)
 	showcaser := getShowcaseMock(dbMock)
 
-	showcaser.Process(mocks.NewRecord("github.com/moo/bar", "", "B"))
+	showcaser.Process(mocks.NewRecord("github.com/moo/bar", branch, goversion, "B"))
 	err := showcaser.updatePopular()
 	if err != nil {
 		t.Errorf("Everything should go fine: %v", err)
