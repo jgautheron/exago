@@ -46,8 +46,6 @@ func New(options ...exago.Option) *Server {
 
 // ListenAndServe binds the HTTP port and listens for requests.
 func (s *Server) ListenAndServe() error {
-	// Our graceful valve shut-off package to manage code preemption and
-	// shutdown signaling.
 	valv := valve.New()
 	baseCtx := valv.Context()
 

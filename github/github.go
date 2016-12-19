@@ -15,7 +15,7 @@ import (
 )
 
 const (
-	CacheSize = 20
+	CacheSize = 30
 )
 
 var (

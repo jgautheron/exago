@@ -108,6 +108,7 @@ func (s *Server) getRepo(w http.ResponseWriter, r *http.Request) {
 		render.JSON(w, r, http.StatusText(http.StatusNotFound))
 		return
 	}
+	go s.config.Showcaser.Process(rp)
 	render.JSON(w, r, rp)
 }
 
