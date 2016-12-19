@@ -16,7 +16,7 @@ var (
 type Repository struct {
 	Name          string     `json:"name"`
 	Branch        string     `json:"branch"`
-	GoVersion     string     `json:"goVersion"`
+	GoVersion     string     `json:"goversion"`
 	ExecutionTime string     `json:"executionTime"`
 	LastUpdate    time.Time  `json:"lastUpdate"`
 	Data          model.Data `json:"results"`
