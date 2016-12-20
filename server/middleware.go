@@ -10,6 +10,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	. "github.com/hotolab/exago-svc/config"
+	"github.com/hotolab/exago-svc/repository/loader"
 	"github.com/pressly/chi"
 	"github.com/pressly/chi/render"
 )
@@ -19,6 +20,50 @@ var (
 	ErrBranchDoesNotExist = errors.New("The specified branch does not exist")
 	ErrNotValidRepository = errors.New("Not a valid repository")
 )
+
+func (s *Server) checkRepo(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var (
+			host, owner, name string
+		)
+		repo := strings.Split(chi.URLParam(r, "repo"), "|")
+		if len(repo) != 3 {
+			render.Status(r, http.StatusBadRequest)
+			render.JSON(w, r, ErrNotValidRepository)
+			return
+		}
+		host, owner, name = repo[0], repo[1], repo[2]
+
+		data, err := s.config.RepositoryLoader.IsValid(
+			fmt.Sprintf("%s/%s/%s", host, owner, name),
+		)
+		if err != nil {
+			switch err {
+			case loader.ErrRepositoryNotFound:
+				render.Status(r, http.StatusNotFound)
+			case loader.ErrTooLarge:
+				render.Status(r, http.StatusRequestEntityTooLarge)
+			case loader.ErrInvalidLanguage:
+				render.Status(r, http.StatusUnprocessableEntity)
+			default:
+				render.Status(r, http.StatusBadRequest)
+			}
+			render.JSON(w, r, err.Error())
+			return
+		}
+
+		// Reuse the proper owner/repository name with caps if any
+		HTMLURL := strings.Replace(data["html_url"].(string), "https://", "", 1)
+		rp := strings.Split(HTMLURL, "/")
+
+		ctx := context.WithValue(r.Context(), "host", rp[0])
+		ctx = context.WithValue(ctx, "owner", rp[1])
+		ctx = context.WithValue(ctx, "name", rp[2])
+		ctx = context.WithValue(ctx, "repo", HTMLURL)
+
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
+}
 
 func (s *Server) checkValidData(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

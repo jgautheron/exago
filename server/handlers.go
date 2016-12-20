@@ -126,29 +126,32 @@ func (s *Server) getFile(w http.ResponseWriter, r *http.Request) {
 	render.PlainText(w, r, content)
 }
 
-func (s *Server) getRecent(w http.ResponseWriter, r *http.Request) {
-	repos := s.config.Showcaser.GetRecentRepositories()
+func (s *Server) getProjects(w http.ResponseWriter, r *http.Request) {
+	tp := r.URL.Query().Get("type")
+	var repos []interface{}
+	switch tp {
+	case "recent":
+		repos = s.config.Showcaser.GetRecentRepositories()
+	case "top":
+		repos = s.config.Showcaser.GetTopRankedRepositories()
+	case "popular":
+		repos = s.config.Showcaser.GetPopularRepositories()
+	}
 	list := map[string]interface{}{
-		"type":         "recent",
+		"type":         tp,
 		"repositories": repos,
 	}
 	render.JSON(w, r, list)
 }
 
-func (s *Server) getTop(w http.ResponseWriter, r *http.Request) {
-	repos := s.config.Showcaser.GetTopRankedRepositories()
-	list := map[string]interface{}{
-		"type":         "top",
-		"repositories": repos,
+func (s *Server) getBranches(w http.ResponseWriter, r *http.Request) {
+	owner := r.Context().Value("owner").(string)
+	name := r.Context().Value("name").(string)
+	res, err := s.config.RepositoryHost.Get(owner, name)
+	if err != nil {
+		render.Status(r, http.StatusInternalServerError)
+		render.JSON(w, r, err.Error())
+		return
 	}
-	render.JSON(w, r, list)
-}
-
-func (s *Server) getPopular(w http.ResponseWriter, r *http.Request) {
-	repos := s.config.Showcaser.GetPopularRepositories()
-	list := map[string]interface{}{
-		"type":         "popular",
-		"repositories": repos,
-	}
-	render.JSON(w, r, list)
+	render.JSON(w, r, res["branches"])
 }

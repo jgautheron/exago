@@ -77,9 +77,9 @@ func (s *Server) ListenAndServe() error {
 		})
 	})
 
-	r.Get("/projects/recent", s.getRecent)
-	r.Get("/projects/top", s.getTop)
-	r.Get("/projects/popular", s.getPopular)
+	r.With(s.checkRepo).Get("/branches/:repo", s.getBranches)
+
+	r.Get("/projects", s.getProjects)
 
 	srv := &graceful.Server{
 		Timeout: 20 * time.Second,

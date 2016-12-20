@@ -7,6 +7,8 @@ import (
 
 type RepositoryInfo struct {
 	Name        string `json:"name"`
+	Branch      string `json:"branch"`
+	GoVersion   string `json:"goversion"`
 	Description string `json:"description"`
 	Image       string `json:"image"`
 	Rank        string `json:"rank"`
@@ -18,6 +20,8 @@ func (s *Showcaser) GetRecentRepositories() (repos []interface{}) {
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
+			Branch:      repo.GetBranch(),
+			GoVersion:   repo.GetGoVersion(),
 			Description: meta.Description,
 			Image:       meta.Image,
 			Rank:        repo.GetRank(),
@@ -36,6 +40,8 @@ func (s *Showcaser) GetTopRankedRepositories() (repos []interface{}) {
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
+			Branch:      repo.GetBranch(),
+			GoVersion:   repo.GetGoVersion(),
 			Description: meta.Description,
 			Image:       meta.Image,
 			Rank:        repo.GetRank(),
@@ -49,6 +55,8 @@ func (s *Showcaser) GetPopularRepositories() (repos []interface{}) {
 		meta := repo.GetMetadata()
 		repos = append(repos, RepositoryInfo{
 			Name:        repo.GetName(),
+			Branch:      repo.GetBranch(),
+			GoVersion:   repo.GetGoVersion(),
 			Description: meta.Description,
 			Image:       meta.Image,
 			Rank:        repo.GetRank(),

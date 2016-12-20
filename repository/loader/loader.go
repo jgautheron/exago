@@ -16,10 +16,11 @@ const (
 )
 
 var (
-	ErrOnlyGitHub        = errors.New("Only GitHub is implemented right now")
-	ErrInvalidRepository = errors.New("The repository name is invalid")
-	ErrInvalidLanguage   = errors.New("The repository does not contain Go code")
-	ErrTooLarge          = errors.New("The repository is too large")
+	ErrOnlyGitHub         = errors.New("Only GitHub is implemented right now")
+	ErrRepositoryNotFound = errors.New("The repository does not exist")
+	ErrInvalidRepository  = errors.New("The repository name is invalid")
+	ErrInvalidLanguage    = errors.New("The repository does not contain Go code")
+	ErrTooLarge           = errors.New("The repository is too large")
 
 	// Make sure it satisfies the interface.
 	_ model.RepositoryLoader = (*Loader)(nil)
@@ -64,7 +65,7 @@ func (l Loader) IsValid(repository string) (map[string]interface{}, error) {
 	sp := strings.Split(repository, "/")
 	data, err := l.config.RepositoryHost.Get(sp[1], sp[2])
 	if err != nil {
-		return nil, err
+		return nil, ErrRepositoryNotFound
 	}
 
 	languages := data["languages"].(map[string]int)
