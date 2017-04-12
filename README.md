@@ -2,7 +2,7 @@
 
 Exago is a code quality tool that inspects your Go repository and reports on what could be improved. The dashboard displays metrics that we consider as your application pillars, you can dive deeper and browse directly the recommandations in the code.
 
-This is the API backend consumed by the [app](https://github.com/exago/app).
+This is the API backend consumed by the [app](https://github.com/hotolab/exago-app).
 
 ## Getting started
 
