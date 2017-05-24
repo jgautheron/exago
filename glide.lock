@@ -58,7 +58,7 @@ imports:
 - name: github.com/golang/snappy
   version: 553a641470496b2327abcac10b36396bd98e45c9
 - name: github.com/google/go-github
-  version: ebfec748347a9af6793c723f8859afcd906860fb
+  version: 94a3cd9f531888fe4a03487276c0adb887428e77
   subpackages:
   - github
 - name: github.com/google/go-querystring
@@ -130,7 +130,7 @@ imports:
 - name: github.com/urfave/cli
   version: f1be59ff3d239f0942b201619030d302bce912cc
 - name: github.com/x-cray/logrus-prefixed-formatter
-  version: a716e7a767326cdb2065e162f6e98874579a8557
+  version: 78e945f7d6bfe5a81ce6121d92d8118e44303e58
 - name: golang.org/x/image
   version: 7c492694a6443a92fd349fda0c4c7b587040f161
   subpackages:

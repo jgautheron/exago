@@ -57,5 +57,5 @@ See the [dedicated page](CONTRIBUTING.md).
 
 ## Contributors
 
-- Karol Górecki @karolgorecki
-- Christophe Eble @christopheeble
+- Karol Górecki [@karolgorecki](https://twitter.com/karolgorecki)
+- Christophe Eble [@christopheeble(https://twitter.com/christopheeble)
