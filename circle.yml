@@ -28,7 +28,7 @@ dependencies:
   # cache the go install
   cache_directories:
     - /home/ubuntu/goinstall
-    - /home/ubuntu/.go/src/github.com/hotolab/exago-svc/vendor
+    - /home/ubuntu/.go/src/github.com/jgautheron/exago/vendor
 
 test:
   override:
@@ -41,7 +41,5 @@ deployment:
     branch: master
     commands:
       - docker login -u $REGISTRY_USERNAME -p $REGISTRY_PASSWORD -e $REGISTRY_EMAIL
-      - docker build -t hotolab/exago-svc:$TAG .
-      - docker push hotolab/exago-svc:$TAG
-      - docker build -t hotolab/exago-svc:latest .
-      - docker push hotolab/exago-svc:latest
+      - docker build -t jgautheron/exago:latest .
+      - docker push jgautheron/exago:latest
