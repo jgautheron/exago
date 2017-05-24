@@ -3,8 +3,8 @@ package showcaser
 import (
 	"testing"
 
-	"github.com/hotolab/exago-svc/mocks"
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/mocks"
+	"github.com/jgautheron/exago/repository/model"
 	. "github.com/stretchr/testify/mock"
 )
 

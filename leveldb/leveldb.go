@@ -5,8 +5,8 @@ import (
 	"fmt"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/repository/model"
+	. "github.com/jgautheron/exago/config"
+	"github.com/jgautheron/exago/repository/model"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/opt"
 	"github.com/syndtr/goleveldb/leveldb/util"

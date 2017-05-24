@@ -6,8 +6,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
-	"github.com/hotolab/exago-svc/badge"
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/badge"
+	"github.com/jgautheron/exago/repository/model"
 	"github.com/julienschmidt/httprouter"
 )
 

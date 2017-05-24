@@ -11,8 +11,8 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
-	exago "github.com/hotolab/exago-svc"
-	. "github.com/hotolab/exago-svc/config"
+	exago "github.com/jgautheron/exago"
+	. "github.com/jgautheron/exago/config"
 	"github.com/justinas/alice"
 )
 

@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws/credentials"
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/lambda"
-	. "github.com/hotolab/exago-svc/config"
+	. "github.com/jgautheron/exago/config"
 )
 
 const (

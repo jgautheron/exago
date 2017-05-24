@@ -1,9 +1,9 @@
 package main
 
 import (
-	. "github.com/hotolab/exago-svc"
-	"github.com/hotolab/exago-svc/gosearch"
-	"github.com/hotolab/exago-svc/leveldb"
+	. "github.com/jgautheron/exago"
+	"github.com/jgautheron/exago/gosearch"
+	"github.com/jgautheron/exago/leveldb"
 	"github.com/urfave/cli"
 )
 

@@ -3,7 +3,7 @@ package score_test
 import (
 	"testing"
 
-	"github.com/hotolab/exago-svc/score"
+	"github.com/jgautheron/exago/score"
 )
 
 func TestRank(t *testing.T) {

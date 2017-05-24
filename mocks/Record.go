@@ -1,6 +1,6 @@
 package mocks
 
-import "github.com/hotolab/exago-svc/repository/model"
+import "github.com/jgautheron/exago/repository/model"
 import "github.com/stretchr/testify/mock"
 
 import "time"

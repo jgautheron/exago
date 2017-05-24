@@ -10,8 +10,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	"github.com/didip/tollbooth"
 	"github.com/gorilla/context"
-	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/requestlock"
+	. "github.com/jgautheron/exago/config"
+	"github.com/jgautheron/exago/requestlock"
 	"github.com/julienschmidt/httprouter"
 )
 

@@ -9,8 +9,8 @@ import (
 	log "github.com/Sirupsen/logrus"
 	gh "github.com/google/go-github/github"
 	"github.com/hashicorp/golang-lru"
-	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/repository/model"
+	. "github.com/jgautheron/exago/config"
+	"github.com/jgautheron/exago/repository/model"
 	"golang.org/x/oauth2"
 )
 

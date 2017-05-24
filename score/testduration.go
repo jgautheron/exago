@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 const (

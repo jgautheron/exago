@@ -4,6 +4,14 @@ Exago is a code quality tool that inspects your Go repository and reports on wha
 
 This is the API backend consumed by the [app](https://github.com/jgautheron/exago-app).
 
+## How it works
+
+Exago "outsources" the entire code processing to two dedicated AWS Lambda functions that take care of pulling and processing the code concurrently.  
+
+Once both functions are done processing the code, this service retrieves the KPIs and outputs them as JSON formatted output, which is then displayed by the [frontend](https://github.com/jgautheron/exago-app). Every successful processing is cached in LevelDB.
+
+For those familiar with Lambda, there is a default limit of 100 concurrent running functions, which means that we can process about 50 projects simultaneously. Reaching that limit won't cause any dysfunction as Exago is relying on a routine pool to execute orderly repository checks.
+
 ## Rank calculation process
 
 All metrics are factored with the amount of lines of code, so that bigger projects can also get into high ranks. Actually the bigger the project the more we try to be permissive.
@@ -18,6 +26,12 @@ We spent months tuning the [algorithms](https://docs.google.com/spreadsheets/d/1
 4. Each linter is not equal and has a different weight
 
 Exago tries its best to show you relevant KPIs but ultimately it's up to you to make your own opinion.
+
+## Known limits
+
+- The repository analysis will fail if processing the code exceeds AWS Lambda's 5 mins time limit
+- Every project that relies on `CGO` will fail since it's disabled
+- Not `go-get`table projects will fail
 
 ## Getting started
 
@@ -35,7 +49,13 @@ HTTP_PORT      | HTTP port to bind | Yes
 DATABASE_PATH      | Path to the database | No
 ALLOW_ORIGIN   | Origin allowed for API calls (CORS) | Yes
 LOG_LEVEL   | Log level (debug, info, warn, error, fatal) | Yes
+POOL_SIZE   | Processing pool size | Yes
 
 ## Contributing
 
 See the [dedicated page](CONTRIBUTING.md).
+
+## Contributors
+
+- Karol Górecki @karolgorecki
+- Christophe Eble @christopheeble

@@ -5,7 +5,7 @@ import (
 	"syscall"
 	"time"
 
-	. "github.com/hotolab/exago-svc/config"
+	. "github.com/jgautheron/exago/config"
 )
 
 // catchInterrupt traps termination signals.

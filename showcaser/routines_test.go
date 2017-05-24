@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
-	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/mocks"
+	. "github.com/jgautheron/exago/config"
+	"github.com/jgautheron/exago/mocks"
 	. "github.com/stretchr/testify/mock"
 )
 

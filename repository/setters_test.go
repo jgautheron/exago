@@ -5,7 +5,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 func TestProjectRunnerChanged(t *testing.T) {

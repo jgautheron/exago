@@ -4,8 +4,8 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	"github.com/hotolab/exago-svc/repository/model"
-	"github.com/hotolab/exago-svc/score"
+	"github.com/jgautheron/exago/repository/model"
+	"github.com/jgautheron/exago/score"
 )
 
 var (

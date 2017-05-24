@@ -3,7 +3,7 @@ package repository
 import (
 	"time"
 
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 func (r *Repository) SetName(name string) {

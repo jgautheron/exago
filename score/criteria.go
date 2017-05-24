@@ -2,7 +2,7 @@
 // criteria evaluator
 package score
 
-import "github.com/hotolab/exago-svc/repository/model"
+import "github.com/jgautheron/exago/repository/model"
 
 // CriteriaEvaluator is the interface that must be implemented by a criteria
 // evaluator.

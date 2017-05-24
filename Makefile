@@ -26,6 +26,6 @@ test:
 .PHONY: image
 image: | build
 	@echo "Building docker image"
-	docker build --rm --force-rm=true -t hotolab/exago-svc .
+	docker build --rm --force-rm=true -t jgautheron/exago .
 
 default: build

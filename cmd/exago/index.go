@@ -3,15 +3,15 @@ package main
 import (
 	"errors"
 
-	. "github.com/hotolab/exago-svc"
-	"github.com/hotolab/exago-svc/github"
-	"github.com/hotolab/exago-svc/gosearch"
-	"github.com/hotolab/exago-svc/leveldb"
-	"github.com/hotolab/exago-svc/pool"
-	"github.com/hotolab/exago-svc/pool/job"
-	"github.com/hotolab/exago-svc/repository/loader"
-	"github.com/hotolab/exago-svc/repository/model"
-	"github.com/hotolab/exago-svc/repository/processor"
+	. "github.com/jgautheron/exago"
+	"github.com/jgautheron/exago/github"
+	"github.com/jgautheron/exago/gosearch"
+	"github.com/jgautheron/exago/leveldb"
+	"github.com/jgautheron/exago/pool"
+	"github.com/jgautheron/exago/pool/job"
+	"github.com/jgautheron/exago/repository/loader"
+	"github.com/jgautheron/exago/repository/model"
+	"github.com/jgautheron/exago/repository/processor"
 	"github.com/urfave/cli"
 )
 

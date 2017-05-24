@@ -9,7 +9,7 @@ import (
 
 	log "github.com/Sirupsen/logrus"
 	"github.com/gorilla/context"
-	. "github.com/hotolab/exago-svc/config"
+	. "github.com/jgautheron/exago/config"
 	"github.com/julienschmidt/httprouter"
 )
 

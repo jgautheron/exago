@@ -10,7 +10,7 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	exago "github.com/hotolab/exago-svc"
+	exago "github.com/jgautheron/exago"
 )
 
 const (

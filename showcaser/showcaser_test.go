@@ -3,9 +3,9 @@ package showcaser
 import (
 	"testing"
 
-	. "github.com/hotolab/exago-svc"
-	"github.com/hotolab/exago-svc/mocks"
-	"github.com/hotolab/exago-svc/repository/loader"
+	. "github.com/jgautheron/exago"
+	"github.com/jgautheron/exago/mocks"
+	"github.com/jgautheron/exago/repository/loader"
 	. "github.com/stretchr/testify/mock"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )

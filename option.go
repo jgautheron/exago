@@ -3,7 +3,7 @@
 // Greatly inspired from a talk by Dave Cheney: https://youtu.be/5buaPyJ0XeQ
 package exago
 
-import "github.com/hotolab/exago-svc/repository/model"
+import "github.com/jgautheron/exago/repository/model"
 
 // Option defines the behavior of the configuration settings passed to constructors.
 type Option interface {

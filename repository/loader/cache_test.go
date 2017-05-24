@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"testing"
 
-	. "github.com/hotolab/exago-svc"
-	"github.com/hotolab/exago-svc/mocks"
-	"github.com/hotolab/exago-svc/repository"
+	. "github.com/jgautheron/exago"
+	"github.com/jgautheron/exago/mocks"
+	"github.com/jgautheron/exago/repository"
 	ldb "github.com/syndtr/goleveldb/leveldb"
 )
 

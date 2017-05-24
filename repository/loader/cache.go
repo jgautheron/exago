@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 // Save persists in database the repository data.

@@ -3,11 +3,11 @@ package repository
 import (
 	"time"
 
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 // GetName retrieves the full project name, including the provider domain name.
-// Ex. github.com/hotolab/exago-svc
+// Ex. github.com/jgautheron/exago
 func (r *Repository) GetName() string {
 	return r.Name
 }

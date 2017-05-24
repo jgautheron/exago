@@ -6,7 +6,7 @@ import (
 	"github.com/SimonWaldherr/golibs/xmath"
 	log "github.com/Sirupsen/logrus"
 
-	"github.com/hotolab/exago-svc/repository/model"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 type linter struct {

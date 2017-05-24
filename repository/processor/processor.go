@@ -8,10 +8,10 @@ import (
 	"time"
 
 	log "github.com/Sirupsen/logrus"
-	exago "github.com/hotolab/exago-svc"
-	"github.com/hotolab/exago-svc/pool/job"
-	"github.com/hotolab/exago-svc/repository"
-	"github.com/hotolab/exago-svc/repository/model"
+	exago "github.com/jgautheron/exago"
+	"github.com/jgautheron/exago/pool/job"
+	"github.com/jgautheron/exago/repository"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 const (

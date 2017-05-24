@@ -3,10 +3,10 @@ package pool
 import (
 	"time"
 
-	exago "github.com/hotolab/exago-svc"
-	. "github.com/hotolab/exago-svc/config"
-	"github.com/hotolab/exago-svc/repository/model"
 	"github.com/jeffail/tunny"
+	exago "github.com/jgautheron/exago"
+	. "github.com/jgautheron/exago/config"
+	"github.com/jgautheron/exago/repository/model"
 )
 
 const (

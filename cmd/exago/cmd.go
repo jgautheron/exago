@@ -4,7 +4,7 @@ import (
 	"os"
 
 	log "github.com/Sirupsen/logrus"
-	. "github.com/hotolab/exago-svc/config"
+	. "github.com/jgautheron/exago/config"
 	"github.com/urfave/cli"
 	"github.com/x-cray/logrus-prefixed-formatter"
 )
