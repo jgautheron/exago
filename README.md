@@ -12,7 +12,7 @@ Once both functions are done processing the code, this service retrieves the KPI
 
 For those familiar with Lambda, there is a default limit of 100 concurrent running functions, which means that we can process about 50 projects simultaneously. Reaching that limit won't cause any dysfunction as Exago is relying on a routine pool to execute orderly repository checks.
 
-## Rank calculation process
+## Rank calculation
 
 All metrics are factored with the amount of lines of code, so that bigger projects can also get into high ranks. Actually the bigger the project the more we try to be permissive.
 
@@ -58,4 +58,4 @@ See the [dedicated page](CONTRIBUTING.md).
 ## Contributors
 
 - Karol Górecki [@karolgorecki](https://twitter.com/karolgorecki)
-- Christophe Eble [@christopheeble(https://twitter.com/christopheeble)
+- Christophe Eble [@christopheeble](https://twitter.com/christopheeble)
