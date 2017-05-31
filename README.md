@@ -33,6 +33,14 @@ Exago tries its best to show you relevant KPIs but ultimately it's up to you to 
 - Every project that relies on `CGO` will fail since it's disabled
 - Not `go-get`table projects will fail
 
+## Building blocks
+
+- [exago-app](https://github.com/jgautheron/exago-app) - The exago client
+- [exago-runner](https://github.com/jgautheron/exago-runner) - Runs all quality checks concurrently
+- [exago-lambda-project-runner](https://github.com/jgautheron/exago-lambda-project-runner) - Function that runs `exago-runner` in Amazon Lambda
+- [cov](https://github.com/chreble/cov) - The coverage tool generator which includes every possible detail
+- [go](https://github.com/chreble/go) - Go fork that speeds up `go get` by implementing the option to do shallow clones
+
 ## Getting started
 
 #### Configuration
