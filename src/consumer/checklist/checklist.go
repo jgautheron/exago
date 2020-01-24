@@ -72,10 +72,15 @@ func New(sourcePath string) *CheckList {
 			fn:   hasOccurrence(`func\sBenchmark\w+\(`, "*_test.go"),
 		},
 		{
-			Name: "hasBlackboxTests",
-			Desc: "Blackbox Tests: In addition to standard tests, does the project have blackbox tests?",
-			fn:   hasOccurrence(`"testing\/quick"`, "*_test.go"),
+			Name: "hasMainPackage",
+			Desc: "Does the project have a main package?",
+			fn:   hasOccurrence(`"package(\s)main"`, "*.go"),
 		},
+		//{
+		//	Name: "hasBlackboxTests",
+		//	Desc: "Blackbox Tests: In addition to standard tests, does the project have blackbox tests?",
+		//	fn:   hasOccurrence(`"testing\/quick"`, "*_test.go"),
+		//},
 	}
 
 	return &CheckList{checkList, sourcePath, sourceGoPath}
