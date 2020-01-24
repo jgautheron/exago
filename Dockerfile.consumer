@@ -9,7 +9,7 @@ FROM build-env
 
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh
-RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s v1.23.1
+RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.1
 
 COPY . .
 WORKDIR /exago/src/consumer
