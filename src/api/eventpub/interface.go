@@ -1,4 +1,5 @@
 package eventpub
 
-type EventPublisher interface {
-}
+var _ EventPublisher = (*EventPub)(nil)
+
+type EventPublisher interface{}
