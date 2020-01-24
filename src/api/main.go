@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jgautheron/exago/src/api/internal/server"
+	"github.com/jgautheron/exago/src/api/server"
 )
 
 func main() {

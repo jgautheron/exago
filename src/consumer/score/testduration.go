@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math"
 
-	"github.com/jgautheron/exago/src/api/internal/repository/model"
+	"github.com/jgautheron/exago/src/api/repository/model"
 )
 
 const (

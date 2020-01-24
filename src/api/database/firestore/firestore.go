@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"cloud.google.com/go/firestore"
-	"github.com/jgautheron/exago/src/api/internal/config"
+	"github.com/jgautheron/exago/src/api/config"
 	"github.com/pkg/errors"
 )
 

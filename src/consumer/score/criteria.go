@@ -2,7 +2,7 @@
 // criteria evaluator
 package score
 
-import "github.com/jgautheron/exago/src/api/internal/repository/model"
+import "github.com/jgautheron/exago/src/api/repository/model"
 
 // CriteriaEvaluator is the interface that must be implemented by a criteria
 // evaluator.

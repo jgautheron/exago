@@ -1,7 +1,7 @@
 package server
 
 import (
-	"github.com/jgautheron/exago/src/api/internal/config"
+	"github.com/jgautheron/exago/src/api/config"
 )
 
 var Config Cfg

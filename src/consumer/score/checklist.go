@@ -1,7 +1,7 @@
 package score
 
 import (
-	"github.com/jgautheron/exago/src/api/internal/repository/model"
+	"github.com/jgautheron/exago/src/api/repository/model"
 	"github.com/sirupsen/logrus"
 
 	"simonwaldherr.de/go/golibs/xmath"

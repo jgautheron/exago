@@ -3,10 +3,10 @@ package eventpub
 import (
 	"context"
 	"encoding/json"
-	"errors"
 
 	"cloud.google.com/go/pubsub"
 	"github.com/jgautheron/exago/src/api/config"
+	"github.com/pkg/errors"
 )
 
 var _ EventPublisher = (*EventPub)(nil)

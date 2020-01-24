@@ -1,4 +1,4 @@
-# Exago [![CircleCI](https://circleci.com/gh/jgautheron/exago.svg?style=svg)](https://circleci.com/gh/jgautheron/exago) [![](https://badge.imagelayers.io/jgautheron/exago:latest.svg)](https://imagelayers.io/?images=jgautheron/exago:latest 'Get your own badge on imagelayers.io')
+# Exago
 
 Exago is a code quality tool that inspects your Go repository and reports on what could be improved. The dashboard displays metrics that we consider as your application pillars, you can dive deeper and browse directly the recommandations in the code.
 

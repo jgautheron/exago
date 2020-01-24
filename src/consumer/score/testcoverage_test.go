@@ -5,8 +5,8 @@ import (
 
 	"simonwaldherr.de/go/golibs/xmath"
 
-	"github.com/jgautheron/exago/src/api/internal/repository/model"
-	"github.com/jgautheron/exago/src/api/internal/score"
+	"github.com/jgautheron/exago/src/api/repository/model"
+	"github.com/jgautheron/exago/src/consumer/score"
 )
 
 func TestCoverageNone(t *testing.T) {

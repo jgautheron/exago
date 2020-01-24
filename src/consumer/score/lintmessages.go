@@ -7,7 +7,7 @@ import (
 	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/jgautheron/exago/src/api/internal/repository/model"
+	"github.com/jgautheron/exago/src/api/repository/model"
 )
 
 type linter struct {

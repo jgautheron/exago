@@ -9,8 +9,8 @@ import (
 	"github.com/go-chi/chi"
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/cors"
-	"github.com/jgautheron/exago/src/api/internal/database/firestore"
-	"github.com/jgautheron/exago/src/api/internal/eventpub"
+	"github.com/jgautheron/exago/src/api/database/firestore"
+	"github.com/jgautheron/exago/src/api/eventpub"
 )
 
 var ErrInvalidRepository = errors.New("The repository doesn't contain Go code")

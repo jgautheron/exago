@@ -3,8 +3,8 @@ package score_test
 import (
 	"testing"
 
-	"github.com/jgautheron/exago/src/api/internal/repository/model"
-	"github.com/jgautheron/exago/src/api/internal/score"
+	"github.com/jgautheron/exago/src/api/repository/model"
+	"github.com/jgautheron/exago/src/consumer/score"
 	"github.com/sirupsen/logrus"
 )
 
