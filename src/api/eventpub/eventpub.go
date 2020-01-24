@@ -9,8 +9,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-var _ EventPublisher = (*EventPub)(nil)
-
 type EventPub struct {
 	client *pubsub.Client
 	config *config.GoogleCloudConfig
