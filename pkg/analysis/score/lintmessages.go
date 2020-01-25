@@ -8,7 +8,6 @@ import (
 	log "github.com/sirupsen/logrus"
 
 	exago "github.com/jgautheron/exago/pkg"
-	"github.com/jgautheron/exago/repository/model"
 )
 
 type linter struct {
@@ -28,7 +27,7 @@ type lintMessagesEvaluator struct {
 // LintMessagesEvaluator measures a score based on the output of gometalinter
 func LintMessagesEvaluator() CriteriaEvaluator {
 	return &lintMessagesEvaluator{Evaluator{
-		model.LintMessagesName,
+		"linterMessages",
 		"https://github.com/alecthomas/gometalinter",
 		"runs a whole bunch of Go linters",
 	}, nil}
@@ -60,7 +59,7 @@ func (le *lintMessagesEvaluator) Setup() {
 // Calculate overloads Evaluator/Calculate
 func (le *lintMessagesEvaluator) Calculate(d exago.Data) *exago.EvaluatorResponse {
 	r := le.NewResponse(100, 2, "", nil)
-	lm, cs := d.LintMessages, d.ProjectRunner.CodeStats.Data
+	lm, cs := d.Results.Linters, d.Results.CodeStats.Data
 
 	// Loop over messages, counting all warnings
 	// @todo improve incoming structure so we avoid these ugly nested loops
