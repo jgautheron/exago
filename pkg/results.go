@@ -39,11 +39,8 @@ type Checklist struct {
 	Passed []string `json:"passed"`
 }
 
-type LinterResults struct {
-	WarningCount int                      `json:"warningCount"`
-	ErrorCount   int                      `json:"errorCount"`
-	Files        map[string][]LinterFiles `json:"files"` // filename: []messages
-}
+// filename: []messages
+type LinterResults map[string][]LinterFiles
 
 type LinterFiles struct {
 	Filename string          `json:"filename"`
