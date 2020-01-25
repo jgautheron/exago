@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"math"
 
+	"github.com/sirupsen/logrus"
+
 	exago "github.com/jgautheron/exago/pkg"
 )
 
@@ -40,7 +42,7 @@ func TestDurationEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (te *testDurationEvaluator) Calculate(d exago.Data) *exago.EvaluatorResponse {
-	t, cs := d.ProjectRunner, d.ProjectRunner.CodeStats.Data
+	t, cs := d.Results, d.Results.CodeStats.Data
 
 	r := te.NewResponse(100, 1.2, "", nil)
 
@@ -54,7 +56,7 @@ func (te *testDurationEvaluator) Calculate(d exago.Data) *exago.EvaluatorRespons
 
 	duration := t.GetMeanTestDuration()
 
-	logger.WithField(
+	logrus.WithField(
 		"duration (overall)", duration,
 	).Debugf("[%s] duration", exago.TestDurationName)
 

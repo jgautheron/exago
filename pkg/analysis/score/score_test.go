@@ -23,12 +23,11 @@ func getStubData(loc int, cloc int, duration, coverage float64, thirdParties int
 
 	pr := exago.Results{}
 	pr.Coverage.Data.Coverage = coverage
-	pr.Thirdparties.Data = getThirdParties(thirdParties)
-	pr.Goprove.Data = getStubChecklist(checklist)
+	pr.ThirdParties.Data = getThirdParties(thirdParties)
+	pr.Checklist.Data = getStubChecklist(checklist)
 	pr.CodeStats.Data = map[string]int{"loc": loc, "cloc": cloc, "test": 123}
-	d.ProjectRunner = pr
-
-	d.LintMessages = getStubMessages(map[string]int{"gas": 3})
+	pr.Linters.Data = getStubMessages(map[string]int{"gas": 3})
+	d.Results = pr
 
 	return d
 }

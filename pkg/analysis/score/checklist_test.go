@@ -33,9 +33,9 @@ func TestChecklist(t *testing.T) {
 
 	for _, tt := range tests {
 		d := exago.Data{}
-		d.ProjectRunner = exago.Results{}
-		d.ProjectRunner.Goprove.Data = getStubChecklist(tt.criterias)
-		d.ProjectRunner.CodeStats.Data = map[string]int{"LOC": 123}
+		d.Results = exago.Results{}
+		d.Results.Checklist.Data = getStubChecklist(tt.criterias)
+		d.Results.CodeStats.Data = map[string]int{"LOC": 123}
 		evaluator := score.CheckListEvaluator()
 		evaluator.Setup()
 		res := evaluator.Calculate(d)
@@ -71,18 +71,14 @@ func getStubChecklist(passed []string) exago.Checklist {
 		}
 	}
 
-	failedItemList := []exago.ChecklistItem{}
+	failedItemList := []string{}
 	for _, item := range failed {
-		failedItemList = append(failedItemList, exago.ChecklistItem{
-			Name: item,
-		})
+		failedItemList = append(failedItemList, item)
 	}
 
-	passedItemList := []exago.ChecklistItem{}
+	passedItemList := []string{}
 	for _, item := range passed {
-		passedItemList = append(passedItemList, exago.ChecklistItem{
-			Name: item,
-		})
+		passedItemList = append(passedItemList, item)
 	}
 
 	return exago.Checklist{

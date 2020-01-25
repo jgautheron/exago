@@ -12,7 +12,7 @@ import (
 
 func TestCoverageNone(t *testing.T) {
 	d := exago.Data{}
-	d.ProjectRunner = getStubCoverage([]float64{})
+	d.Results = getStubCoverage([]float64{})
 	res := score.TestCoverageEvaluator().Calculate(d)
 	if res.Score != 0 {
 		t.Error("The score should be 0")
@@ -34,7 +34,7 @@ func TestCoverage(t *testing.T) {
 
 	for _, tt := range tests {
 		d := exago.Data{}
-		d.ProjectRunner = getStubCoverage(tt.coverage)
+		d.Results = getStubCoverage(tt.coverage)
 		res := score.TestCoverageEvaluator().Calculate(d)
 
 		switch tt.operator {

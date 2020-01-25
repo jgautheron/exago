@@ -2,7 +2,6 @@ package score
 
 import (
 	exago "github.com/jgautheron/exago/pkg"
-	"github.com/jgautheron/exago/repository/model"
 	"github.com/sirupsen/logrus"
 
 	"simonwaldherr.de/go/golibs/xmath"
@@ -22,9 +21,9 @@ type checkListEvaluator struct {
 // CheckListEvaluator measures a score based on given checklist criterias
 func CheckListEvaluator() CriteriaEvaluator {
 	return &checkListEvaluator{Evaluator{
-		model.CheckListName,
-		"https://github.com/karolgorecki/goprove",
-		"inspects project for the best practices listed in the Go CheckList",
+		"checklist",
+		"https://github.com/jgautheron/exago",
+		"inspects project for best practices",
 	}, nil}
 }
 
@@ -47,10 +46,10 @@ func (ce *checkListEvaluator) Setup() {
 // Calculate overloads Evaluator/Calculate
 func (ce *checkListEvaluator) Calculate(d exago.Data) *exago.EvaluatorResponse {
 	r := ce.NewResponse(100, 1.8, "", nil)
-	cl := d.ProjectRunner
+	cl := d.Results
 
-	for _, failed := range cl.Goprove.Data.Failed {
-		if ch, ok := ce.checkers[failed.Name]; ok {
+	for _, failed := range cl.Checklist.Data.Failed {
+		if ch, ok := ce.checkers[failed]; ok {
 			ch.score = 0
 		}
 	}
