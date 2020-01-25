@@ -23,20 +23,38 @@ type CoveragePackage struct {
 
 type TestPackage struct {
 	Name          string     `json:"name"`
-	ExecutionTime float64    `json:"execution_time"`
+	ExecutionTime float64    `json:"executionTime"`
 	Success       bool       `json:"success"`
 	Tests         []TestFile `json:"tests"`
 }
 
 type TestFile struct {
 	Name          string  `json:"name"`
-	ExecutionTime float64 `json:"execution_time"`
+	ExecutionTime float64 `json:"executionTime"`
 	Passed        bool    `json:"passed"`
 }
 
 type Checklist struct {
-	Failed []ChecklistItem `json:"failed"`
-	Passed []ChecklistItem `json:"passed"`
+	Failed []string `json:"failed"`
+	Passed []string `json:"passed"`
+}
+
+type LinterResults struct {
+	WarningCount int                      `json:"warningCount"`
+	ErrorCount   int                      `json:"errorCount"`
+	Files        map[string][]LinterFiles `json:"files"` // filename: []messages
+}
+
+type LinterFiles struct {
+	Filename string          `json:"filename"`
+	Messages []LinterMessage `json:"messages"`
+}
+
+type LinterMessage struct {
+	Column   int    `json:"column"`
+	Message  string `json:"message"`
+	Row      int    `json:"row"`
+	Severity string `json:"severity"`
 }
 
 // Results received from the test runner.
@@ -47,44 +65,44 @@ type Results struct {
 			Packages []CoveragePackage `json:"packages"`
 			Coverage float64           `json:"coverage"`
 		} `json:"data"`
-		RawOutput     string  `json:"raw_output"`
-		ExecutionTime float64 `json:"execution_time"`
+		RawOutput     string  `json:"rawOutput"`
+		ExecutionTime float64 `json:"executionTime"`
 	} `json:"coverage"`
 	Download struct {
 		Label         string      `json:"label"`
 		Data          interface{} `json:"data"`
-		RawOutput     string      `json:"raw_output"`
-		ExecutionTime float64     `json:"execution_time"`
+		RawOutput     string      `json:"rawOutput"`
+		ExecutionTime float64     `json:"executionTime"`
 	} `json:"download"`
 	CodeStats struct {
 		Label         string         `json:"label"`
 		Data          map[string]int `json:"data"`
-		RawOutput     string         `json:"raw_output"`
-		ExecutionTime float64        `json:"execution_time"`
+		RawOutput     string         `json:"rawOutput"`
+		ExecutionTime float64        `json:"executionTime"`
 	} `json:"codeStats"`
 	Checklist struct {
 		Label         string    `json:"label"`
 		Data          Checklist `json:"data"`
-		RawOutput     string    `json:"raw_output"`
-		ExecutionTime float64   `json:"execution_time"`
+		RawOutput     string    `json:"rawOutput"`
+		ExecutionTime float64   `json:"executionTime"`
 	} `json:"checklist"`
 	Test struct {
 		Label         string        `json:"label"`
 		Data          []TestPackage `json:"data"`
-		RawOutput     string        `json:"raw_output"`
-		ExecutionTime float64       `json:"execution_time"`
+		RawOutput     string        `json:"rawOutput"`
+		ExecutionTime float64       `json:"executionTime"`
 	} `json:"test"`
 	ThirdParties struct {
 		Label         string   `json:"label"`
 		Data          []string `json:"data"`
-		RawOutput     string   `json:"raw_output"`
-		ExecutionTime float64  `json:"execution_time"`
+		RawOutput     string   `json:"rawOutput"`
+		ExecutionTime float64  `json:"executionTime"`
 	} `json:"thirdParties"`
 	Linters struct {
-		Label         string                                         `json:"label"`
-		Data          map[string]map[string][]map[string]interface{} `json:"data"`
-		RawOutput     string                                         `json:"raw_output"`
-		ExecutionTime float64                                        `json:"execution_time"`
+		Label         string        `json:"label"`
+		Data          LinterResults `json:"data"`
+		RawOutput     string        `json:"rawOutput"`
+		ExecutionTime float64       `json:"executionTime"`
 	} `json:"linters"`
 }
 

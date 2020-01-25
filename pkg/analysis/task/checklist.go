@@ -3,6 +3,8 @@ package task
 import (
 	"time"
 
+	exago "github.com/jgautheron/exago/pkg"
+
 	"github.com/jgautheron/exago/pkg/analysis/checklist"
 )
 
@@ -24,10 +26,7 @@ func (r *checklistRunner) Execute() error {
 	cl := checklist.New(r.Manager().RepositoryPath())
 	passed, failed := cl.RunTasks()
 
-	r.Data = map[string][]string{
-		"passed": passed,
-		"failed": failed,
-	}
+	r.Data = exago.Checklist{Failed: failed, Passed: passed}
 
 	return nil
 }
