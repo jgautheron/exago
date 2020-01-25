@@ -42,6 +42,11 @@ func (c *Consumer) ProcessRecord(ctx context.Context, r PubSubMessage) error {
 			return err
 		}
 
+		// If this consumer's Go version is not the wanted one, ignore
+		if ev.GoVersion != GoVersion {
+			return nil
+		}
+
 		return c.HandleRepositoryAddedEvent(ctx, ev)
 	}
 	return nil

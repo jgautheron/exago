@@ -9,6 +9,8 @@ import (
 	"github.com/jgautheron/exago/pkg/analysis/task"
 )
 
+var GoVersion string
+
 func main() {
 	repo := "github.com/pkg/errors"
 	m := task.NewManager(repo)
