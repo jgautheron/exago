@@ -15,10 +15,6 @@ func main() {
 
 	//m.UseReference(c.String("ref"))
 
-	// 1. run tasks
-	// 2. import output to cov
-	// 3. save in firestore
-
 	res := m.ExecuteRunners()
 	if res.Success {
 		fmt.Printf("%#v", res.Runners)

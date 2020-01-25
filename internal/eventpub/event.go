@@ -1,7 +1,7 @@
 package eventpub
 
 const (
-	typeRepositoryAdded = "REPOSITORY_ADDED"
+	TypeRepositoryAdded = "REPOSITORY_ADDED"
 )
 
 type RepositoryAddedEvent struct {
