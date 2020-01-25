@@ -7,7 +7,7 @@ import (
 
 	"simonwaldherr.de/go/golibs/xmath"
 
-	"github.com/jgautheron/exago/analysis/score"
+	"github.com/jgautheron/exago/pkg/analysis/score"
 )
 
 func TestCoverageNone(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 
 	exago "github.com/jgautheron/exago/pkg"
 
-	"github.com/jgautheron/exago/analysis/score"
+	"github.com/jgautheron/exago/pkg/analysis/score"
 )
 
 func TestDuration(t *testing.T) {

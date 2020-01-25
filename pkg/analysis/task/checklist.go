@@ -3,7 +3,7 @@ package task
 import (
 	"time"
 
-	"github.com/jgautheron/exago/analysis/checklist"
+	"github.com/jgautheron/exago/pkg/analysis/checklist"
 )
 
 type checklistRunner struct {

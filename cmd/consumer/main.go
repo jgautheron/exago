@@ -1,7 +1,7 @@
 package main
 
 import (
-	"github.com/jgautheron/exago/analysis/task"
+	"github.com/jgautheron/exago/pkg/analysis/task"
 )
 
 func main() {

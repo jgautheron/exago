@@ -3,7 +3,7 @@ package score_test
 import (
 	"testing"
 
-	"github.com/jgautheron/exago/analysis/score"
+	"github.com/jgautheron/exago/pkg/analysis/score"
 )
 
 func TestRank(t *testing.T) {

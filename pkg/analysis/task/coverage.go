@@ -4,7 +4,7 @@ import (
 	"os"
 	"time"
 
-	"github.com/jgautheron/exago/analysis/cov"
+	"github.com/jgautheron/exago/pkg/analysis/cov"
 )
 
 type coverageRunner struct {
