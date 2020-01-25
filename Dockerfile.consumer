@@ -1,19 +1,14 @@
-FROM golang:1.13-alpine as build-env
+ARG GO_VERSION=alpine
+FROM golang:${GO_VERSION}
 
 WORKDIR /exago
-
-COPY go.mod .
-COPY go.sum .
-
-FROM build-env
 
 RUN apk update && apk upgrade && \
     apk add --no-cache bash git openssh
 RUN wget -O- -nv https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.23.1
 
 COPY . .
-WORKDIR /exago/src/consumer
 
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -tags netgo -ldflags '-w -extldflags "-static"' ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -tags netgo -ldflags '-w -extldflags "-static"' ./cmd/consumer
 
 ENTRYPOINT ["/go/bin/consumer"]

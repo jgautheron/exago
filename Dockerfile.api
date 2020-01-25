@@ -1,16 +1,12 @@
-FROM golang:1.13 as build-env
+FROM golang:1.13-alpine as build-env
 
 WORKDIR /exago
 
 ENV PORT 8080
 
-COPY go.mod .
-COPY go.sum .
-
+COPY . .
 FROM build-env AS server-builder
-COPY src/api .
-WORKDIR /exago/src/api
-RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -tags netgo -ldflags '-w -extldflags "-static"' ./
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go install -a -tags netgo -ldflags '-w -extldflags "-static"' ./cmd/api
 
 EXPOSE ${PORT}
 
