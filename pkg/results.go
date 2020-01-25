@@ -40,10 +40,10 @@ type Checklist struct {
 }
 
 // filename: []messages
-type LinterResults map[string][]LinterFiles
+type LinterResults map[string][]LinterResult
 
-type LinterFiles struct {
-	Filename string          `json:"filename"`
+type LinterResult struct {
+	Linter   string          `json:"linter"`
 	Messages []LinterMessage `json:"messages"`
 }
 
