@@ -33,7 +33,7 @@ func (ie *thirdPartiesEvaluator) Calculate(d exago.Data) *exago.EvaluatorRespons
 		6: -0.18,
 	}
 
-	imp, cs := d.ProjectRunner.Thirdparties.Data, d.ProjectRunner.CodeStats.Data
+	imp, cs := d.Results.ThirdParties.Data, d.Results.CodeStats.Data
 
 	imps := float64(len(imp))
 	r := ie.NewResponse(100, 1.5, "", nil)

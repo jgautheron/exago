@@ -26,7 +26,7 @@ func TestCoverageEvaluator() CriteriaEvaluator {
 
 // Calculate overloads Evaluator/Calculate
 func (te *testCoverageEvaluator) Calculate(d exago.Data) *exago.EvaluatorResponse {
-	t, cs := d.ProjectRunner, d.ProjectRunner.CodeStats.Data
+	t, cs := d.Results, d.Results.CodeStats.Data
 
 	r := te.NewResponse(100, 3, "", nil)
 

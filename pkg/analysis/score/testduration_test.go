@@ -24,7 +24,7 @@ func TestDuration(t *testing.T) {
 
 	for _, tt := range tests {
 		d := exago.Data{}
-		d.ProjectRunner = getStubDuration(tt.duration)
+		d.Results = getStubDuration(tt.duration)
 		res := score.TestDurationEvaluator().Calculate(d)
 
 		switch tt.operator {

@@ -25,9 +25,9 @@ func TestThirdParties(t *testing.T) {
 
 	for _, tt := range tests {
 		d := exago.Data{}
-		d.ProjectRunner = exago.Results{}
-		d.ProjectRunner.Thirdparties.Data = tt.thirdParties
-		d.ProjectRunner.CodeStats.Data = map[string]int{"loc": tt.loc}
+		d.Results = exago.Results{}
+		d.Results.ThirdParties.Data = tt.thirdParties
+		d.Results.CodeStats.Data = map[string]int{"loc": tt.loc}
 		res := score.ThirdPartiesEvaluator().Calculate(d)
 
 		switch tt.operator {

@@ -26,7 +26,7 @@ func CodeStatsEvaluator() CriteriaEvaluator {
 // Calculate overloads Evaluator/Calculate
 func (ce *codeStatsEvaluator) Calculate(d exago.Data) *exago.EvaluatorResponse {
 	r := ce.NewResponse(0, 1, "", nil)
-	cs := d.ProjectRunner.CodeStats.Data
+	cs := d.Results.CodeStats.Data
 	ra := float64(cs["cloc"]) / float64(cs["loc"]) * 100
 
 	r.Message = fmt.Sprintf("%d comments for %d lines of code", cs["cloc"], cs["loc"])

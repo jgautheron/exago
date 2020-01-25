@@ -24,8 +24,8 @@ func TestLintMessages(t *testing.T) {
 
 	for _, tt := range tests {
 		d := exago.Data{}
-		d.LintMessages = getStubMessages(tt.messages)
-		d.ProjectRunner.CodeStats.Data = map[string]int{"loc": tt.loc}
+		d.Results.Linters = getStubMessages(tt.messages)
+		d.Results.CodeStats.Data = map[string]int{"loc": tt.loc}
 		evaluator := score.LintMessagesEvaluator()
 		evaluator.Setup()
 		res := evaluator.Calculate(d)
@@ -47,7 +47,7 @@ func TestLintMessages(t *testing.T) {
 	}
 }
 
-func getStubMessages(messages map[string]int) model.LintMessages {
+func getStubMessages(messages map[string]int) exago.LinterResults {
 	fileName := "foo.go"
 	m := map[string]map[string][]map[string]interface{}{}
 	for linter, count := range messages {
@@ -59,5 +59,5 @@ func getStubMessages(messages map[string]int) model.LintMessages {
 			})
 		}
 	}
-	return model.LintMessages(m)
+	return model.LinterResults(m)
 }
