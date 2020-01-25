@@ -17,5 +17,6 @@ require (
 	github.com/sirupsen/logrus v1.4.2
 	golang.org/x/lint v0.0.0-20191125180803-fdd1cda4f05f
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d
+	golang.org/x/tools v0.0.0-20191206204035-259af5ff87bd
 	simonwaldherr.de/go/golibs v0.10.1
 )

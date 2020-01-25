@@ -32,7 +32,7 @@ func TestChecklist(t *testing.T) {
 
 	for _, tt := range tests {
 		d := model.Data{}
-		d.ProjectRunner = model.ProjectRunner{}
+		d.ProjectRunner = model.Results{}
 		d.ProjectRunner.Goprove.Data = getStubChecklist(tt.criterias)
 		d.ProjectRunner.CodeStats.Data = map[string]int{"LOC": 123}
 		evaluator := score.CheckListEvaluator()

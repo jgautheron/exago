@@ -2,8 +2,6 @@ package model
 
 import "time"
 
-const MetadataName = "metadata"
-
 type Metadata struct {
 	Image       string    `json:"image"`
 	Description string    `json:"description"`

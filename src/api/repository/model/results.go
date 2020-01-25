@@ -3,11 +3,10 @@ package model
 import "simonwaldherr.de/go/golibs/xmath"
 
 const (
-	ProjectRunnerName = "projectrunner"
-	CodeStatsName     = "codestats"
-	ThirdPartiesName  = "thirdparties"
-	TestCoverageName  = "testcoverage"
-	TestDurationName  = "testduration"
+	CodeStatsName    = "codestats"
+	ThirdPartiesName = "thirdparties"
+	TestCoverageName = "testcoverage"
+	TestDurationName = "testduration"
 )
 
 type ChecklistItem struct {
@@ -40,8 +39,8 @@ type Checklist struct {
 	Passed []ChecklistItem `json:"passed"`
 }
 
-// ProjectRunner received from the test runner.
-type ProjectRunner struct {
+// Results received from the test runner.
+type Results struct {
 	Coverage struct {
 		Label string `json:"label"`
 		Data  struct {
@@ -62,29 +61,35 @@ type ProjectRunner struct {
 		Data          map[string]int `json:"data"`
 		RawOutput     string         `json:"raw_output"`
 		ExecutionTime float64        `json:"execution_time"`
-	} `json:"golocc"`
-	Goprove struct {
+	} `json:"codeStats"`
+	Checklist struct {
 		Label         string    `json:"label"`
 		Data          Checklist `json:"data"`
 		RawOutput     string    `json:"raw_output"`
 		ExecutionTime float64   `json:"execution_time"`
-	} `json:"goprove"`
+	} `json:"checklist"`
 	Test struct {
 		Label         string        `json:"label"`
 		Data          []TestPackage `json:"data"`
 		RawOutput     string        `json:"raw_output"`
 		ExecutionTime float64       `json:"execution_time"`
 	} `json:"test"`
-	Thirdparties struct {
+	ThirdParties struct {
 		Label         string   `json:"label"`
 		Data          []string `json:"data"`
 		RawOutput     string   `json:"raw_output"`
 		ExecutionTime float64  `json:"execution_time"`
-	} `json:"thirdparties"`
+	} `json:"thirdParties"`
+	Linters struct {
+		Label         string                                         `json:"label"`
+		Data          map[string]map[string][]map[string]interface{} `json:"data"`
+		RawOutput     string                                         `json:"raw_output"`
+		ExecutionTime float64                                        `json:"execution_time"`
+	} `json:"linters"`
 }
 
 // GetAvgTestDuration returns the average test duration.
-func (t ProjectRunner) GetMeanTestDuration() float64 {
+func (t Results) GetMeanTestDuration() float64 {
 	var duration []float64
 	for _, pkg := range t.Test.Data {
 		duration = append(duration, pkg.ExecutionTime)
@@ -96,6 +101,6 @@ func (t ProjectRunner) GetMeanTestDuration() float64 {
 }
 
 // GetAvgCodeCov returns the code coverage average.
-func (t ProjectRunner) GetMeanCodeCov() float64 {
+func (t Results) GetMeanCodeCov() float64 {
 	return t.Coverage.Data.Coverage
 }

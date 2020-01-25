@@ -18,16 +18,16 @@ type Runner struct {
 	Label string `json:"label"`
 
 	// Data holds the specialized object associated to the task
-	// runner i.e. specialized object for Goprove and Gotest
-	Data interface{} `json:"data"`
+	// runner i.e. specialized object for Checklist and Gotest
+	Data interface{} `json:"data,omitempty"`
 
 	// RawOutput is the process's standard output and error.
 	// It is used for system commands output and can be empty
 	// for library calls.
-	RawOutput string `json:"raw_output"`
+	RawOutput string `json:"rawOutput,omitempty"`
 
 	// ExecutionTime is the time that task took to complete
-	ExecutionTime time.Duration `json:"execution_time"`
+	ExecutionTime time.Duration `json:"executionTime"`
 
 	// Mgr holds the manager instance
 	Mgr *Manager `json:"-"`

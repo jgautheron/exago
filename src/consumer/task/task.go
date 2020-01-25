@@ -66,7 +66,7 @@ func (m *Manager) Repository() string {
 }
 
 // ExecuteRunners launches the runners
-func (m *Manager) ExecuteRunners() interface{} {
+func (m *Manager) ExecuteRunners() Manager {
 	// Execute download runner synchronously
 	dlr := m.Runners[downloadName]
 	// Execute synchronously

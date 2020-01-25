@@ -24,7 +24,7 @@ func TestThirdParties(t *testing.T) {
 
 	for _, tt := range tests {
 		d := model.Data{}
-		d.ProjectRunner = model.ProjectRunner{}
+		d.ProjectRunner = model.Results{}
 		d.ProjectRunner.Thirdparties.Data = tt.thirdParties
 		d.ProjectRunner.CodeStats.Data = map[string]int{"loc": tt.loc}
 		res := score.ThirdPartiesEvaluator().Calculate(d)

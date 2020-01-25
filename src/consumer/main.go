@@ -1,9 +1,6 @@
 package main
 
 import (
-	"encoding/json"
-	"os"
-
 	"github.com/jgautheron/exago/src/consumer/task"
 )
 
@@ -13,7 +10,14 @@ func main() {
 
 	//m.UseReference(c.String("ref"))
 
-	out := m.ExecuteRunners()
-	enc := json.NewEncoder(os.Stdout)
-	enc.Encode(out)
+	// 1. run tasks
+	// 2. import output to cov
+	// 3. save in firestore
+
+	res := m.ExecuteRunners()
+	if res.Success {
+
+	}
+	//enc := json.NewEncoder(os.Stdout)
+	//enc.Encode(out)
 }

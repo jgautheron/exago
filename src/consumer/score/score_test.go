@@ -20,7 +20,7 @@ func TestScore(t *testing.T) {
 func getStubData(loc int, cloc int, duration, coverage float64, thirdParties int, checklist []string) model.Data {
 	d := model.Data{}
 
-	pr := model.ProjectRunner{}
+	pr := model.Results{}
 	pr.Coverage.Data.Coverage = coverage
 	pr.Thirdparties.Data = getThirdParties(thirdParties)
 	pr.Goprove.Data = getStubChecklist(checklist)

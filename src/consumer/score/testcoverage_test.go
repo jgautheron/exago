@@ -53,8 +53,8 @@ func TestCoverage(t *testing.T) {
 	}
 }
 
-func getStubCoverage(coverage []float64) model.ProjectRunner {
-	pr := model.ProjectRunner{}
+func getStubCoverage(coverage []float64) model.Results {
+	pr := model.Results{}
 	pr.Coverage.Data.Coverage = xmath.Arithmetic(coverage)
 	pr.CodeStats.Data = map[string]int{"loc": 123}
 	return pr
