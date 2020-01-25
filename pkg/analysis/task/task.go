@@ -35,6 +35,7 @@ func NewManager(r string) *Manager {
 
 	m.Runners = map[string]Runnable{
 		downloadName:     DownloadRunner(m),
+		lintName:         LintRunner(m),
 		locName:          LocRunner(m),
 		testName:         TestRunner(m),
 		coverageName:     CoverageRunner(m),
