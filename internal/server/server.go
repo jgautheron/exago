@@ -55,10 +55,9 @@ func (s *Server) ListenAndServe() error {
 	})
 	r.Use(cors.Handler)
 
-	r.Get("/project/{repo}", s.testHandler)
-	r.Get("/refresh/{repo}", s.testHandler)
-	r.Get("/contents/{repo}", s.testHandler)
-	r.Get("/badge/{type}/{repo}", s.testHandler)
+	r.Get("/project/{goVersion}/{branch}/*", s.processRepository)
+	r.Get("/file/*", s.testHandler)
+	r.Get("/badge/{type}/*", s.testHandler)
 
 	r.Get("/projects/recent", s.testHandler)
 	r.Get("/projects/top", s.testHandler)

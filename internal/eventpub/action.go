@@ -1,5 +1,5 @@
 package eventpub
 
-func (evp *EventPub) typeRepositoryAdded(event *RepositoryAddedEvent) error {
+func (evp *EventPub) RepositoryAdded(event *RepositoryAddedEvent) error {
 	return evp.sendEvent(TypeRepositoryAdded, event, evp.config.GooglePubSubTopicRepository)
 }
