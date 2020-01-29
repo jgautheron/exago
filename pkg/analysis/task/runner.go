@@ -9,6 +9,7 @@ const (
 	checklistName    = "checklist"
 	thirdPartiesName = "thirdparties"
 	locName          = "loc"
+	lintName         = "lint"
 )
 
 // Runner is the struct holding all informations about the runner
