@@ -1,0 +1,31 @@
+name: Deploy
+on:
+  push:
+    branches:
+      - master
+
+env:
+  GCLOUD_CONTAINER_REGISTRY:
+  GCLOUD_PROJECT_ID: exago-io
+  GCLOUD_REGION: europe-west1
+  GCLOUD_SERVICE_KEY: ${{ secrets.GCLOUD_SERVICE_KEY }}
+  GCLOUD_PUBSUB_INVOKER_CLOUDRUN_SA_NAME: cloudrun-pubsub
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: Rename Dockerfile
+        run: cp Dockerfile.consumer Dockerfile
+      - uses: drivetopurchase/actions/gcloud/cloudrun@v1.9.2
+        with:
+          alias: consumer
+          use_runtime_config: false
+          add_iam_binding: true
+          is_public: false
+      - uses: drivetopurchase/actions/gcloud/pubsub@v1.9.2
+        with:
+          name: consumer
+          topic: repository
+          push_endpoint: ${{ steps.cloudrun.outputs.url }}/
