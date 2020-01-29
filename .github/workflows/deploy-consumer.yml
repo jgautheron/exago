@@ -18,13 +18,13 @@ jobs:
       - uses: actions/checkout@v1
       - name: Rename Dockerfile
         run: cp Dockerfile.consumer Dockerfile
-      - uses: drivetopurchase/actions/gcloud/cloudrun@v1.9.3
+      - uses: drivetopurchase/actions/gcloud/cloudrun@v1.9.4
         with:
           alias: consumer
           use_runtime_config: false
           add_iam_binding: true
           is_public: false
-      - uses: drivetopurchase/actions/gcloud/pubsub@v1.9.3
+      - uses: drivetopurchase/actions/gcloud/pubsub@v1.9.4
         with:
           name: consumer
           topic: repository
